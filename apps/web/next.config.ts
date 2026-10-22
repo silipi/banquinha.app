@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   transpilePackages: ['@vendeu/api-client'],
+  // The default bottom-left spot covers the storefront's floating bag button.
+  devIndicators: { position: 'bottom-right' },
   turbopack: {
     rules: {
       '*.css': {

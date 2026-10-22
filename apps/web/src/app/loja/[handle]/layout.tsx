@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { Suspense, type CSSProperties } from 'react';
 import { Logo } from '@/components/logo';
 import { getStore } from '@/lib/storefront';
+import { BagButton } from './_components/BagButton';
 import { CartBar } from './_components/CartBar';
 
 async function StoreFrame({
@@ -18,6 +19,7 @@ async function StoreFrame({
       className="storefront flex flex-1 flex-col"
       style={{ '--store-accent': store.accentColor } as CSSProperties}
     >
+      <BagButton />
       {children}
       <CartBar />
     </div>
