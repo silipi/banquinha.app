@@ -12,6 +12,11 @@ packages/api-client  Typed API client generated from the API's OpenAPI document
 
 Tooling: **pnpm** workspaces + **Turborepo**. Everything is ESM (`"type": "module"`).
 
+## URLs
+
+- `vendeu.store/<handle>`: storefronts, served by the root dynamic route `apps/web/src/app/[handle]`. Static routes win over it, and the API reserves every root path in `PLATFORM_ROOT_PATHS` (`apps/api/src/stores/store-handle.ts`). **When adding a route at the root of the web app, add it there too** (a unit test covers the list).
+- `app.vendeu.store`: merchant area (phase 2). `api.vendeu.store`: the API.
+
 ## Architecture rules
 
 - **All business logic lives in `apps/api`.** Validation, calculations and decisions belong to Nest services. `apps/web` is frontend only: rendering, SEO, forms, UI state.
@@ -69,15 +74,4 @@ Env: copy `.env.example` to `.env` at the root. The API loads `../../.env` in de
 
 ## Roadmap
 
-Key idea: the storefront is built on the real data model from day one. The example stores (Paulo, Luluca, Clara) are **seed data in Postgres**, served by the API, so the landing links to live stores and the dashboard later writes to the same tables.
-
-0. ✅ Foundation: monorepo, design system, landing (first pass), typed API client.
-1. **Storefront + finished landing** (in parallel, now)
-   - API: `stores`, `products`, `product_images`, `orders` tables; `GET /storefront/:handle`, `GET /storefront/:handle/products/:slug` (✅ done); seed with the 3 example stores (`pnpm db:seed`).
-   - Web storefront (`/loja/[handle]`, later `<handle>.vendeu.store` via `proxy.ts`): header (logo, name, bio, WhatsApp/Instagram/location pills), product grid, product page, per-store accent color as a CSS variable (`bg-store`, `bg-store-soft`), "Feito com vendeu.store" badge (✅ pages and share images done, `/loja/[handle]/produto/[slug]`; subdomain pending). Storefront URLs are built only in `src/lib/storefront-links.ts`; data comes from `src/lib/storefront.ts` (`'use cache'`, tagged `store:<handle>`).
-   - Cart (client, per store, localStorage) → checkout form (name, delivery/pickup, note) → `POST /storefront/:handle/orders`: the API recomputes totals, saves the order and returns the WhatsApp message/link (✅ done: `orders`/`order_items`, cart in `use-cart.ts`, bag at `/loja/[handle]/sacola`, server action → API).
-   - Landing: example stores link to the live storefronts, `/termos` + `/privacidade`, metadata/OG/sitemap/robots (✅ done; share images in `src/lib/og.tsx`, absolute URLs from `NEXT_PUBLIC_SITE_URL` via `src/lib/site.ts`, store/product list from `GET /sitemap/storefronts`), mobile polish, Vercel Analytics. Blog with 6 posts (✅ done).
-2. **Merchant dashboard** → closed beta: auth (Google + e-mail), onboarding (handle → name → WhatsApp → logo/color), product CRUD with photos (R2), orders list (already recorded since phase 1), free-plan limits, PWA.
-3. **Public launch**: open sign-up, transactional e-mails, error monitoring, rate limiting, deploy hardening (Vercel + Neon + R2).
-4. **Payments**: Mercado Pago (Pix first, then card), order status, stock control.
-5. **Growth**: paid plan + billing, shipping, digital products, analytics, custom domains, AI store assistant.
+Backlog and ticket status live in [`ROADMAP.md`](ROADMAP.md) (IDs like `P1-09`; written in pt-BR for the owner). Update a ticket's status there when you start or finish it.

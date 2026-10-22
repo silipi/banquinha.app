@@ -2,7 +2,7 @@ import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { exampleStores } from '@/lib/example-stores';
-import { storePath } from '@/lib/storefront-links';
+import { storeDisplayUrl, storePath } from '@/lib/storefront-links';
 import { cn, formatBRL } from '@/lib/utils';
 import { SectionHeading } from './SectionHeading';
 
@@ -36,7 +36,7 @@ export function ExampleStores() {
                     {store.name}
                   </p>
                   <p className="truncate text-sm text-foreground/60">
-                    {store.handle}.vendeu.store
+                    {storeDisplayUrl(store.handle)}
                   </p>
                 </div>
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface transition-transform group-hover:translate-x-0.5">

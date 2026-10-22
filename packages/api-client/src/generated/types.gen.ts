@@ -11,7 +11,7 @@ export type HealthResponseDto = {
 
 export type CheckHandleResponseDto = {
     /**
-     * Normalized handle, as it would appear in the subdomain.
+     * Normalized handle, as it would appear in the store URL.
      */
     handle: string;
     available: boolean;

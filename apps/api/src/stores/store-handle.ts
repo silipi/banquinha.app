@@ -1,39 +1,96 @@
-// The handle becomes the store's subdomain: <handle>.vendeu.store
+// The handle is the store's public path: vendeu.store/<handle>.
+// Only lowercase letters, digits and single hyphens, so it never needs URL encoding
+// and can't collide with files (no dots) or Next.js internals (no underscores).
 export const STORE_HANDLE_MIN_LENGTH = 3;
 export const STORE_HANDLE_MAX_LENGTH = 30;
 
 const STORE_HANDLE_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
-// Subdomains the platform uses or may use in the future.
-const RESERVED_HANDLES = new Set([
+/**
+ * Top-level paths of the web app (apps/web/src/app and public/). A store with one of
+ * these handles would be shadowed by the platform page, so they can never be used.
+ * Keep in sync when adding a route at the root of the web app.
+ */
+export const PLATFORM_ROOT_PATHS = [
+  'blog',
+  'cadastro',
+  'lojas', // public/lojas: example store images
+  'opengraph-image',
+  'privacidade',
+  'robots',
+  'sitemap',
+  'termos',
+] as const;
+
+// Paths and subdomains the platform uses or may use in the future.
+const RESERVED_HANDLES = new Set<string>([
+  ...PLATFORM_ROOT_PATHS,
+  // Platform hosts and areas
   'admin',
   'api',
   'app',
-  'ajuda',
-  'blog',
   'cdn',
-  'checkout',
-  'conta',
   'dashboard',
   'dev',
   'docs',
-  'email',
-  'help',
-  'loja',
-  'lojas',
   'mail',
   'painel',
-  'pagamento',
   'staging',
   'static',
   'status',
-  'suporte',
-  'vendeu',
   'www',
+  // Account and auth
+  'auth',
+  'callback',
+  'conta',
+  'entrar',
+  'login',
+  'logout',
+  'oauth',
+  'sair',
+  'senha',
+  'signin',
+  'signup',
+  // Merchant area and commerce words
+  'carrinho',
+  'checkout',
+  'configuracoes',
+  'loja',
+  'lojista',
+  'pagamento',
+  'pedido',
+  'pedidos',
+  'produto',
+  'produtos',
+  'sacola',
+  // Institutional pages
+  'ajuda',
+  'contato',
+  'email',
+  'faq',
+  'help',
+  'planos',
+  'precos',
+  'sobre',
+  'suporte',
+  // Files and assets
+  'apple-icon',
+  'assets',
+  'favicon',
+  'feed',
+  'icon',
+  'images',
+  'manifest',
+  'media',
+  'public',
+  'rss',
+  'uploads',
+  // Brand
+  'vendeu',
 ]);
 
 /**
- * Turns free text (e.g. the store name) into a subdomain-safe handle:
+ * Turns free text (e.g. the store name) into a URL-safe handle:
  * no accents, lowercase, only letters, digits and hyphens.
  */
 export function toStoreHandle(input: string): string {

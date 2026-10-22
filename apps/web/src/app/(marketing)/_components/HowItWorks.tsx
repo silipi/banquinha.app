@@ -8,7 +8,7 @@ const steps = [
   },
   {
     title: 'Compartilhe seu link',
-    text: 'Coloque sualoja.vendeu.store na bio do Instagram, no status do WhatsApp ou no TikTok.',
+    text: 'Coloque vendeu.store/sualoja na bio do Instagram, no status do WhatsApp ou no TikTok.',
     bg: 'bg-sky',
   },
   {

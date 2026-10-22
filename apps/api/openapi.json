@@ -17,7 +17,9 @@
             }
           }
         },
-        "tags": ["Health"]
+        "tags": [
+          "Health"
+        ]
       }
     },
     "/stores/handle-availability": {
@@ -47,8 +49,10 @@
             }
           }
         },
-        "summary": "Checks whether an address (subdomain) can be used by a new store.",
-        "tags": ["Stores"]
+        "summary": "Checks whether an address (vendeu.store/<handle>) can be used by a new store.",
+        "tags": [
+          "Stores"
+        ]
       }
     },
     "/storefront/{handle}": {
@@ -77,7 +81,9 @@
           }
         },
         "summary": "Public store page: store info and its active products.",
-        "tags": ["Storefront"]
+        "tags": [
+          "Storefront"
+        ]
       }
     },
     "/storefront/{handle}/products/{slug}": {
@@ -114,7 +120,9 @@
           }
         },
         "summary": "Public product page.",
-        "tags": ["Storefront"]
+        "tags": [
+          "Storefront"
+        ]
       }
     },
     "/storefront/{handle}/orders": {
@@ -153,7 +161,9 @@
           }
         },
         "summary": "Places an order from the cart. Prices come from the database, not the client.\nA 400 with `unavailableSlugs` means some products were removed or deactivated.",
-        "tags": ["Storefront"]
+        "tags": [
+          "Storefront"
+        ]
       }
     },
     "/sitemap/storefronts": {
@@ -176,7 +186,9 @@
           }
         },
         "summary": "Every public store and product URL, for the web app's sitemap.xml.",
-        "tags": ["Sitemap"]
+        "tags": [
+          "Sitemap"
+        ]
       }
     }
   },
@@ -195,21 +207,30 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["ok", "degraded"]
+            "enum": [
+              "ok",
+              "degraded"
+            ]
           },
           "database": {
             "type": "string",
-            "enum": ["up", "down"]
+            "enum": [
+              "up",
+              "down"
+            ]
           }
         },
-        "required": ["status", "database"]
+        "required": [
+          "status",
+          "database"
+        ]
       },
       "CheckHandleResponseDto": {
         "type": "object",
         "properties": {
           "handle": {
             "type": "string",
-            "description": "Normalized handle, as it would appear in the subdomain."
+            "description": "Normalized handle, as it would appear in the store URL."
           },
           "available": {
             "type": "boolean"
@@ -219,7 +240,10 @@
             "description": "User-facing reason (pt-BR) when the handle is not available."
           }
         },
-        "required": ["handle", "available"]
+        "required": [
+          "handle",
+          "available"
+        ]
       },
       "StorefrontContactDto": {
         "type": "object",
@@ -238,7 +262,11 @@
             "nullable": true
           }
         },
-        "required": ["whatsapp", "instagram", "locationUrl"]
+        "required": [
+          "whatsapp",
+          "instagram",
+          "locationUrl"
+        ]
       },
       "StorefrontProductSummaryDto": {
         "type": "object",
@@ -258,7 +286,12 @@
             "description": "Cover image. Absolute URL or a path served by the web app."
           }
         },
-        "required": ["slug", "name", "priceCents", "imageUrl"]
+        "required": [
+          "slug",
+          "name",
+          "priceCents",
+          "imageUrl"
+        ]
       },
       "StorefrontStoreDto": {
         "type": "object",
@@ -314,7 +347,9 @@
             "type": "string"
           }
         },
-        "required": ["url"]
+        "required": [
+          "url"
+        ]
       },
       "StorefrontStoreSummaryDto": {
         "type": "object",
@@ -334,7 +369,12 @@
             "description": "Hex color used to theme the storefront."
           }
         },
-        "required": ["handle", "name", "logoUrl", "accentColor"]
+        "required": [
+          "handle",
+          "name",
+          "logoUrl",
+          "accentColor"
+        ]
       },
       "StorefrontProductDto": {
         "type": "object",
@@ -386,7 +426,10 @@
             "maximum": 99
           }
         },
-        "required": ["slug", "quantity"]
+        "required": [
+          "slug",
+          "quantity"
+        ]
       },
       "CreateOrderDto": {
         "type": "object",
@@ -398,7 +441,10 @@
           },
           "fulfillment": {
             "type": "string",
-            "enum": ["pickup", "delivery"]
+            "enum": [
+              "pickup",
+              "delivery"
+            ]
           },
           "address": {
             "type": "string",
@@ -419,7 +465,11 @@
             }
           }
         },
-        "required": ["customerName", "fulfillment", "items"]
+        "required": [
+          "customerName",
+          "fulfillment",
+          "items"
+        ]
       },
       "CreateOrderResponseDto": {
         "type": "object",
@@ -436,7 +486,11 @@
             "description": "wa.me link with the order message, ready to open."
           }
         },
-        "required": ["number", "totalCents", "whatsappUrl"]
+        "required": [
+          "number",
+          "totalCents",
+          "whatsappUrl"
+        ]
       },
       "SitemapProductDto": {
         "type": "object",
@@ -448,7 +502,10 @@
             "type": "string"
           }
         },
-        "required": ["slug", "updatedAt"]
+        "required": [
+          "slug",
+          "updatedAt"
+        ]
       },
       "SitemapStoreDto": {
         "type": "object",
@@ -467,7 +524,11 @@
             }
           }
         },
-        "required": ["handle", "updatedAt", "products"]
+        "required": [
+          "handle",
+          "updatedAt",
+          "products"
+        ]
       }
     }
   }

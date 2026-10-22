@@ -1,7 +1,15 @@
-// Storefront URLs live here so moving stores to <handle>.vendeu.store only changes this file.
+// Storefront URLs live here, so changing the URL format only touches this file.
+// Stores live at the root: vendeu.store/<handle>. The API reserves every platform path.
+
+import { brandDomain } from '@/lib/site';
 
 export function storePath(handle: string) {
-  return `/loja/${handle}`;
+  return `/${handle}`;
+}
+
+/** Store address as people read and type it, e.g. "vendeu.store/luluca". */
+export function storeDisplayUrl(handle: string) {
+  return `${brandDomain}${storePath(handle)}`;
 }
 
 export function productPath(handle: string, slug: string) {

@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { ProductCard } from './_components/ProductCard';
 import { StoreAvatar } from './_components/StoreAvatar';
 
-type Props = PageProps<'/loja/[handle]'>;
+type Props = PageProps<'/[handle]'>;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { handle } = await params;

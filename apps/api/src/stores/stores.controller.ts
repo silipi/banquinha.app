@@ -9,7 +9,7 @@ import { StoresService } from './stores.service.js';
 export class StoresController {
   constructor(private readonly storesService: StoresService) {}
 
-  /** Checks whether an address (subdomain) can be used by a new store. */
+  /** Checks whether an address (vendeu.store/<handle>) can be used by a new store. */
   @Get('handle-availability')
   checkHandle(@Query() query: CheckHandleQueryDto): CheckHandleResponseDto {
     return this.storesService.checkHandle(query.handle);

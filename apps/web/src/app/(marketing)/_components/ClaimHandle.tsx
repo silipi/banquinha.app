@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useId, useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { storesCheckHandle } from '@/lib/api';
+import { brandDomain } from '@/lib/site';
 import { formatStoreHandleInput } from '@/lib/store-handle-input';
 import { cn } from '@/lib/utils';
 
@@ -46,6 +47,7 @@ export function ClaimHandle({ className }: { className?: string }) {
         )}
       >
         <div className="flex min-w-0 flex-1 items-baseline overflow-hidden text-base">
+          <span className="shrink-0 text-muted-foreground">{brandDomain}/</span>
           <input
             id={inputId}
             value={handle}
@@ -61,7 +63,6 @@ export function ClaimHandle({ className }: { className?: string }) {
             aria-describedby={error ? `${inputId}-error` : undefined}
             className="max-w-full min-w-0 bg-transparent font-medium outline-none placeholder:text-muted-foreground/60"
           />
-          <span className="text-muted-foreground">.vendeu.store</span>
         </div>
         <Button
           type="submit"

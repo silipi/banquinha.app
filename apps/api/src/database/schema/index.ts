@@ -24,7 +24,7 @@ const timestamps = {
 // The owning merchant arrives in phase 2 with auth.
 export const stores = pgTable('stores', {
   id: uuid('id').primaryKey().defaultRandom(),
-  /** Public address: <handle>.vendeu.store. Always normalized (see store-handle.ts). */
+  /** Public path: vendeu.store/<handle>. Always normalized (see store-handle.ts). */
   handle: text('handle').notNull().unique(),
   name: text('name').notNull(),
   bio: text('bio'),

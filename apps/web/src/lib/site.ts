@@ -7,6 +7,9 @@ export const siteUrl = new URL(
 
 export const siteName = 'vendeu.store';
 
+/** Domain shown to people in copy and store links, regardless of the environment. */
+export const brandDomain = 'vendeu.store';
+
 export function absoluteUrl(path: string) {
   return new URL(path, siteUrl).toString();
 }

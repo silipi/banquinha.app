@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { buttonVariants } from '@/components/ui/button';
+import { storeDisplayUrl } from '@/lib/storefront-links';
 
 export const metadata: Metadata = { title: 'Criar loja' };
 
@@ -13,7 +14,7 @@ async function ChosenHandle({
   if (typeof loja !== 'string') return null;
   return (
     <p className="mt-4 text-lg">
-      Endereço escolhido: <strong>{loja}.vendeu.store</strong>
+      Endereço escolhido: <strong>{storeDisplayUrl(loja)}</strong>
     </p>
   );
 }

@@ -8,6 +8,7 @@ import {
   softColor,
 } from '@/lib/og';
 import { getStore } from '@/lib/storefront';
+import { storeDisplayUrl } from '@/lib/storefront-links';
 
 export const alt = 'Loja na vendeu.store';
 export const size = ogSize;
@@ -105,7 +106,7 @@ export default async function Image({
               {store.name}
             </div>
             <div style={{ marginTop: 8, fontSize: 30, color: ogColors.muted }}>
-              {store.city ?? `${store.handle}.vendeu.store`}
+              {store.city ?? storeDisplayUrl(store.handle)}
             </div>
           </div>
         </div>

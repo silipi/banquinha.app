@@ -1,4 +1,8 @@
-import { findStoreHandleProblem, toStoreHandle } from './store-handle.js';
+import {
+  PLATFORM_ROOT_PATHS,
+  findStoreHandleProblem,
+  toStoreHandle,
+} from './store-handle.js';
 
 describe('toStoreHandle', () => {
   it.each([
@@ -25,7 +29,14 @@ describe('findStoreHandleProblem', () => {
     ['clara--joias', 'invalid'],
     ['clara_joias', 'invalid'],
     ['api', 'reserved'],
+    ['clara.joias', 'invalid'],
+    ['clara/joias', 'invalid'],
+    ['clara%20joias', 'invalid'],
   ])('%s -> %s', (handle, problem) => {
     expect(findStoreHandleProblem(handle)).toBe(problem);
+  });
+
+  it.each(PLATFORM_ROOT_PATHS)('reserves the web app root path /%s', (path) => {
+    expect(findStoreHandleProblem(path)).toBe('reserved');
   });
 });

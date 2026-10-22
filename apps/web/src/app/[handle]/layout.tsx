@@ -9,7 +9,7 @@ import { CartBar } from './_components/CartBar';
 async function StoreFrame({
   params,
   children,
-}: Pick<LayoutProps<'/loja/[handle]'>, 'params' | 'children'>) {
+}: Pick<LayoutProps<'/[handle]'>, 'params' | 'children'>) {
   const { handle } = await params;
   const store = await getStore(handle);
   if (!store) notFound();
@@ -39,7 +39,7 @@ function StoreSkeleton() {
 export default function StoreLayout({
   params,
   children,
-}: LayoutProps<'/loja/[handle]'>) {
+}: LayoutProps<'/[handle]'>) {
   return (
     <>
       <Suspense fallback={<StoreSkeleton />}>

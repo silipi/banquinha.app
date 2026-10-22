@@ -11,7 +11,7 @@ import { formatBRL } from '@/lib/utils';
 import { AddToCartButton } from '../../_components/AddToCartButton';
 import { StoreAvatar } from '../../_components/StoreAvatar';
 
-type Props = PageProps<'/loja/[handle]/produto/[slug]'>;
+type Props = PageProps<'/[handle]/produto/[slug]'>;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { handle, slug } = await params;

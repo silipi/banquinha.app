@@ -8,7 +8,7 @@ export class CheckHandleQueryDto {
 }
 
 export class CheckHandleResponseDto {
-  /** Normalized handle, as it would appear in the subdomain. */
+  /** Normalized handle, as it would appear in the store URL. */
   handle: string;
   available: boolean;
   /** User-facing reason (pt-BR) when the handle is not available. */
