@@ -1,6 +1,6 @@
 // Fictional stores shown on the landing page. Images are served by the web app from /public/lojas.
-// The WhatsApp number is vendeu.store's own, as in the legacy demo, so test orders reach us.
-const DEMO_WHATSAPP = '554137975110';
+// Demo orders go to the owner's WhatsApp so they can be tried end to end.
+const DEMO_WHATSAPP = '5545999158412';
 const DEMO_INSTAGRAM = 'vendeustore';
 
 export type ExampleProduct = {

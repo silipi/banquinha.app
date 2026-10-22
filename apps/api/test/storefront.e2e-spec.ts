@@ -25,7 +25,7 @@ describe('Storefront', () => {
         handle: 'pauloplantas',
         name: 'Plantinhas do Paulo',
         logoUrl: '/lojas/pauloplantas/logo.webp',
-        contact: { whatsapp: '554137975110', instagram: 'vendeustore' },
+        contact: { whatsapp: '5545999158412', instagram: 'vendeustore' },
       });
       expect(store.products).toHaveLength(6);
       expect(store.products[0]).toEqual({

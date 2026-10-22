@@ -37,7 +37,7 @@ describe('POST /storefront/:handle/orders', () => {
     expect(order.number).toBeGreaterThan(0);
 
     const url = new URL(order.whatsappUrl);
-    expect(url.origin + url.pathname).toBe('https://wa.me/554137975110');
+    expect(url.origin + url.pathname).toBe('https://wa.me/5545999158412');
     const message = url.searchParams.get('text');
     expect(message).toContain(`*Pedido #${order.number}*`);
     expect(message).toContain('2x Samambaia — R$ 50,00');
