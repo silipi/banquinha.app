@@ -114,6 +114,20 @@ export type CreateOrderResponseDto = {
     whatsappUrl: string;
 };
 
+export type SitemapProductDto = {
+    slug: string;
+    updatedAt: string;
+};
+
+export type SitemapStoreDto = {
+    handle: string;
+    updatedAt: string;
+    /**
+     * Active products only.
+     */
+    products: Array<SitemapProductDto>;
+};
+
 export type HealthCheckData = {
     body?: never;
     path?: never;
@@ -190,3 +204,16 @@ export type StorefrontCreateOrderResponses = {
 };
 
 export type StorefrontCreateOrderResponse = StorefrontCreateOrderResponses[keyof StorefrontCreateOrderResponses];
+
+export type SitemapListStorefrontsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/sitemap/storefronts';
+};
+
+export type SitemapListStorefrontsResponses = {
+    200: Array<SitemapStoreDto>;
+};
+
+export type SitemapListStorefrontsResponse = SitemapListStorefrontsResponses[keyof SitemapListStorefrontsResponses];

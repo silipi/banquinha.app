@@ -44,3 +44,15 @@ export class StorefrontProductDto {
   images: StorefrontProductImageDto[];
   store: StorefrontStoreSummaryDto;
 }
+
+export class SitemapProductDto {
+  slug: string;
+  updatedAt: string;
+}
+
+export class SitemapStoreDto {
+  handle: string;
+  updatedAt: string;
+  /** Active products only. */
+  products: SitemapProductDto[];
+}

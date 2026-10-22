@@ -4,6 +4,7 @@ import type { Db } from '../database/database.js';
 import { DB } from '../database/database.module.js';
 import { productImages, products, stores } from '../database/schema/index.js';
 import type {
+  SitemapStoreDto,
   StorefrontProductDto,
   StorefrontStoreDto,
   StorefrontStoreSummaryDto,
@@ -91,5 +92,28 @@ export class StorefrontService {
       images: product.images,
       store: toStoreSummary(store),
     };
+  }
+
+  async listForSitemap(): Promise<SitemapStoreDto[]> {
+    const rows = await this.db.query.stores.findMany({
+      columns: { handle: true, updatedAt: true },
+      orderBy: [asc(stores.handle)],
+      with: {
+        products: {
+          columns: { slug: true, updatedAt: true },
+          where: eq(products.active, true),
+          orderBy: [asc(products.position)],
+        },
+      },
+    });
+
+    return rows.map((store) => ({
+      handle: store.handle,
+      updatedAt: store.updatedAt.toISOString(),
+      products: store.products.map((product) => ({
+        slug: product.slug,
+        updatedAt: product.updatedAt.toISOString(),
+      })),
+    }));
   }
 }

@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
   transpilePackages: ['@vendeu/api-client'],
   // The default bottom-left spot covers the storefront's floating bag button.
   devIndicators: { position: 'bottom-right' },
+  // Share images read these fonts from disk at runtime (src/lib/og.tsx).
+  outputFileTracingIncludes: {
+    '/**': [
+      './node_modules/@fontsource/bricolage-grotesque/files/bricolage-grotesque-latin-{400,700}-normal.woff',
+    ],
+  },
   turbopack: {
     rules: {
       '*.css': {

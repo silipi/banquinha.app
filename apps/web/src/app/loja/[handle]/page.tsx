@@ -3,7 +3,8 @@ import { AtSign, MapPin, MessageCircle } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { getStore } from '@/lib/storefront';
-import { instagramLink, whatsappLink } from '@/lib/storefront-links';
+import { openGraphDefaults } from '@/lib/site';
+import { instagramLink, storePath, whatsappLink } from '@/lib/storefront-links';
 import { cn } from '@/lib/utils';
 import { ProductCard } from './_components/ProductCard';
 import { StoreAvatar } from './_components/StoreAvatar';
@@ -14,9 +15,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { handle } = await params;
   const store = await getStore(handle);
   if (!store) return { title: 'Loja não encontrada' };
+  const description = store.bio ?? `Confira os produtos de ${store.name}.`;
   return {
     title: store.name,
-    description: store.bio ?? `Confira os produtos de ${store.name}.`,
+    description,
+    alternates: { canonical: storePath(store.handle) },
+    openGraph: {
+      ...openGraphDefaults,
+      title: store.name,
+      description,
+      url: storePath(store.handle),
+    },
   };
 }
 

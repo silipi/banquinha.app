@@ -1,7 +1,11 @@
 'use cache';
 
 import { cacheLife, cacheTag } from 'next/cache';
-import { storefrontGetProduct, storefrontGetStore } from '@/lib/api';
+import {
+  sitemapListStorefronts,
+  storefrontGetProduct,
+  storefrontGetStore,
+} from '@/lib/api';
 
 // Tagged per store so merchant edits (phase 2) can revalidate with updateTag(storeCacheTag(handle)).
 const storeCacheTag = (handle: string) => `store:${handle.toLowerCase()}`;
@@ -33,5 +37,15 @@ export async function getProduct(handle: string, slug: string) {
       `Failed to load product ${handle}/${slug}: ${response?.status}`,
     );
   }
+  return data;
+}
+
+/** Every public store and product, for sitemap.xml. */
+export async function getSitemapStores() {
+  cacheLife('hours');
+  cacheTag('sitemap');
+
+  const { data, response } = await sitemapListStorefronts();
+  if (!data) throw new Error(`Failed to load sitemap: ${response?.status}`);
   return data;
 }

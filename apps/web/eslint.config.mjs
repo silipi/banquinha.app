@@ -5,6 +5,11 @@ import nextTs from 'eslint-config-next/typescript';
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    // ImageResponse (Satori) only understands plain <img>.
+    files: ['src/**/opengraph-image.tsx', 'src/lib/og.tsx'],
+    rules: { '@next/next/no-img-element': 'off' },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

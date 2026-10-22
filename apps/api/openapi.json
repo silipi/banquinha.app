@@ -155,6 +155,29 @@
         "summary": "Places an order from the cart. Prices come from the database, not the client.\nA 400 with `unavailableSlugs` means some products were removed or deactivated.",
         "tags": ["Storefront"]
       }
+    },
+    "/sitemap/storefronts": {
+      "get": {
+        "operationId": "sitemapListStorefronts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SitemapStoreDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Every public store and product URL, for the web app's sitemap.xml.",
+        "tags": ["Sitemap"]
+      }
     }
   },
   "info": {
@@ -414,6 +437,37 @@
           }
         },
         "required": ["number", "totalCents", "whatsappUrl"]
+      },
+      "SitemapProductDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": ["slug", "updatedAt"]
+      },
+      "SitemapStoreDto": {
+        "type": "object",
+        "properties": {
+          "handle": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "products": {
+            "description": "Active products only.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SitemapProductDto"
+            }
+          }
+        },
+        "required": ["handle", "updatedAt", "products"]
       }
     }
   }

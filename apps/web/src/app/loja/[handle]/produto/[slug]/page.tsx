@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { getProduct } from '@/lib/storefront';
-import { storePath } from '@/lib/storefront-links';
+import { openGraphDefaults } from '@/lib/site';
+import { productPath, storePath } from '@/lib/storefront-links';
 import { formatBRL } from '@/lib/utils';
 import { AddToCartButton } from '../../_components/AddToCartButton';
 import { StoreAvatar } from '../../_components/StoreAvatar';
@@ -16,9 +17,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { handle, slug } = await params;
   const product = await getProduct(handle, slug);
   if (!product) return { title: 'Produto não encontrado' };
+  const title = `${product.name} · ${product.store.name}`;
+  const description = product.description?.slice(0, 155);
+  const url = productPath(product.store.handle, product.slug);
   return {
-    title: `${product.name} · ${product.store.name}`,
-    description: product.description?.slice(0, 155),
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { ...openGraphDefaults, title, description, url },
   };
 }
 

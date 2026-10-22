@@ -87,4 +87,23 @@ describe('Storefront', () => {
       expect(res.statusCode).toBe(404);
     });
   });
+
+  describe('GET /sitemap/storefronts', () => {
+    it('lists stores with their active product slugs', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/sitemap/storefronts',
+      });
+      expect(res.statusCode).toBe(200);
+
+      const paulo = res
+        .json()
+        .find((store: { handle: string }) => store.handle === 'pauloplantas');
+      expect(paulo.products).toHaveLength(6);
+      expect(paulo.products[0]).toEqual({
+        slug: 'costela-de-adao',
+        updatedAt: expect.any(String),
+      });
+    });
+  });
 });

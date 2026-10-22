@@ -3,10 +3,10 @@ import { Logo } from '@/components/logo';
 import { buttonVariants } from '@/components/ui/button';
 
 const links = [
-  { href: '#como-funciona', label: 'Como funciona' },
-  { href: '#recursos', label: 'Recursos' },
-  { href: '#precos', label: 'Preços' },
-  { href: '#perguntas', label: 'Dúvidas' },
+  { href: '/#como-funciona', label: 'Como funciona' },
+  { href: '/#recursos', label: 'Recursos' },
+  { href: '/#precos', label: 'Preços' },
+  { href: '/#perguntas', label: 'Dúvidas' },
 ];
 
 export function Header() {

@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { HealthCheckData, HealthCheckResponses, StorefrontCreateOrderData, StorefrontCreateOrderResponses, StorefrontGetProductData, StorefrontGetProductResponses, StorefrontGetStoreData, StorefrontGetStoreResponses, StoresCheckHandleData, StoresCheckHandleResponses } from './types.gen';
+import type { HealthCheckData, HealthCheckResponses, SitemapListStorefrontsData, SitemapListStorefrontsResponses, StorefrontCreateOrderData, StorefrontCreateOrderResponses, StorefrontGetProductData, StorefrontGetProductResponses, StorefrontGetStoreData, StorefrontGetStoreResponses, StoresCheckHandleData, StoresCheckHandleResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -47,3 +47,8 @@ export const storefrontCreateOrder = <ThrowOnError extends boolean = false>(opti
         ...options.headers
     }
 });
+
+/**
+ * Every public store and product URL, for the web app's sitemap.xml.
+ */
+export const sitemapListStorefronts = <ThrowOnError extends boolean = false>(options?: Options<SitemapListStorefrontsData, ThrowOnError>): RequestResult<SitemapListStorefrontsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<SitemapListStorefrontsResponses, unknown, ThrowOnError>({ url: '/sitemap/storefronts', ...options });

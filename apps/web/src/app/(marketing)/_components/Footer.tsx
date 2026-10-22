@@ -1,4 +1,5 @@
 import { cacheLife } from 'next/cache';
+import Link from 'next/link';
 import { Logo } from '@/components/logo';
 
 async function CurrentYear() {
@@ -6,6 +7,11 @@ async function CurrentYear() {
   cacheLife('days');
   return new Date().getFullYear();
 }
+
+const links = [
+  { href: '/termos', label: 'Termos de Uso' },
+  { href: '/privacidade', label: 'Privacidade' },
+];
 
 export function Footer() {
   return (
@@ -17,9 +23,22 @@ export function Footer() {
             Sua loja online, pronta em minutos.
           </p>
         </div>
-        <p className="text-sm text-muted-foreground">
-          © <CurrentYear /> vendeu.store · Feito no Brasil
-        </p>
+        <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:items-end">
+          <nav className="flex gap-4">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="transition-colors hover:text-foreground"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          <p>
+            © <CurrentYear /> vendeu.store · Feito no Brasil
+          </p>
+        </div>
       </div>
     </footer>
   );
