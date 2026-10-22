@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { connection } from 'next/server';
+import { blogPosts } from '@/lib/blog';
 import { absoluteUrl } from '@/lib/site';
 import { getSitemapStores } from '@/lib/storefront';
 import { productPath, storePath } from '@/lib/storefront-links';
@@ -12,6 +13,18 @@ const staticPages: MetadataRoute.Sitemap = [
     changeFrequency: 'yearly',
     priority: 0.2,
   },
+  {
+    url: absoluteUrl('/blog'),
+    lastModified: blogPosts[0]?.publishedAt,
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  },
+  ...blogPosts.map((post) => ({
+    url: absoluteUrl(`/blog/${post.slug}`),
+    lastModified: post.updatedAt ?? post.publishedAt,
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
+  })),
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

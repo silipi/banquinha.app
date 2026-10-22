@@ -7,6 +7,7 @@ const links = [
   { href: '/#recursos', label: 'Recursos' },
   { href: '/#precos', label: 'Preços' },
   { href: '/#perguntas', label: 'Dúvidas' },
+  { href: '/blog', label: 'Blog' },
 ];
 
 export function Header() {

@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs';
+import createMDX from '@next/mdx';
 import type { NextConfig } from 'next';
 
 // The monorepo keeps a single .env at the root; Next only reads its own folder.
@@ -28,4 +29,12 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Blog posts live in src/content/blog/*.mdx. Turbopack needs plugins referenced by name.
+const withMDX = createMDX({
+  options: {
+    remarkPlugins: ['remark-gfm'],
+    rehypePlugins: ['rehype-slug'],
+  },
+});
+
+export default withMDX(nextConfig);

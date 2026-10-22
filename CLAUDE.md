@@ -57,6 +57,7 @@ Env: copy `.env.example` to `.env` at the root. The API loads `../../.env` in de
 - Unstable values (`new Date()`, `Math.random()`) in Server Components break prerendering: use `'use cache'` + `cacheLife`, or move them to the client.
 - Design tokens live in `src/app/globals.css` (`bg-ink`, `bg-brand`, `bg-sage`, `font-display`, ...). Use tokens, not ad-hoc colors.
 - Base components in `src/components/ui` (shadcn style: `cva` + `cn`). Marketing routes in `src/app/(marketing)`.
+- Blog: post metadata in `src/lib/blog.ts`, body in `src/content/blog/<slug>.mdx` (`@next/mdx`, GFM, heading ids via rehype-slug). To add a post, add both; the list, sitemap, RSS (`/blog/rss.xml`), share image and JSON-LD pick it up. `/blog` lives outside `(marketing)` so its generated share image URLs stay unhashed.
 
 ## API (apps/api)
 
@@ -75,7 +76,7 @@ Key idea: the storefront is built on the real data model from day one. The examp
    - API: `stores`, `products`, `product_images`, `orders` tables; `GET /storefront/:handle`, `GET /storefront/:handle/products/:slug` (✅ done); seed with the 3 example stores (`pnpm db:seed`).
    - Web storefront (`/loja/[handle]`, later `<handle>.vendeu.store` via `proxy.ts`): header (logo, name, bio, WhatsApp/Instagram/location pills), product grid, product page, per-store accent color as a CSS variable (`bg-store`, `bg-store-soft`), "Feito com vendeu.store" badge (✅ pages and share images done, `/loja/[handle]/produto/[slug]`; subdomain pending). Storefront URLs are built only in `src/lib/storefront-links.ts`; data comes from `src/lib/storefront.ts` (`'use cache'`, tagged `store:<handle>`).
    - Cart (client, per store, localStorage) → checkout form (name, delivery/pickup, note) → `POST /storefront/:handle/orders`: the API recomputes totals, saves the order and returns the WhatsApp message/link (✅ done: `orders`/`order_items`, cart in `use-cart.ts`, bag at `/loja/[handle]/sacola`, server action → API).
-   - Landing: example stores link to the live storefronts, `/termos` + `/privacidade`, metadata/OG/sitemap/robots (✅ done; share images in `src/lib/og.tsx`, absolute URLs from `NEXT_PUBLIC_SITE_URL` via `src/lib/site.ts`, store/product list from `GET /sitemap/storefronts`), mobile polish, Vercel Analytics.
+   - Landing: example stores link to the live storefronts, `/termos` + `/privacidade`, metadata/OG/sitemap/robots (✅ done; share images in `src/lib/og.tsx`, absolute URLs from `NEXT_PUBLIC_SITE_URL` via `src/lib/site.ts`, store/product list from `GET /sitemap/storefronts`), mobile polish, Vercel Analytics. Blog with 6 posts (✅ done).
 2. **Merchant dashboard** → closed beta: auth (Google + e-mail), onboarding (handle → name → WhatsApp → logo/color), product CRUD with photos (R2), orders list (already recorded since phase 1), free-plan limits, PWA.
 3. **Public launch**: open sign-up, transactional e-mails, error monitoring, rate limiting, deploy hardening (Vercel + Neon + R2).
 4. **Payments**: Mercado Pago (Pix first, then card), order status, stock control.

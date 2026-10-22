@@ -9,6 +9,7 @@ async function CurrentYear() {
 }
 
 const links = [
+  { href: '/blog', label: 'Blog' },
   { href: '/termos', label: 'Termos de Uso' },
   { href: '/privacidade', label: 'Privacidade' },
 ];
