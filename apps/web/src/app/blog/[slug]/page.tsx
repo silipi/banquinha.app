@@ -15,7 +15,7 @@ import {
   postTimestamp,
 } from '@/lib/blog';
 import { absoluteUrl, openGraphDefaults, siteName } from '@/lib/site';
-import { PostCard } from '../_components/PostCard';
+import { PostCard } from '@/components/blog/PostCard';
 
 type Props = PageProps<'/blog/[slug]'>;
 

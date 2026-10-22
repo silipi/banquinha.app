@@ -6,6 +6,7 @@ import { Features } from './_components/Features';
 import { FinalCta } from './_components/FinalCta';
 import { Hero } from './_components/Hero';
 import { HowItWorks } from './_components/HowItWorks';
+import { LatestPosts } from './_components/LatestPosts';
 import { Pricing } from './_components/Pricing';
 
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export default function HomePage() {
       <ExampleStores />
       <Pricing />
       <Faq />
+      <LatestPosts />
       <FinalCta />
     </>
   );

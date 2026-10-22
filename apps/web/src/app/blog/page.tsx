@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { JsonLd } from '@/components/json-ld';
 import { blogPosts } from '@/lib/blog';
 import { absoluteUrl, openGraphDefaults, siteName } from '@/lib/site';
-import { PostCard } from './_components/PostCard';
+import { PostCard } from '@/components/blog/PostCard';
 
 const title = 'Blog: dicas para vender online';
 const description =
