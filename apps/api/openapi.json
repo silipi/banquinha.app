@@ -1,0 +1,420 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "healthCheck",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Health"]
+      }
+    },
+    "/stores/handle-availability": {
+      "get": {
+        "operationId": "storesCheckHandle",
+        "parameters": [
+          {
+            "name": "handle",
+            "required": true,
+            "in": "query",
+            "description": "Desired address as free text. The API normalizes it before validating.",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckHandleResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Checks whether an address (subdomain) can be used by a new store.",
+        "tags": ["Stores"]
+      }
+    },
+    "/storefront/{handle}": {
+      "get": {
+        "operationId": "storefrontGetStore",
+        "parameters": [
+          {
+            "name": "handle",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorefrontStoreDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Public store page: store info and its active products.",
+        "tags": ["Storefront"]
+      }
+    },
+    "/storefront/{handle}/products/{slug}": {
+      "get": {
+        "operationId": "storefrontGetProduct",
+        "parameters": [
+          {
+            "name": "handle",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorefrontProductDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Public product page.",
+        "tags": ["Storefront"]
+      }
+    },
+    "/storefront/{handle}/orders": {
+      "post": {
+        "operationId": "storefrontCreateOrder",
+        "parameters": [
+          {
+            "name": "handle",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateOrderResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Places an order from the cart. Prices come from the database, not the client.\nA 400 with `unavailableSlugs` means some products were removed or deactivated.",
+        "tags": ["Storefront"]
+      }
+    }
+  },
+  "info": {
+    "title": "vendeu.store API",
+    "description": "",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "HealthResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["ok", "degraded"]
+          },
+          "database": {
+            "type": "string",
+            "enum": ["up", "down"]
+          }
+        },
+        "required": ["status", "database"]
+      },
+      "CheckHandleResponseDto": {
+        "type": "object",
+        "properties": {
+          "handle": {
+            "type": "string",
+            "description": "Normalized handle, as it would appear in the subdomain."
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string",
+            "description": "User-facing reason (pt-BR) when the handle is not available."
+          }
+        },
+        "required": ["handle", "available"]
+      },
+      "StorefrontContactDto": {
+        "type": "object",
+        "properties": {
+          "whatsapp": {
+            "type": "string",
+            "description": "Digits only, with country code."
+          },
+          "instagram": {
+            "type": "string",
+            "nullable": true,
+            "description": "Username without the @."
+          },
+          "locationUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["whatsapp", "instagram", "locationUrl"]
+      },
+      "StorefrontProductSummaryDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "priceCents": {
+            "type": "number"
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Cover image. Absolute URL or a path served by the web app."
+          }
+        },
+        "required": ["slug", "name", "priceCents", "imageUrl"]
+      },
+      "StorefrontStoreDto": {
+        "type": "object",
+        "properties": {
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "contact": {
+            "$ref": "#/components/schemas/StorefrontContactDto"
+          },
+          "products": {
+            "description": "Active products, in display order.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StorefrontProductSummaryDto"
+            }
+          },
+          "handle": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "logoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "accentColor": {
+            "type": "string",
+            "description": "Hex color used to theme the storefront."
+          }
+        },
+        "required": [
+          "bio",
+          "city",
+          "contact",
+          "products",
+          "handle",
+          "name",
+          "logoUrl",
+          "accentColor"
+        ]
+      },
+      "StorefrontProductImageDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": ["url"]
+      },
+      "StorefrontStoreSummaryDto": {
+        "type": "object",
+        "properties": {
+          "handle": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "logoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "accentColor": {
+            "type": "string",
+            "description": "Hex color used to theme the storefront."
+          }
+        },
+        "required": ["handle", "name", "logoUrl", "accentColor"]
+      },
+      "StorefrontProductDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "priceCents": {
+            "type": "number"
+          },
+          "images": {
+            "description": "Cover first.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StorefrontProductImageDto"
+            }
+          },
+          "store": {
+            "$ref": "#/components/schemas/StorefrontStoreSummaryDto"
+          }
+        },
+        "required": [
+          "slug",
+          "name",
+          "description",
+          "priceCents",
+          "images",
+          "store"
+        ]
+      },
+      "CreateOrderItemDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "maxLength": 100,
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "quantity": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 99
+          }
+        },
+        "required": ["slug", "quantity"]
+      },
+      "CreateOrderDto": {
+        "type": "object",
+        "properties": {
+          "customerName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80
+          },
+          "fulfillment": {
+            "type": "string",
+            "enum": ["pickup", "delivery"]
+          },
+          "address": {
+            "type": "string",
+            "description": "Required for delivery.",
+            "minLength": 5,
+            "maxLength": 300
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "items": {
+            "minItems": 1,
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateOrderItemDto"
+            }
+          }
+        },
+        "required": ["customerName", "fulfillment", "items"]
+      },
+      "CreateOrderResponseDto": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "number",
+            "description": "Sequential within the store."
+          },
+          "totalCents": {
+            "type": "number"
+          },
+          "whatsappUrl": {
+            "type": "string",
+            "description": "wa.me link with the order message, ready to open."
+          }
+        },
+        "required": ["number", "totalCents", "whatsappUrl"]
+      }
+    }
+  }
+}

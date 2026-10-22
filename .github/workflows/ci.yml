@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: vendeu
+          POSTGRES_PASSWORD: vendeu
+          POSTGRES_DB: vendeu
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      # E2E tests create and seed a separate `vendeu_test` database on this server.
+      DATABASE_URL: postgres://vendeu:vendeu@localhost:5432/vendeu
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Generated API client is up to date
+        run: pnpm generate && git diff --exit-code -- apps/api/openapi.json packages/api-client/src/generated
+      - run: pnpm check

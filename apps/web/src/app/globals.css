@@ -1,0 +1,94 @@
+@import 'tailwindcss';
+
+/*
+ * vendeu.store design tokens.
+ * Warm paper background, near-black ink, an orange brand accent
+ * and pastel tones for cards and highlights.
+ */
+:root {
+  --background: #faf7f2;
+  --foreground: #1a1714;
+  --surface: #ffffff;
+  --muted: #f1ece4;
+  --muted-foreground: #6b645b;
+  --border: #e6dfd4;
+  --ink: #1a1714;
+  --ink-foreground: #faf7f2;
+  --brand: #ff5a1f;
+  --brand-foreground: #ffffff;
+  --brand-soft: #ffe4d6;
+  --sage: #dfe8d5;
+  --lilac: #e7e0f5;
+  --butter: #fbefc4;
+  --sky: #d9e9f5;
+  --whatsapp: #25d366;
+}
+
+/* Storefront theme. The store layout sets --store-accent from the store's accent color. */
+.storefront {
+  --store: var(--store-accent, var(--brand));
+  --store-soft: color-mix(in oklab, var(--store) 14%, var(--surface));
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-soft: var(--brand-soft);
+  --color-sage: var(--sage);
+  --color-lilac: var(--lilac);
+  --color-butter: var(--butter);
+  --color-sky: var(--sky);
+  --color-whatsapp: var(--whatsapp);
+  --color-store: var(--store);
+  --color-store-soft: var(--store-soft);
+
+  --font-sans: var(--font-geist);
+  --font-display: var(--font-bricolage);
+
+  --animate-marquee: marquee 40s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  ::selection {
+    @apply bg-brand-soft;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-marquee {
+    animation: none;
+  }
+}

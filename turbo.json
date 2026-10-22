@@ -1,0 +1,28 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "stream",
+  "globalEnv": ["NODE_ENV"],
+  "globalPassThroughEnv": ["DATABASE_URL", "API_PORT", "WEB_ORIGIN"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {},
+    "typecheck": {},
+    "test": {},
+    "@vendeu/api#openapi": {
+      "dependsOn": ["build"],
+      "outputs": ["openapi.json"]
+    },
+    "@vendeu/api-client#generate": {
+      "dependsOn": ["@vendeu/api#openapi"],
+      "outputs": ["src/generated/**"]
+    }
+  }
+}
