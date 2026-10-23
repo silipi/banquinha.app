@@ -25,12 +25,12 @@ const faq = [
   {
     question: 'Como meus clientes encontram minha loja?',
     answer:
-      'Toda loja tem um link próprio, como vendeu.store/sualoja. Coloque na bio do Instagram, no TikTok, no status do WhatsApp ou num QR code no balcão.',
+      'Toda loja tem um link próprio, como banquinha.app/sualoja. Coloque na bio do Instagram, no TikTok, no status do WhatsApp ou num QR code no balcão.',
   },
   {
     question: 'Posso usar meu próprio domínio?',
     answer:
-      'Vai ser possível no plano Pro. Até lá, sua loja usa o endereço vendeu.store/sualoja.',
+      'Vai ser possível no plano Pro. Até lá, sua loja usa o endereço banquinha.app/sualoja.',
   },
 ];
 

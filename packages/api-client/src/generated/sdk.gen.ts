@@ -21,7 +21,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 export const healthCheck = <ThrowOnError extends boolean = false>(options?: Options<HealthCheckData, ThrowOnError>): RequestResult<HealthCheckResponses, unknown, ThrowOnError> => (options?.client ?? client).get<HealthCheckResponses, unknown, ThrowOnError>({ url: '/health', ...options });
 
 /**
- * Checks whether an address (vendeu.store/<handle>) can be used by a new store.
+ * Checks whether an address (banquinha.app/<handle>) can be used by a new store.
  */
 export const storesCheckHandle = <ThrowOnError extends boolean = false>(options: Options<StoresCheckHandleData, ThrowOnError>): RequestResult<StoresCheckHandleResponses, unknown, ThrowOnError> => (options.client ?? client).get<StoresCheckHandleResponses, unknown, ThrowOnError>({ url: '/stores/handle-availability', ...options });
 

@@ -3,9 +3,9 @@ services:
     image: postgres:17
     restart: unless-stopped
     environment:
-      POSTGRES_USER: vendeu
-      POSTGRES_PASSWORD: vendeu
-      POSTGRES_DB: vendeu
+      POSTGRES_USER: banquinha
+      POSTGRES_PASSWORD: banquinha
+      POSTGRES_DB: banquinha
     ports:
       - '5432:5432'
     volumes:

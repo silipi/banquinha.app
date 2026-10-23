@@ -13,7 +13,7 @@ export default function NotFound() {
         O endereço pode estar errado, ou a loja não existe mais.
       </p>
       <Link href="/" className={buttonVariants({ className: 'mt-8' })}>
-        Ir para a vendeu.store
+        Ir para a banquinha.app
       </Link>
     </main>
   );

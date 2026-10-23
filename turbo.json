@@ -7,7 +7,8 @@
     "API_PORT",
     "WEB_ORIGIN",
     "ORDER_RATE_LIMIT",
-    "INTERNAL_API_KEY"
+    "INTERNAL_API_KEY",
+    "TRUST_PROXY_HOPS"
   ],
   "tasks": {
     "build": {
@@ -22,12 +23,12 @@
     "lint": {},
     "typecheck": {},
     "test": {},
-    "@vendeu/api#openapi": {
+    "@banquinha/api#openapi": {
       "dependsOn": ["build"],
       "outputs": ["openapi.json"]
     },
-    "@vendeu/api-client#generate": {
-      "dependsOn": ["@vendeu/api#openapi"],
+    "@banquinha/api-client#generate": {
+      "dependsOn": ["@banquinha/api#openapi"],
       "outputs": ["src/generated/**"]
     }
   }

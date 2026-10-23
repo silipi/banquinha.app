@@ -1,7 +1,7 @@
 // Fictional stores shown on the landing page. Images are served by the web app from /public/lojas.
 // Demo orders go to the owner's WhatsApp so they can be tried end to end.
 const DEMO_WHATSAPP = '5545999158412';
-const DEMO_INSTAGRAM = 'vendeustore';
+const DEMO_INSTAGRAM = 'banquinhaapp';
 
 export type ExampleProduct = {
   slug: string;

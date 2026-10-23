@@ -8,7 +8,7 @@ export function Logo({ className }: { className?: string }) {
         className,
       )}
     >
-      vendeu<span className="text-brand">.</span>store
+      banquinha<span className="text-brand">.</span>app
     </span>
   );
 }

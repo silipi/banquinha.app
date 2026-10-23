@@ -10,7 +10,7 @@ import {
 import { getProduct } from '@/lib/storefront';
 import { formatBRL } from '@/lib/utils';
 
-export const alt = 'Produto na vendeu.store';
+export const alt = 'Produto na banquinha.app';
 export const size = ogSize;
 export const contentType = 'image/png';
 

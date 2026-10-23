@@ -14,7 +14,7 @@ const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
 });
 
-const defaultTitle = 'vendeu.store — sua loja online, pronta em minutos';
+const defaultTitle = 'banquinha.app — sua loja online, pronta em minutos';
 const defaultDescription =
   'Crie sua loja online grátis, compartilhe um link na bio e receba pedidos direto no WhatsApp. Feito para quem vende pelo Instagram.';
 
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   metadataBase: siteUrl,
   title: {
     default: defaultTitle,
-    template: '%s · vendeu.store',
+    template: '%s · banquinha.app',
   },
   description: defaultDescription,
   applicationName: siteName,

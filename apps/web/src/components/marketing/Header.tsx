@@ -17,7 +17,7 @@ export function Header() {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 rounded-full border bg-surface/80 pr-1.5 pl-5 shadow-sm backdrop-blur">
         <Link
           href="/"
-          aria-label="vendeu.store, página inicial"
+          aria-label="banquinha.app, página inicial"
           className="flex h-11 items-center"
         >
           <Logo />

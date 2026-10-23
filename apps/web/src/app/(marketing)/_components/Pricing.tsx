@@ -14,7 +14,7 @@ const plans = [
     features: [
       'Até 10 produtos',
       'Até 3 fotos por produto',
-      'Link vendeu.store/sualoja',
+      'Link banquinha.app/sualoja',
       'Pedidos pelo WhatsApp',
       'Sem taxa por venda',
     ],

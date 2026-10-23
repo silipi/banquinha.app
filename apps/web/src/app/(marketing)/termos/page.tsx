@@ -4,7 +4,7 @@ import { LegalPage } from '../_components/LegalPage';
 
 export const metadata: Metadata = {
   title: 'Termos de Uso',
-  description: 'As regras para usar a vendeu.store, para lojistas e clientes.',
+  description: 'As regras para usar a banquinha.app, para lojistas e clientes.',
   alternates: { canonical: '/termos' },
 };
 
@@ -15,7 +15,7 @@ export default function TermsPage() {
       updatedAt="22 de outubro de 2026"
       intro={
         <p>
-          A vendeu.store é uma plataforma para criar uma loja online simples e
+          A banquinha.app é uma plataforma para criar uma loja online simples e
           receber pedidos pelo WhatsApp. Estes termos valem para quem cria uma
           loja (<strong>lojista</strong>) e para quem compra nelas (
           <strong>cliente</strong>). Ao usar a plataforma, você concorda com
@@ -24,12 +24,12 @@ export default function TermsPage() {
       }
       sections={[
         {
-          title: 'O que a vendeu.store faz',
+          title: 'O que a banquinha.app faz',
           body: (
             <p>
               Oferecemos a vitrine, a sacola e o envio do pedido para o WhatsApp
               do lojista. A venda é feita diretamente entre lojista e cliente: a
-              vendeu.store não é parte da compra, não recebe pagamentos em nome
+              banquinha.app não é parte da compra, não recebe pagamentos em nome
               do lojista e não faz a entrega dos produtos.
             </p>
           ),
@@ -48,7 +48,7 @@ export default function TermsPage() {
           title: 'Responsabilidades do lojista',
           body: (
             <>
-              <p>Ao vender pela vendeu.store, o lojista se compromete a:</p>
+              <p>Ao vender pela banquinha.app, o lojista se compromete a:</p>
               <ul>
                 <li>
                   publicar só produtos que pode vender legalmente, com fotos,
@@ -96,7 +96,7 @@ export default function TermsPage() {
           title: 'Planos e preços',
           body: (
             <p>
-              A vendeu.store tem um plano grátis com limites e poderá oferecer
+              A banquinha.app tem um plano grátis com limites e poderá oferecer
               planos pagos. Antes de qualquer cobrança, os valores e condições
               serão informados com clareza, e nada será cobrado sem a sua
               confirmação.
@@ -118,7 +118,7 @@ export default function TermsPage() {
             <p>
               Trabalhamos para manter a plataforma no ar e funcionando bem, mas
               ela pode ficar indisponível por manutenção ou falhas. A
-              vendeu.store não responde pelos produtos vendidos nem pelos
+              banquinha.app não responde pelos produtos vendidos nem pelos
               acordos entre lojista e cliente.
             </p>
           ),

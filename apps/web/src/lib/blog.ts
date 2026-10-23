@@ -22,7 +22,7 @@ export type BlogPost = {
   tone: BlogTone;
 };
 
-export const blogAuthor = 'Equipe vendeu.store';
+export const blogAuthor = 'Equipe banquinha.app';
 
 const posts: BlogPost[] = [
   {

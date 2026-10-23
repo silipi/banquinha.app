@@ -70,7 +70,7 @@ export async function ogImage(
 export function OgWordmark({ size = 36 }: { size?: number }) {
   return (
     <div style={{ display: 'flex', fontSize: size, fontWeight: 700 }}>
-      vendeu<span style={{ color: ogColors.brand }}>.</span>store
+      banquinha<span style={{ color: ogColors.brand }}>.</span>app
     </div>
   );
 }

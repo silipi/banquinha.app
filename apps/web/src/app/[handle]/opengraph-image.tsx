@@ -10,7 +10,7 @@ import {
 import { getStore } from '@/lib/storefront';
 import { storeDisplayUrl } from '@/lib/storefront-links';
 
-export const alt = 'Loja na vendeu.store';
+export const alt = 'Loja na banquinha.app';
 export const size = ogSize;
 export const contentType = 'image/png';
 

@@ -1,4 +1,4 @@
-// Writes apps/api/openapi.json, the source of the @vendeu/api-client types.
+// Writes apps/api/openapi.json, the source of the @banquinha/api-client types.
 import { writeFileSync } from 'node:fs';
 import { buildOpenApiDocument, createApp } from './app.js';
 

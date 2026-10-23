@@ -12,6 +12,11 @@ const envSchema = z.object({
    * may say which end-user IP they act for (see OrderThrottlerGuard).
    */
   INTERNAL_API_KEY: z.string().min(32).optional(),
+  /**
+   * Proxies in front of the API whose X-Forwarded-For entry is trusted when resolving the
+   * client IP. 0 locally; 1 on Cloud Run, whose front end appends the real client IP.
+   */
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
 });
 
 export type Env = z.infer<typeof envSchema>;

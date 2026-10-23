@@ -16,7 +16,7 @@ export type CartItem = {
 
 export const MAX_ITEM_QUANTITY = 99;
 
-const storageKey = (handle: string) => `vendeu:cart:${handle}`;
+const storageKey = (handle: string) => `banquinha:cart:${handle}`;
 const listeners = new Set<() => void>();
 const EMPTY: CartItem[] = [];
 

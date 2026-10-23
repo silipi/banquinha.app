@@ -12,16 +12,16 @@ jobs:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_USER: vendeu
-          POSTGRES_PASSWORD: vendeu
-          POSTGRES_DB: vendeu
+          POSTGRES_USER: banquinha
+          POSTGRES_PASSWORD: banquinha
+          POSTGRES_DB: banquinha
         ports:
           - 5432:5432
         options: >-
           --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      # E2E tests create and seed a separate `vendeu_test` database on this server.
-      DATABASE_URL: postgres://vendeu:vendeu@localhost:5432/vendeu
+      # E2E tests create and seed a separate `banquinha_test` database on this server.
+      DATABASE_URL: postgres://banquinha:banquinha@localhost:5432/banquinha
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

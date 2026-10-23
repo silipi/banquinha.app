@@ -49,7 +49,7 @@
             }
           }
         },
-        "summary": "Checks whether an address (vendeu.store/<handle>) can be used by a new store.",
+        "summary": "Checks whether an address (banquinha.app/<handle>) can be used by a new store.",
         "tags": [
           "Stores"
         ]
@@ -193,7 +193,7 @@
     }
   },
   "info": {
-    "title": "vendeu.store API",
+    "title": "banquinha.app API",
     "description": "",
     "version": "0.1.0",
     "contact": {}

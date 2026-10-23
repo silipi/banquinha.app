@@ -5,10 +5,10 @@ export const siteUrl = new URL(
   process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
 );
 
-export const siteName = 'vendeu.store';
+export const siteName = 'banquinha.app';
 
 /** Domain shown to people in copy and store links, regardless of the environment. */
-export const brandDomain = 'vendeu.store';
+export const brandDomain = 'banquinha.app';
 
 export function absoluteUrl(path: string) {
   return new URL(path, siteUrl).toString();

@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 import { getBlogPost, type BlogTone } from '@/lib/blog';
 import { ogColors, ogFonts, ogSize, OgWordmark } from '@/lib/og';
 
-export const alt = 'Artigo do blog da vendeu.store';
+export const alt = 'Artigo do blog da banquinha.app';
 export const size = ogSize;
 export const contentType = 'image/png';
 
@@ -67,10 +67,10 @@ export default async function Image({
           letterSpacing: -1.5,
         }}
       >
-        {post?.title ?? 'Blog da vendeu.store'}
+        {post?.title ?? 'Blog da banquinha.app'}
       </div>
       <div style={{ display: 'flex', fontSize: 28, color: ogColors.muted }}>
-        vendeu.store/blog
+        banquinha.app/blog
       </div>
     </div>,
     { ...size, fonts: ogFonts },

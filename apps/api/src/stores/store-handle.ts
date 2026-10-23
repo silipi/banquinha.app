@@ -1,4 +1,4 @@
-// The handle is the store's public path: vendeu.store/<handle>.
+// The handle is the store's public path: banquinha.app/<handle>.
 // Only lowercase letters, digits and single hyphens, so it never needs URL encoding
 // and can't collide with files (no dots) or Next.js internals (no underscores).
 export const STORE_HANDLE_MIN_LENGTH = 3;
@@ -86,7 +86,7 @@ const RESERVED_HANDLES = new Set<string>([
   'rss',
   'uploads',
   // Brand
-  'vendeu',
+  'banquinha',
 ]);
 
 /**

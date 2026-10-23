@@ -13,10 +13,15 @@ const upperFirst = (value: string) =>
   value.charAt(0).toUpperCase() + value.slice(1);
 
 /** Creates the app with global config. Shared by the server, tests and OpenAPI generation. */
-export async function createApp(): Promise<NestFastifyApplication> {
+export async function createApp(
+  options: { trustProxyHops?: number } = {},
+): Promise<NestFastifyApplication> {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter(),
+    // Trust the nearest N hops (what Fastify's numeric trustProxy does; the adapter types omit it).
+    new FastifyAdapter({
+      trustProxy: (_address, hop) => hop < (options.trustProxyHops ?? 0),
+    }),
     { logger: ['error', 'warn', 'log'] },
   );
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
@@ -25,7 +30,7 @@ export async function createApp(): Promise<NestFastifyApplication> {
 
 export function buildOpenApiDocument(app: NestFastifyApplication) {
   const config = new DocumentBuilder()
-    .setTitle('vendeu.store API')
+    .setTitle('banquinha.app API')
     .setVersion('0.1.0')
     .build();
 

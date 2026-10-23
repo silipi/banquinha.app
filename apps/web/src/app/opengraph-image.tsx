@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { ogColors, ogFonts, ogSize, OgWordmark } from '@/lib/og';
 
-export const alt = 'vendeu.store — sua loja online, pronta em minutos';
+export const alt = 'banquinha.app — sua loja online, pronta em minutos';
 export const size = ogSize;
 export const contentType = 'image/png';
 

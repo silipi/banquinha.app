@@ -6,12 +6,12 @@ Backlog do produto organizado em tickets. Cada ticket tem um ID (`P<fase>-<sequ�
 
 **Endereços da plataforma:**
 
-| Endereço                      | O que é                                                                                         |
-| ----------------------------- | ----------------------------------------------------------------------------------------------- |
-| `vendeu.store`                | Site: landing, blog, páginas legais                                                             |
-| `vendeu.store/<nome-da-loja>` | Vitrine de cada loja, igual no plano grátis e no pago                                           |
-| `app.vendeu.store`            | Área logada do lojista (SPA): `/login`, `/cadastro`, `/configuracoes`, `/produtos`, `/pedidos`… |
-| `api.vendeu.store`            | API                                                                                             |
+| Endereço                       | O que é                                                                                         |
+| ------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `banquinha.app`                | Site: landing, blog, páginas legais                                                             |
+| `banquinha.app/<nome-da-loja>` | Vitrine de cada loja, igual no plano grátis e no pago                                           |
+| `app.banquinha.app`            | Área logada do lojista (SPA): `/login`, `/cadastro`, `/configuracoes`, `/produtos`, `/pedidos`… |
+| `api.banquinha.app`            | API                                                                                             |
 
 O nome da loja só aceita letras minúsculas, números e hífens, e não pode ser um caminho da plataforma (`blog`, `termos`, `cadastro`…). A lista fica em `apps/api/src/stores/store-handle.ts` e precisa ser atualizada sempre que o site ganhar uma rota nova na raiz.
 
@@ -24,7 +24,7 @@ O nome da loja só aceita letras minúsculas, números e hífens, e não pode se
 | [P0](#p0--base)                           | Base: monorepo, design system, client tipado da API | ✅     |
 | [P1](#p1--vitrine-e-landing)              | Vitrine, pedido pelo WhatsApp e landing pronta      | ✅     |
 | [P2](#p2--painel-do-lojista-beta-fechado) | Painel do lojista, beta fechado                     | ⬜     |
-| [P3](#p3--lançamento-público)             | Deploy de produção e lançamento público             | ⬜     |
+| [P3](#p3--lançamento-público)             | Deploy de produção e lançamento público             | 🚧     |
 | [P4](#p4--pagamentos)                     | Pagamentos com Mercado Pago                         | ⬜     |
 | [P5](#p5--crescimento)                    | Plano pago e recursos de crescimento                | ⬜     |
 
@@ -120,14 +120,14 @@ Posts em MDX com metadados em `src/lib/blog.ts`, páginas de listagem e de artig
 - [x] Posts entram no sitemap e no RSS
 - [x] A landing mostra os três posts mais recentes
 
-### P1-09 · Endereço curto `vendeu.store/<nome-da-loja>` ✅
+### P1-09 · Endereço curto `banquinha.app/<nome-da-loja>` ✅
 
-As lojas ficam na raiz do site (`vendeu.store/luluca`), no mesmo formato no plano grátis e no pago. Decidimos não usar subdomínio por loja: o formato com barra é o que o público já conhece (Instagram, Linktree), não muda quando a lojista assina ou cancela e soma autoridade ao domínio principal no Google.
+As lojas ficam na raiz do site (`banquinha.app/luluca`), no mesmo formato no plano grátis e no pago. Decidimos não usar subdomínio por loja: o formato com barra é o que o público já conhece (Instagram, Linktree), não muda quando a lojista assina ou cancela e soma autoridade ao domínio principal no Google.
 
 - [x] `/luluca`, `/luluca/produto/<slug>` e `/luluca/sacola` funcionam
 - [x] O nome da loja só aceita `a-z`, `0-9` e hífens simples (nada que quebre a URL)
 - [x] Caminhos da plataforma (`blog`, `termos`, `privacidade`, `cadastro`, `login`, `app`, `api`…) são reservados na API, com teste para cada rota da raiz do site
-- [x] Landing, blog, FAQ, preços e imagens de compartilhamento mostram `vendeu.store/sualoja`
+- [x] Landing, blog, FAQ, preços e imagens de compartilhamento mostram `banquinha.app/sualoja`
 - [x] Links de loja montados só em `src/lib/storefront-links.ts`
 
 ### P1-10 · Proteção contra pedidos abusivos ✅
@@ -146,7 +146,7 @@ Revisão de todas as seções entre 360 e 414px de largura.
 - [x] Sem rolagem horizontal
 - [x] Áreas de toque com pelo menos 44px (logo, botão do topo, campo do endereço, links do rodapé)
 - [x] Menu no celular com as seções e o blog
-- [x] Tocar em `vendeu.store/` no campo do hero foca o campo
+- [x] Tocar em `banquinha.app/` no campo do hero foca o campo
 
 ### P1-12 · Analytics ✅
 
@@ -169,10 +169,10 @@ Definir a marca final antes de lojistas reais começarem a divulgar links.
 
 ### P2-02 · Contas de lojista e login ⬜
 
-Área logada do lojista em `app.vendeu.store`, como um SPA com as rotas `/login`, `/cadastro`, `/configuracoes`, `/produtos`, `/pedidos` etc. Cadastro e login com Google e e-mail (link mágico ou senha). Sessões controladas pela API.
+Área logada do lojista em `app.banquinha.app`, como um SPA com as rotas `/login`, `/cadastro`, `/configuracoes`, `/produtos`, `/pedidos` etc. Cadastro e login com Google e e-mail (link mágico ou senha). Sessões controladas pela API.
 
-- [ ] A área do lojista roda em `app.vendeu.store` (em dev, `app.localhost:3000` ou uma porta própria)
-- [ ] `vendeu.store/cadastro` passa a redirecionar para `app.vendeu.store/cadastro`, levando o nome escolhido na landing
+- [ ] A área do lojista roda em `app.banquinha.app` (em dev, `app.localhost:3000` ou uma porta própria)
+- [ ] `banquinha.app/cadastro` passa a redirecionar para `app.banquinha.app/cadastro`, levando o nome escolhido na landing
 
 - [ ] O lojista consegue se cadastrar, entrar e sair
 - [ ] As rotas da API são protegidas por padrão; rotas públicas são marcadas explicitamente
@@ -180,7 +180,7 @@ Definir a marca final antes de lojistas reais começarem a divulgar links.
 
 ### P2-03 · Criação da loja ⬜
 
-Passo a passo: endereço → nome → WhatsApp → logo e cor. Fica em `app.vendeu.store/cadastro` e aproveita o endereço escolhido na landing.
+Passo a passo: endereço → nome → WhatsApp → logo e cor. Fica em `app.banquinha.app/cadastro` e aproveita o endereço escolhido na landing.
 
 - [ ] A disponibilidade do endereço consulta o banco
 - [ ] A loja fica no ar ao fim do passo a passo
@@ -233,9 +233,9 @@ Manifest, ícones e um shell que funciona offline para o lojista instalar o pain
 
 ## P3 · Lançamento público
 
-### P3-01 · Infraestrutura de produção ⬜
+### P3-01 · Infraestrutura de produção 🚧
 
-Vercel (web), hospedagem da API, Neon (Postgres) e R2, com os domínios `vendeu.store`, `app.vendeu.store` e `api.vendeu.store`.
+Vercel (web), Google Cloud Run em `southamerica-east1` (API), Neon em `aws-sa-east-1` (Postgres) e R2, com os domínios `banquinha.app`, `app.banquinha.app` e `api.banquinha.app`.
 
 - [ ] Ambientes de produção e de preview com bancos separados
 - [ ] Migrations rodam no deploy
@@ -338,6 +338,6 @@ O cliente paga com Pix no checkout; o dinheiro cai na conta Mercado Pago do loji
 
 ### P5-08 · Subdomínio da loja 💤
 
-Possível extra do plano pago (`luluca.vendeu.store`), só se lojistas pedirem. Hoje o diferencial pago é o domínio próprio (P5-05).
+Possível extra do plano pago (`luluca.banquinha.app`), só se lojistas pedirem. Hoje o diferencial pago é o domínio próprio (P5-05).
 
 - [ ] Avaliar demanda antes de construir

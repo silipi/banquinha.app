@@ -4,7 +4,7 @@ import { LegalPage } from '../_components/LegalPage';
 export const metadata: Metadata = {
   title: 'Política de Privacidade',
   description:
-    'Como a vendeu.store coleta, usa e protege dados pessoais, de acordo com a LGPD.',
+    'Como a banquinha.app coleta, usa e protege dados pessoais, de acordo com a LGPD.',
   alternates: { canonical: '/privacidade' },
 };
 
@@ -15,7 +15,7 @@ export default function PrivacyPage() {
       updatedAt="22 de outubro de 2026"
       intro={
         <p>
-          Esta política explica quais dados pessoais a vendeu.store trata, para
+          Esta política explica quais dados pessoais a banquinha.app trata, para
           quê e quais são os seus direitos, de acordo com a Lei Geral de
           Proteção de Dados (LGPD, Lei nº 13.709/2018).
         </p>
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
               </ul>
               <p>
                 Para esses dados, o lojista decide como atender o pedido e
-                responde pelo uso que faz deles. A vendeu.store os guarda e
+                responde pelo uso que faz deles. A banquinha.app os guarda e
                 processa em nome do lojista.
               </p>
             </>
@@ -140,7 +140,7 @@ export default function PrivacyPage() {
           body: (
             <p>
               Para dúvidas ou para exercer seus direitos, fale com a
-              vendeu.store pelos nossos canais oficiais.
+              banquinha.app pelos nossos canais oficiais.
             </p>
           ),
         },

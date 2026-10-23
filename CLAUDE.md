@@ -1,4 +1,4 @@
-# vendeu.store (monorepo)
+# banquinha.app (monorepo)
 
 Product context and decision history (pt-BR): `../CLAUDE.md`. This file covers **how the code is organized and how to work in it**.
 
@@ -6,7 +6,7 @@ Product context and decision history (pt-BR): `../CLAUDE.md`. This file covers *
 
 ```
 apps/web             Next.js 16 (App Router, Tailwind v4): landing, SEO, storefronts, merchant UI
-apps/api             NestJS 12 + Fastify + Drizzle/Postgres: the backend (api.vendeu.store)
+apps/api             NestJS 12 + Fastify + Drizzle/Postgres: the backend (api.banquinha.app)
 packages/api-client  Typed API client generated from the API's OpenAPI document
 ```
 
@@ -14,13 +14,13 @@ Tooling: **pnpm** workspaces + **Turborepo**. Everything is ESM (`"type": "modul
 
 ## URLs
 
-- `vendeu.store/<handle>`: storefronts, served by the root dynamic route `apps/web/src/app/[handle]`. Static routes win over it, and the API reserves every root path in `PLATFORM_ROOT_PATHS` (`apps/api/src/stores/store-handle.ts`). **When adding a route at the root of the web app, add it there too** (a unit test covers the list).
-- `app.vendeu.store`: merchant area (phase 2). `api.vendeu.store`: the API.
+- `banquinha.app/<handle>`: storefronts, served by the root dynamic route `apps/web/src/app/[handle]`. Static routes win over it, and the API reserves every root path in `PLATFORM_ROOT_PATHS` (`apps/api/src/stores/store-handle.ts`). **When adding a route at the root of the web app, add it there too** (a unit test covers the list).
+- `app.banquinha.app`: merchant area (phase 2). `api.banquinha.app`: the API.
 
 ## Architecture rules
 
 - **All business logic lives in `apps/api`.** Validation, calculations and decisions belong to Nest services. `apps/web` is frontend only: rendering, SEO, forms, UI state.
-- The web never touches the database. It talks to the API through `@vendeu/api-client` (import from `@/lib/api`, which sets the base URL).
+- The web never touches the database. It talks to the API through `@banquinha/api-client` (import from `@/lib/api`, which sets the base URL).
 - The web may format input for UX (e.g. `formatStoreHandleInput`), but the API is the source of truth and returns the final value or a user-facing error message.
 
 ## Type sharing (API → web)

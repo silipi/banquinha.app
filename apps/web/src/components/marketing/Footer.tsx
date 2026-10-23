@@ -37,7 +37,7 @@ export function Footer() {
             ))}
           </nav>
           <p>
-            © <CurrentYear /> vendeu.store · Feito no Brasil
+            © <CurrentYear /> banquinha.app · Feito no Brasil
           </p>
         </div>
       </div>

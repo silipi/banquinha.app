@@ -1,6 +1,6 @@
 import { defineConfig } from '@hey-api/openapi-ts';
 
-// The contract comes from the API (apps/api/openapi.json, written by `pnpm --filter @vendeu/api openapi`).
+// The contract comes from the API (apps/api/openapi.json, written by `pnpm --filter @banquinha/api openapi`).
 export default defineConfig({
   input: '../../apps/api/openapi.json',
   // Extensionless imports: the package is consumed as TS source by Next (bundler resolution).

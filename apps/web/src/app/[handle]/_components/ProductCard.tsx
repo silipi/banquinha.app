@@ -1,4 +1,4 @@
-import type { StorefrontProductSummaryDto } from '@vendeu/api-client';
+import type { StorefrontProductSummaryDto } from '@banquinha/api-client';
 import Image from 'next/image';
 import Link from 'next/link';
 import { productPath } from '@/lib/storefront-links';
