@@ -99,3 +99,14 @@ seconds and rerun that command.
 
 The web app needs the same `INTERNAL_API_KEY`:
 `gcloud secrets versions access latest --secret=internal-api-key`.
+
+## Vercel environment variables
+
+| Name                   | Value                                                                              | Environments        |
+| ---------------------- | ---------------------------------------------------------------------------------- | ------------------- |
+| `NEXT_PUBLIC_API_URL`  | `https://banquinha-api-877698749664.southamerica-east1.run.app`                    | Production, Preview |
+| `NEXT_PUBLIC_SITE_URL` | Public site URL, no trailing slash                                                 | Production, Preview |
+| `INTERNAL_API_KEY`     | `gcloud secrets versions access latest --secret=internal-api-key` (mark Sensitive) | Production, Preview |
+
+`NEXT_PUBLIC_*` values are inlined at build time: redeploy after changing them.
+Function region: `gru1` (Settings → Functions).

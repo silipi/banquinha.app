@@ -23,7 +23,7 @@ O nome da loja só aceita letras minúsculas, números e hífens, e não pode se
 | ----------------------------------------- | --------------------------------------------------- | ------ |
 | [P0](#p0--base)                           | Base: monorepo, design system, client tipado da API | ✅     |
 | [P1](#p1--vitrine-e-landing)              | Vitrine, pedido pelo WhatsApp e landing pronta      | ✅     |
-| [P2](#p2--painel-do-lojista-beta-fechado) | Painel do lojista, beta fechado                     | ⬜     |
+| [P2](#p2--painel-do-lojista-beta-fechado) | Painel do lojista, beta fechado                     | 🚧     |
 | [P3](#p3--lançamento-público)             | Deploy de produção e lançamento público             | 🚧     |
 | [P4](#p4--pagamentos)                     | Pagamentos com Mercado Pago                         | ⬜     |
 | [P5](#p5--crescimento)                    | Plano pago e recursos de crescimento                | ⬜     |
@@ -159,32 +159,76 @@ Vercel Web Analytics em todas as páginas: sem cookies e sem identificar pessoas
 
 ## P2 · Painel do lojista (beta fechado)
 
-### P2-01 · Escolher o nome novo ⬜
+### P2-01 · Escolher o nome novo 🚧
 
-Definir a marca final antes de lojistas reais começarem a divulgar links.
+Definir a marca final antes de lojistas reais começarem a divulgar links. Escolhido: **banquinha.app**.
 
-- [ ] Nome escolhido e pesquisado no INPI (classes 35, 42 e 9)
-- [ ] Domínios e @ das redes registrados
-- [ ] Marca trocada no código, nos textos e no blog
+- [x] Nome escolhido
+- [x] Marca trocada no código, nos textos e no blog
+- [ ] Pesquisa no INPI (classes 35, 42 e 9)
+- [ ] Domínio `banquinha.app` e @ das redes registrados
 
 ### P2-02 · Contas de lojista e login ⬜
 
-Área logada do lojista em `app.banquinha.app`, como um SPA com as rotas `/login`, `/cadastro`, `/configuracoes`, `/produtos`, `/pedidos` etc. Cadastro e login com Google e e-mail (link mágico ou senha). Sessões controladas pela API.
+Área logada do lojista em `app.banquinha.app`, com as rotas `/login`, `/cadastro`, `/configuracoes`, `/produtos`, `/pedidos` etc. Sessões controladas pela API.
+
+**Sem senha.** Entrar com **Google** ou com **código de 6 dígitos por e-mail**. Quem chega por anúncio está no navegador interno do Instagram/TikTok, e isso muda o desenho:
+
+- O Google **bloqueia login em navegador interno de app** (erro `disallowed_useragent`). Nesses navegadores, o botão do Google não aparece e o código por e-mail vira a opção principal.
+- **Link mágico não serve:** ele abre no navegador padrão do celular, e a sessão fica longe da aba onde a pessoa estava. Já o código é digitado na mesma tela.
+- O campo do código usa `autocomplete="one-time-code"` e `inputmode="numeric"`, aceita colar e envia sozinho ao completar 6 dígitos.
+
+Cookie de sessão `httpOnly` no domínio `.banquinha.app`. Depende do domínio próprio (P3-01): com o site em `vercel.app` e a API em `run.app`, o Safari bloqueia o cookie entre sites.
 
 - [ ] A área do lojista roda em `app.banquinha.app` (em dev, `app.localhost:3000` ou uma porta própria)
 - [ ] `banquinha.app/cadastro` passa a redirecionar para `app.banquinha.app/cadastro`, levando o nome escolhido na landing
-
-- [ ] O lojista consegue se cadastrar, entrar e sair
+- [ ] O lojista consegue se cadastrar, entrar e sair com Google ou código por e-mail
+- [ ] No navegador interno do Instagram, TikTok e Facebook, o fluxo funciona só com o código por e-mail
+- [ ] Código expira em 10 minutos, tem limite de tentativas e de reenvio
 - [ ] As rotas da API são protegidas por padrão; rotas públicas são marcadas explicitamente
 - [ ] `stores` ganha um dono (migration)
 
-### P2-03 · Criação da loja ⬜
+### P2-03 · Criação da loja (onboarding) ⬜
 
-Passo a passo: endereço → nome → WhatsApp → logo e cor. Fica em `app.banquinha.app/cadastro` e aproveita o endereço escolhido na landing.
+Quem chega aqui veio de um anúncio, no meio da rolagem do feed, com pouca paciência. **Meta: loja no ar em menos de 2 minutos, com só 3 coisas digitadas: nome, WhatsApp e e-mail.** Todo o resto vira um checklist depois que a loja já existe.
+
+**Fluxo (uma pergunta por tela, no celular):**
+
+1. **Endereço:** já vem preenchido da landing. Quem chega sem ele digita o nome da loja e o endereço é sugerido a partir dele, editável.
+2. **Nome da loja:** já vem sugerido a partir do endereço (`luluca` → "Luluca"), só confirmar ou ajustar.
+3. **WhatsApp:** "Onde você quer receber os pedidos?". Teclado numérico, aceita qualquer formato, DDD validado, +55 implícito.
+4. **Primeiro produto (opcional):** foto pela câmera, nome e preço. Botão "Adicionar depois" bem visível. Depende do P2-04.
+5. **Salvar e publicar:** Google ou código por e-mail (P2-02). A conta só é pedida aqui, depois de a pessoa já ter montado a loja.
+6. **Comemoração:** "Sua loja está no ar!", com o link, botão de copiar, compartilhar no WhatsApp, QR code e uma dica de colocar na bio do Instagram.
+
+**Princípios de UX aplicados:**
+
+- **Progresso dado (endowed progress, Nunes & Drèze 2006):** o endereço escolhido na landing conta como etapa 1 já feita. A barra começa andada. Num cartão de lava-rápido, quem ganhou 2 selos de presente completou bem mais que quem começou do zero.
+- **Cadastro preguiçoso (gradual engagement, Luke Wroblewski):** primeiro a pessoa vê valor, depois cria conta. Pedir conta logo de cara é um dos principais motivos de abandono em fluxos de compra nos estudos da Baymard.
+- **Efeito IKEA (Norton, Mochon & Ariely 2012):** prévia ao vivo da vitrine embaixo de cada pergunta, mudando conforme a pessoa digita. Gente valoriza mais o que ajudou a montar, e desistir depois de montar dói mais.
+- **Pé na porta (Freedman & Fraser 1966):** o primeiro pedido é pequeno (só o endereço, na landing); cada passo seguinte é só um pouco maior.
+- **Padrões inteligentes (Johnson & Goldstein 2003):** cor sorteada da paleta, "retirada" já marcada como forma de entrega, nome sugerido. Ninguém precisa decidir nada para seguir.
+- **Menos escolhas (lei de Hick):** nada de seletor de cor livre nem listas no onboarding.
+- **Validação na hora certa (Wroblewski 2009):** validar ao sair do campo, não a cada tecla. Mensagem curta, em pt-BR, explicando o que fazer.
+- **Fim marcante (regra do pico-fim, Kahneman):** a tela final é uma comemoração com algo útil para fazer em seguida (compartilhar), não um painel vazio.
+
+**Detalhes de interação:**
+
+- Botão principal grande e fixo na parte de baixo, ao alcance do polegar, acima do teclado.
+- Enter avança; foco automático no campo de cada tela; voltar não perde nada.
+- Rascunho salvo no aparelho a cada passo: se a pessoa sair e voltar, continua de onde parou.
+- O endereço é verificado de novo ao publicar; se alguém pegou antes, sugerir alternativas parecidas em vez de só dar erro.
+- "Ao continuar, você concorda com os Termos" no lugar de checkbox.
+- Funciona no navegador interno do Instagram e do TikTok (testar nos dois).
+
+**Critérios de aceite:**
 
 - [ ] A disponibilidade do endereço consulta o banco
-- [ ] A loja fica no ar ao fim do passo a passo
-- [ ] Dá para concluir pelo celular em menos de 5 minutos
+- [ ] Só nome, WhatsApp e e-mail (ou Google) são obrigatórios
+- [ ] A loja fica no ar ao fim do fluxo, com prévia ao vivo durante ele
+- [ ] Dá para concluir pelo celular em menos de 2 minutos sem adicionar produto
+- [ ] Sair no meio e voltar retoma do mesmo passo
+- [ ] Funil medido por passo (quantos chegam e quantos concluem cada tela)
 
 ### P2-04 · Upload de imagens ⬜
 
@@ -229,6 +273,18 @@ Manifest, ícones e um shell que funciona offline para o lojista instalar o pain
 - [ ] Instalável no Android e no iOS
 - [ ] Abre direto no painel
 
+### P2-10 · Ativação depois do cadastro ⬜
+
+Fazer a loja recém-criada virar uma loja que vende. A pessoa já saiu do onboarding com a loja no ar; agora o painel puxa ela para os próximos passos.
+
+- **Checklist "Deixe sua loja completa"** no topo do painel: logo, cor, bio, primeiro (ou mais) produtos, Instagram e formas de entrega. A barra já começa andada pelo que foi feito no onboarding (progresso dado). Tarefas incompletas ficam na cabeça (efeito Zeigarnik): o checklist só some quando acabar ou quando a pessoa fechar.
+- **Momentos de comemoração:** primeira visita na loja, primeiro pedido. Mensagem curta no painel, com algo para fazer em seguida.
+- **E-mails de retorno** (depende do P3-03): "falta só o primeiro produto" para quem publicou a loja vazia, e um resumo da primeira semana (visitas e pedidos).
+
+- [ ] Checklist com progresso no painel, que reflete o que já foi feito
+- [ ] Comemoração do primeiro pedido
+- [ ] E-mail de lembrete para quem publicou a loja sem produtos (o e-mail só existe depois de publicar, então não dá para lembrar quem parou antes)
+
 ---
 
 ## P3 · Lançamento público
@@ -238,11 +294,11 @@ Manifest, ícones e um shell que funciona offline para o lojista instalar o pain
 Vercel (web), Google Cloud Run em `southamerica-east1` (API), Neon em `aws-sa-east-1` (Postgres) e R2, com os domínios `banquinha.app`, `app.banquinha.app` e `api.banquinha.app`.
 
 - [ ] Ambientes de produção e de preview com bancos separados
-- [ ] Migrations rodam no deploy
+- [x] Migrations rodam no deploy
 - [ ] DNS e TLS para o site, `app.` e `api.`
 - [ ] `INTERNAL_API_KEY` configurada no site e na API
 - [ ] Limite de pedidos com armazenamento compartilhado (Redis ou similar) se a API rodar em mais de uma instância; hoje o contador fica na memória
-- [ ] API configurada para ler o IP real atrás do proxy do provedor (`trustProxy`)
+- [x] API configurada para ler o IP real atrás do proxy do provedor (`trustProxy`)
 
 ### P3-02 · Cadastro aberto ⬜
 
