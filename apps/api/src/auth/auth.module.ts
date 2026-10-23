@@ -1,22 +1,26 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { loadEnv } from '../env.js';
+import { StoresModule } from '../stores/stores.module.js';
 import { AuthController, MeController } from './auth.controller.js';
 import { AuthGuard } from './auth.guard.js';
 import { AuthService } from './auth.service.js';
-import { LoginAttempts } from './login-attempts.js';
 import {
   EmailSender,
   LogEmailSender,
   ResendEmailSender,
 } from './email-sender.js';
+import { LoginAttempts } from './login-attempts.js';
+import { MeService } from './me.service.js';
 import { SessionsService } from './sessions.service.js';
 
 @Module({
+  imports: [StoresModule],
   controllers: [AuthController, MeController],
   providers: [
     AuthService,
     LoginAttempts,
+    MeService,
     SessionsService,
     { provide: APP_GUARD, useClass: AuthGuard },
     {

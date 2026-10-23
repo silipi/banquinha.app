@@ -26,6 +26,22 @@ export type SignupDto = {
     email: string;
 };
 
+export type PlanDto = {
+    id: 'free';
+    name: string;
+    maxStores: number;
+    /**
+     * Products per store.
+     */
+    maxProducts: number;
+};
+
+export type StoreSummaryDto = {
+    id: string;
+    handle: string;
+    name: string;
+};
+
 export type MeDto = {
     id: string;
     email: string;
@@ -34,6 +50,15 @@ export type MeDto = {
      * Null when the account came from Google and has not given it yet.
      */
     whatsapp: string | null;
+    plan: PlanDto;
+    /**
+     * False until the first store is created; the panel shows the onboarding until then.
+     */
+    onboardingCompleted: boolean;
+    /**
+     * Stores this account owns (one on the free plan).
+     */
+    stores: Array<StoreSummaryDto>;
 };
 
 export type LoginDto = {
@@ -71,6 +96,109 @@ export type CheckHandleResponseDto = {
      * User-facing reason (pt-BR) when the handle is not available.
      */
     message?: string;
+    /**
+     * Free alternatives when the handle is taken by another store.
+     */
+    suggestions?: Array<string>;
+};
+
+export type CreateStoreProductDto = {
+    name: string;
+    /**
+     * Price in cents (R$ 25,90 = 2590).
+     */
+    priceCents: number;
+    description?: string | null;
+};
+
+export type CreateStoreDto = {
+    /**
+     * Desired address as free text; normalized like GET /stores/handle-availability.
+     */
+    handle: string;
+    name: string;
+    /**
+     * Where orders go. Any common format; stored as digits with the country code.
+     */
+    whatsapp: string;
+    /**
+     * A theme from GET /themes. The first platform theme when omitted.
+     */
+    themeId?: string;
+    /**
+     * At least one; at most what the plan allows.
+     */
+    products: Array<CreateStoreProductDto>;
+};
+
+export type ThemeColorsDto = {
+    background: string;
+    surface: string;
+    foreground: string;
+    muted: string;
+    mutedForeground: string;
+    border: string;
+    accent: string;
+    accentForeground: string;
+};
+
+export type ThemeTokensDto = {
+    version: 1;
+    colors: ThemeColorsDto;
+    radius: 'none' | 'small' | 'medium' | 'large';
+};
+
+export type StoreSetupStepDto = {
+    /**
+     * Something the merchant can still customize after the onboarding.
+     */
+    id: 'description' | 'logo' | 'banner';
+    done: boolean;
+};
+
+export type StoreDashboardDto = {
+    id: string;
+    handle: string;
+    name: string;
+    bio: string | null;
+    logoUrl: string | null;
+    bannerUrl: string | null;
+    themeId: string;
+    /**
+     * The theme's tokens with the store's overrides applied.
+     */
+    theme: ThemeTokensDto;
+    productCount: number;
+    /**
+     * Product limit of the owner's plan.
+     */
+    maxProducts: number;
+    /**
+     * Optional customizations, in the order to suggest them.
+     */
+    setup: Array<StoreSetupStepDto>;
+};
+
+export type UpdateStoreDto = {
+    /**
+     * Short description shown under the store name. Empty removes it.
+     */
+    bio?: string | null;
+};
+
+export type ThemeDto = {
+    id: string;
+    /**
+     * Set for platform themes.
+     */
+    slug: string | null;
+    name: string;
+    description: string | null;
+    /**
+     * Lowest plan that can use it.
+     */
+    requiredPlan: 'free';
+    tokens: ThemeTokensDto;
 };
 
 export type StorefrontContactDto = {
@@ -106,10 +234,11 @@ export type StorefrontStoreDto = {
     handle: string;
     name: string;
     logoUrl: string | null;
+    bannerUrl: string | null;
     /**
-     * Hex color used to theme the storefront.
+     * Design tokens to render with: the store's theme plus its own overrides.
      */
-    accentColor: string;
+    theme: ThemeTokensDto;
 };
 
 export type StorefrontProductImageDto = {
@@ -120,10 +249,11 @@ export type StorefrontStoreSummaryDto = {
     handle: string;
     name: string;
     logoUrl: string | null;
+    bannerUrl: string | null;
     /**
-     * Hex color used to theme the storefront.
+     * Design tokens to render with: the store's theme plus its own overrides.
      */
-    accentColor: string;
+    theme: ThemeTokensDto;
 };
 
 export type StorefrontProductDto = {
@@ -314,6 +444,62 @@ export type StoresCheckHandleResponses = {
 };
 
 export type StoresCheckHandleResponse = StoresCheckHandleResponses[keyof StoresCheckHandleResponses];
+
+export type StoresCreateData = {
+    body: CreateStoreDto;
+    path?: never;
+    query?: never;
+    url: '/stores';
+};
+
+export type StoresCreateResponses = {
+    201: StoreSummaryDto;
+};
+
+export type StoresCreateResponse = StoresCreateResponses[keyof StoresCreateResponses];
+
+export type StoresGetData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/stores/{id}';
+};
+
+export type StoresGetResponses = {
+    200: StoreDashboardDto;
+};
+
+export type StoresGetResponse = StoresGetResponses[keyof StoresGetResponses];
+
+export type StoresUpdateData = {
+    body: UpdateStoreDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/stores/{id}';
+};
+
+export type StoresUpdateResponses = {
+    200: StoreDashboardDto;
+};
+
+export type StoresUpdateResponse = StoresUpdateResponses[keyof StoresUpdateResponses];
+
+export type ThemesListData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/themes';
+};
+
+export type ThemesListResponses = {
+    200: Array<ThemeDto>;
+};
+
+export type ThemesListResponse = ThemesListResponses[keyof ThemesListResponses];
 
 export type StorefrontGetStoreData = {
     body?: never;

@@ -25,10 +25,18 @@
   --whatsapp: #25d366;
 }
 
-/* Storefront theme. The store layout sets --store-accent from the store's accent color. */
+/*
+ * Storefront theme. Themes are data (design tokens from the API); themeStyle() in
+ * src/lib/store-theme.ts turns them into the CSS variables below plus the neutral
+ * tokens (--background, --surface, ...) on whatever element wraps a storefront or a
+ * preview. No theme lives in this file; these are only the fallbacks.
+ */
 .storefront {
   --store: var(--store-accent, var(--brand));
+  --store-foreground: var(--store-accent-foreground, var(--brand-foreground));
   --store-soft: color-mix(in oklab, var(--store) 14%, var(--surface));
+  --store-radius: 1.5rem;
+  --store-radius-sm: 1rem;
 }
 
 @theme inline {
@@ -49,7 +57,12 @@
   --color-sky: var(--sky);
   --color-whatsapp: var(--whatsapp);
   --color-store: var(--store);
+  --color-store-foreground: var(--store-foreground);
   --color-store-soft: var(--store-soft);
+
+  /* Corners of storefront cards and images (rounded-store), and smaller ones (rounded-store-sm). */
+  --radius-store: var(--store-radius);
+  --radius-store-sm: var(--store-radius-sm);
 
   --font-sans: var(--font-geist);
   --font-display: var(--font-bricolage);

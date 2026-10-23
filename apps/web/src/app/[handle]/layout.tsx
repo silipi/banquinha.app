@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Suspense, type CSSProperties } from 'react';
+import { Suspense } from 'react';
 import { Logo } from '@/components/logo';
+import { themeStyle } from '@/lib/store-theme';
 import { getStore } from '@/lib/storefront';
 import { BagButton } from './_components/BagButton';
 import { CartBar } from './_components/CartBar';
@@ -14,13 +15,22 @@ async function StoreFrame({
   const store = await getStore(handle);
   if (!store) notFound();
 
+  // The theme tokens repaint everything inside, footer included (src/lib/store-theme.ts).
   return (
     <div
-      className="storefront flex flex-1 flex-col"
-      style={{ '--store-accent': store.accentColor } as CSSProperties}
+      className="storefront flex flex-1 flex-col bg-background text-foreground"
+      style={themeStyle(store.theme)}
     >
       <BagButton />
       {children}
+      <footer className="flex justify-center px-4 pt-10 pb-28">
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 rounded-full border bg-surface px-4 py-2 text-sm text-muted-foreground shadow-sm transition-colors hover:text-foreground"
+        >
+          Feito com <Logo className="text-sm" />
+        </Link>
+      </footer>
       <CartBar />
     </div>
   );
@@ -41,18 +51,8 @@ export default function StoreLayout({
   children,
 }: LayoutProps<'/[handle]'>) {
   return (
-    <>
-      <Suspense fallback={<StoreSkeleton />}>
-        <StoreFrame params={params}>{children}</StoreFrame>
-      </Suspense>
-      <footer className="flex justify-center px-4 pt-10 pb-28">
-        <Link
-          href="/"
-          className="flex items-center gap-1.5 rounded-full border bg-surface px-4 py-2 text-sm text-muted-foreground shadow-sm transition-colors hover:text-foreground"
-        >
-          Feito com <Logo className="text-sm" />
-        </Link>
-      </footer>
-    </>
+    <Suspense fallback={<StoreSkeleton />}>
+      <StoreFrame params={params}>{children}</StoreFrame>
+    </Suspense>
   );
 }

@@ -21,7 +21,7 @@ export function CartBar() {
         className="pointer-events-auto flex h-14 w-full max-w-md items-center gap-3 rounded-full bg-ink pr-6 pl-2 text-ink-foreground shadow-2xl transition-transform active:scale-[0.98]"
       >
         <span className="relative flex size-10 items-center justify-center rounded-full bg-store">
-          <ShoppingBag className="size-5 text-white" />
+          <ShoppingBag className="size-5 text-store-foreground" />
           <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-surface text-xs font-bold text-foreground">
             {count}
           </span>

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { AuthPage } from '../_components/AuthPage';
-import { LoginForm } from '../_components/LoginForm';
+import { AuthPage } from '../../_components/AuthPage';
+import { LoginForm } from '../../_components/LoginForm';
 
 export const metadata: Metadata = { title: 'Entrar' };
 

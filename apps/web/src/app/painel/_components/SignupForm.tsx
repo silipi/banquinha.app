@@ -77,7 +77,8 @@ export function SignupForm() {
     },
   });
 
-  const enterPanel = () => router.replace(panelPath('/'));
+  // New accounts go straight to the onboarding (the dashboard would send them there anyway).
+  const enterPanel = () => router.replace(panelPath('/comecar'));
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();

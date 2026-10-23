@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { AuthPage } from '../_components/AuthPage';
-import { PasswordResetForm } from '../_components/PasswordResetForm';
+import { AuthPage } from '../../_components/AuthPage';
+import { PasswordResetForm } from '../../_components/PasswordResetForm';
 
 export const metadata: Metadata = { title: 'Criar nova senha' };
 

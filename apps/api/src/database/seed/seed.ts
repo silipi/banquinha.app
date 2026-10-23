@@ -1,6 +1,7 @@
-import { eq } from 'drizzle-orm';
+import { eq, isNotNull } from 'drizzle-orm';
+import { syncSystemThemes } from '../../themes/sync-system-themes.js';
 import type { Db } from '../database.js';
-import { productImages, products, stores } from '../schema/index.js';
+import { productImages, products, stores, themes } from '../schema/index.js';
 import { exampleStores } from './example-stores.js';
 
 /**
@@ -8,10 +9,24 @@ import { exampleStores } from './example-stores.js';
  * other stores are left untouched.
  */
 export async function seedExampleStores(db: Db): Promise<void> {
+  await syncSystemThemes(db);
+  const platformThemes = await db
+    .select({ id: themes.id, slug: themes.slug })
+    .from(themes)
+    .where(isNotNull(themes.slug));
+  const themeIdBySlug = new Map(platformThemes.map((t) => [t.slug, t.id]));
+
   await db.transaction(async (tx) => {
-    for (const { products: storeProducts, ...store } of exampleStores) {
+    for (const {
+      products: storeProducts,
+      themeSlug,
+      ...store
+    } of exampleStores) {
+      const themeId = themeIdBySlug.get(themeSlug);
+      if (!themeId) throw new Error(`Unknown theme "${themeSlug}"`);
       const values = {
         ...store,
+        themeId,
         logoUrl: `/lojas/${store.handle}/logo.webp`,
       };
       const [upserted] = await tx

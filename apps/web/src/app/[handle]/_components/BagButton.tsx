@@ -25,7 +25,7 @@ export function BagButton() {
     >
       <ShoppingBag className="size-5" />
       {count > 0 && (
-        <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-store px-1 text-xs font-bold text-white">
+        <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-store px-1 text-xs font-bold text-store-foreground">
           {count}
         </span>
       )}

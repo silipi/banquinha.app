@@ -13,4 +13,6 @@ export class CheckHandleResponseDto {
   available: boolean;
   /** User-facing reason (pt-BR) when the handle is not available. */
   message?: string;
+  /** Free alternatives when the handle is taken by another store. */
+  suggestions?: string[];
 }

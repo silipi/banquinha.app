@@ -1,3 +1,5 @@
+import type { ThemeOverrides } from '../../themes/theme-tokens.js';
+
 // Fictional stores shown on the landing page. Images are served by the web app from /public/lojas.
 // Demo orders go to the owner's WhatsApp so they can be tried end to end.
 const DEMO_WHATSAPP = '5545999158412';
@@ -15,7 +17,9 @@ export type ExampleStore = {
   name: string;
   bio: string;
   city: string;
-  accentColor: string;
+  /** Slug of a platform theme (src/themes/system-themes.ts). */
+  themeSlug: string;
+  themeOverrides: ThemeOverrides | null;
   whatsapp: string;
   instagram: string;
   products: ExampleProduct[];
@@ -27,7 +31,8 @@ export const exampleStores: ExampleStore[] = [
     name: 'Plantinhas do Paulo',
     bio: 'Sou o Paulo, seu plant lover de Curitiba! Minhas plantas são cultivadas e cuidadas com muito carinho, prontas pra deixar seu lar mais verde.',
     city: 'Curitiba, PR',
-    accentColor: '#4f7a3a',
+    themeSlug: 'jardim',
+    themeOverrides: { colors: { accent: '#4f7a3a' } },
     whatsapp: DEMO_WHATSAPP,
     instagram: DEMO_INSTAGRAM,
     products: [
@@ -80,7 +85,8 @@ export const exampleStores: ExampleStore[] = [
     name: 'Mimos da Luluca',
     bio: 'Oi! Eu sou a Luluca 💕 Mamãe e artesã, crio brinquedos e mimos com muito amor para deixar o mundo das crianças ainda mais encantado. Tudo feito à mão, com carinho e segurança.',
     city: 'Belo Horizonte, MG',
-    accentColor: '#7c5cbf',
+    themeSlug: 'docinho',
+    themeOverrides: { colors: { accent: '#7c5cbf' } },
     whatsapp: DEMO_WHATSAPP,
     instagram: DEMO_INSTAGRAM,
     products: [
@@ -133,7 +139,8 @@ export const exampleStores: ExampleStore[] = [
     name: 'Clara Joias',
     bio: 'Joias feitas à mão com metais nobres e pedras naturais brasileiras. Design delicado, elegante e atemporal. Produzido no Brasil, com carinho e autenticidade.',
     city: 'São Paulo, SP',
-    accentColor: '#b0892f',
+    themeSlug: 'classico',
+    themeOverrides: { colors: { accent: '#b0892f' } },
     whatsapp: DEMO_WHATSAPP,
     instagram: DEMO_INSTAGRAM,
     products: [

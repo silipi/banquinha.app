@@ -50,7 +50,7 @@ async function ProductDetails({ params }: Pick<Props, 'params'>) {
 
       <div className="mt-6 grid gap-8 md:grid-cols-2 md:gap-12">
         <div className="space-y-3">
-          <div className="relative aspect-square overflow-hidden rounded-3xl bg-store-soft">
+          <div className="relative aspect-square overflow-hidden rounded-store bg-store-soft">
             {cover && (
               <Image
                 src={cover.url}
@@ -67,7 +67,7 @@ async function ProductDetails({ params }: Pick<Props, 'params'>) {
               {gallery.map((image) => (
                 <div
                   key={image.url}
-                  className="relative aspect-square overflow-hidden rounded-2xl bg-store-soft"
+                  className="relative aspect-square overflow-hidden rounded-store-sm bg-store-soft"
                 >
                   <Image
                     src={image.url}
@@ -110,7 +110,7 @@ async function ProductDetails({ params }: Pick<Props, 'params'>) {
 function ProductSkeleton() {
   return (
     <div className="mt-14 grid gap-8 md:grid-cols-2 md:gap-12">
-      <div className="aspect-square animate-pulse rounded-3xl bg-muted" />
+      <div className="aspect-square animate-pulse rounded-store bg-muted" />
       <div className="space-y-3 md:pt-4">
         <div className="h-9 w-3/4 animate-pulse rounded-full bg-muted" />
         <div className="h-7 w-24 animate-pulse rounded-full bg-muted" />

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { AuthPage } from '../_components/AuthPage';
-import { ChosenHandle } from '../_components/ChosenHandle';
-import { SignupForm } from '../_components/SignupForm';
+import { AuthPage } from '../../_components/AuthPage';
+import { ChosenHandle } from '../../_components/ChosenHandle';
+import { SignupForm } from '../../_components/SignupForm';
 
 export const metadata: Metadata = { title: 'Criar loja' };
 

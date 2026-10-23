@@ -66,7 +66,7 @@ export default async function Image({
         flexDirection: 'column',
         justifyContent: 'space-between',
         padding: 64,
-        background: softColor(store.accentColor),
+        background: softColor(store.theme.colors.accent),
         color: ogColors.ink,
         fontFamily: 'Bricolage',
       }}
@@ -88,7 +88,7 @@ export default async function Image({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: store.accentColor,
+              background: store.theme.colors.accent,
               color: 'white',
               fontSize: 64,
               fontWeight: 700,

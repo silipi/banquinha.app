@@ -228,7 +228,7 @@
             }
           }
         },
-        "summary": "The signed-in merchant. 401 without a session.",
+        "summary": "The signed-in merchant, their plan and stores. 401 without a session.",
         "tags": [
           "Me"
         ]
@@ -261,9 +261,136 @@
             }
           }
         },
-        "summary": "Checks whether an address (banquinha.app/<handle>) can be used by a new store.",
+        "summary": "Checks whether an address (banquinha.app/<handle>) can be used by a new store.\nWhen another store has it, suggests free alternatives.",
         "tags": [
           "Stores"
+        ]
+      }
+    },
+    "/stores": {
+      "post": {
+        "operationId": "storesCreate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStoreDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreSummaryDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Creates the signed-in merchant's store with its first products (end of the onboarding).\n409: handle taken. 403: the plan allows no more stores. 400: invalid data or too many products.",
+        "tags": [
+          "Stores"
+        ]
+      }
+    },
+    "/stores/{id}": {
+      "get": {
+        "operationId": "storesGet",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreDashboardDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "One of the merchant's stores, with what is left to customize.",
+        "tags": [
+          "Stores"
+        ]
+      },
+      "patch": {
+        "operationId": "storesUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStoreDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreDashboardDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Edits store details. Only the fields sent change.",
+        "tags": [
+          "Stores"
+        ]
+      }
+    },
+    "/themes": {
+      "get": {
+        "operationId": "themesList",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ThemeDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Platform themes with their design tokens, in display order.",
+        "tags": [
+          "Themes"
         ]
       }
     },
@@ -481,6 +608,52 @@
           "email"
         ]
       },
+      "PlanDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "free"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "maxStores": {
+            "type": "number"
+          },
+          "maxProducts": {
+            "type": "number",
+            "description": "Products per store."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "maxStores",
+          "maxProducts"
+        ]
+      },
+      "StoreSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "handle": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "handle",
+          "name"
+        ]
+      },
       "MeDto": {
         "type": "object",
         "properties": {
@@ -498,13 +671,30 @@
             "type": "string",
             "nullable": true,
             "description": "Null when the account came from Google and has not given it yet."
+          },
+          "plan": {
+            "$ref": "#/components/schemas/PlanDto"
+          },
+          "onboardingCompleted": {
+            "type": "boolean",
+            "description": "False until the first store is created; the panel shows the onboarding until then."
+          },
+          "stores": {
+            "description": "Stores this account owns (one on the free plan).",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StoreSummaryDto"
+            }
           }
         },
         "required": [
           "id",
           "email",
           "name",
-          "whatsapp"
+          "whatsapp",
+          "plan",
+          "onboardingCompleted",
+          "stores"
         ]
       },
       "LoginDto": {
@@ -590,11 +780,284 @@
           "message": {
             "type": "string",
             "description": "User-facing reason (pt-BR) when the handle is not available."
+          },
+          "suggestions": {
+            "description": "Free alternatives when the handle is taken by another store.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "handle",
           "available"
+        ]
+      },
+      "CreateStoreProductDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80
+          },
+          "priceCents": {
+            "type": "number",
+            "description": "Price in cents (R$ 25,90 = 2590).",
+            "minimum": 1,
+            "maximum": 10000000
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "name",
+          "priceCents"
+        ]
+      },
+      "CreateStoreDto": {
+        "type": "object",
+        "properties": {
+          "handle": {
+            "type": "string",
+            "description": "Desired address as free text; normalized like GET /stores/handle-availability.",
+            "maxLength": 100
+          },
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 60
+          },
+          "whatsapp": {
+            "type": "string",
+            "description": "Where orders go. Any common format; stored as digits with the country code.",
+            "pattern": "^55\\d{11}$"
+          },
+          "themeId": {
+            "type": "string",
+            "description": "A theme from GET /themes. The first platform theme when omitted.",
+            "format": "uuid"
+          },
+          "products": {
+            "description": "At least one; at most what the plan allows.",
+            "minItems": 1,
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateStoreProductDto"
+            }
+          }
+        },
+        "required": [
+          "handle",
+          "name",
+          "whatsapp",
+          "products"
+        ]
+      },
+      "ThemeColorsDto": {
+        "type": "object",
+        "properties": {
+          "background": {
+            "type": "string"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "foreground": {
+            "type": "string"
+          },
+          "muted": {
+            "type": "string"
+          },
+          "mutedForeground": {
+            "type": "string"
+          },
+          "border": {
+            "type": "string"
+          },
+          "accent": {
+            "type": "string"
+          },
+          "accentForeground": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "background",
+          "surface",
+          "foreground",
+          "muted",
+          "mutedForeground",
+          "border",
+          "accent",
+          "accentForeground"
+        ]
+      },
+      "ThemeTokensDto": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "number",
+            "enum": [
+              1
+            ]
+          },
+          "colors": {
+            "$ref": "#/components/schemas/ThemeColorsDto"
+          },
+          "radius": {
+            "type": "string",
+            "enum": [
+              "none",
+              "small",
+              "medium",
+              "large"
+            ]
+          }
+        },
+        "required": [
+          "version",
+          "colors",
+          "radius"
+        ]
+      },
+      "StoreSetupStepDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Something the merchant can still customize after the onboarding.",
+            "enum": [
+              "description",
+              "logo",
+              "banner"
+            ]
+          },
+          "done": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "done"
+        ]
+      },
+      "StoreDashboardDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "handle": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "logoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "bannerUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "themeId": {
+            "type": "string"
+          },
+          "theme": {
+            "description": "The theme's tokens with the store's overrides applied.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ThemeTokensDto"
+              }
+            ]
+          },
+          "productCount": {
+            "type": "number"
+          },
+          "maxProducts": {
+            "type": "number",
+            "description": "Product limit of the owner's plan."
+          },
+          "setup": {
+            "description": "Optional customizations, in the order to suggest them.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StoreSetupStepDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "handle",
+          "name",
+          "bio",
+          "logoUrl",
+          "bannerUrl",
+          "themeId",
+          "theme",
+          "productCount",
+          "maxProducts",
+          "setup"
+        ]
+      },
+      "UpdateStoreDto": {
+        "type": "object",
+        "properties": {
+          "bio": {
+            "type": "string",
+            "nullable": true,
+            "description": "Short description shown under the store name. Empty removes it.",
+            "maxLength": 300
+          }
+        }
+      },
+      "ThemeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "nullable": true,
+            "description": "Set for platform themes."
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "requiredPlan": {
+            "type": "string",
+            "description": "Lowest plan that can use it.",
+            "enum": [
+              "free"
+            ]
+          },
+          "tokens": {
+            "$ref": "#/components/schemas/ThemeTokensDto"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "description",
+          "requiredPlan",
+          "tokens"
         ]
       },
       "StorefrontContactDto": {
@@ -676,9 +1139,17 @@
             "type": "string",
             "nullable": true
           },
-          "accentColor": {
+          "bannerUrl": {
             "type": "string",
-            "description": "Hex color used to theme the storefront."
+            "nullable": true
+          },
+          "theme": {
+            "description": "Design tokens to render with: the store's theme plus its own overrides.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ThemeTokensDto"
+              }
+            ]
           }
         },
         "required": [
@@ -689,7 +1160,8 @@
           "handle",
           "name",
           "logoUrl",
-          "accentColor"
+          "bannerUrl",
+          "theme"
         ]
       },
       "StorefrontProductImageDto": {
@@ -716,16 +1188,25 @@
             "type": "string",
             "nullable": true
           },
-          "accentColor": {
+          "bannerUrl": {
             "type": "string",
-            "description": "Hex color used to theme the storefront."
+            "nullable": true
+          },
+          "theme": {
+            "description": "Design tokens to render with: the store's theme plus its own overrides.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ThemeTokensDto"
+              }
+            ]
           }
         },
         "required": [
           "handle",
           "name",
           "logoUrl",
-          "accentColor"
+          "bannerUrl",
+          "theme"
         ]
       },
       "StorefrontProductDto": {

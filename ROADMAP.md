@@ -189,43 +189,40 @@ Definir a marca final antes de lojistas reais começarem a divulgar links. Escol
 - [x] As rotas da API são protegidas por padrão; rotas públicas são marcadas explicitamente
 - [x] `stores` ganha um dono (migration)
 
-### P2-03 · Criação da loja (onboarding) ⬜
+### P2-03 · Criação da loja (onboarding) 🚧
 
-Logo depois de criar a conta (P2-02), a pessoa monta a loja. Quem chega aqui veio de um anúncio, com pouca paciência: **meta de loja no ar em menos de 2 minutos depois do cadastro.** O WhatsApp já veio da conta; todo o resto que não é essencial vira um checklist depois que a loja existe (P2-10).
+Logo depois de criar a conta (P2-02), a pessoa monta a loja em `/comecar`. A conta guarda a flag `onboardingCompleted` (verdadeira quando ela já tem uma loja): sem onboarding concluído, o painel manda para o `/comecar`; concluído, entra direto no painel.
 
-**Fluxo (uma pergunta por tela, no celular):**
+**Obrigatório:** nome da loja e pelo menos um produto. O tema já vem escolhido (Clássico) e dá para trocar. Todo mundo começa no plano Grátis, e no onboarding a pessoa pode cadastrar quantos produtos o plano permitir (hoje 10, em `PLANS` na API). Assinar um plano pago fica fora do onboarding (P5-01).
 
-1. **Endereço:** já vem preenchido da landing. Quem chega sem ele digita o nome da loja e o endereço é sugerido a partir dele, editável.
-2. **Nome da loja:** já vem sugerido a partir do endereço (`luluca` → "Luluca"), só confirmar ou ajustar.
-3. **WhatsApp dos pedidos:** já vem da conta, só confirmar. Quem entrou com Google digita aqui.
-4. **Primeiro produto (opcional):** foto pela câmera, nome e preço. Botão "Adicionar depois" bem visível. Depende do P2-04.
-5. **Comemoração:** "Sua loja está no ar!", com o link, botão de copiar, compartilhar no WhatsApp, QR code e uma dica de colocar na bio do Instagram.
+**Fluxo (feito em 2026-10-23):**
+
+1. **Sua loja:** nome (sugerido a partir do endereço da landing: `flores-da-maria` → "Flores da Maria"), endereço (verificado no banco ao sair do campo, com sugestões livres se estiver ocupado) e WhatsApp dos pedidos (já vem da conta).
+2. **Tema:** três temas grátis (Clássico, Jardim, Docinho), com a prévia mudando na hora. Os temas são dados no banco (tokens de design), não CSS fixo: ver `docs/themes.md`.
+3. **Produtos:** nome, preço e descrição opcional; "Adicionar outro produto" até o limite do plano ("2 de 10 produtos no plano Grátis"). As fotos entram depois, no painel (P2-04).
+4. **Comemoração:** "Sua loja está no ar!", com o link, copiar, compartilhar no WhatsApp, ver a loja e uma dica de colocar na bio do Instagram.
 
 **Princípios de UX aplicados:**
 
-- **Progresso dado (endowed progress, Nunes & Drèze 2006):** o endereço escolhido na landing aparece no cadastro como etapa já feita ("banquinha.app/sualoja está livre"), e a barra do onboarding começa andada. Num cartão de lava-rápido, quem ganhou 2 selos de presente completou bem mais que quem começou do zero.
-- **Efeito IKEA (Norton, Mochon & Ariely 2012):** prévia ao vivo da vitrine embaixo de cada pergunta, mudando conforme a pessoa digita. Gente valoriza mais o que ajudou a montar.
+- **Progresso dado (endowed progress, Nunes & Drèze 2006):** o endereço escolhido na landing aparece no cadastro como etapa já feita, e a barra do onboarding já começa com a "Conta" preenchida.
+- **Efeito IKEA (Norton, Mochon & Ariely 2012):** prévia ao vivo da vitrine ao lado de cada passo, mudando conforme a pessoa digita.
 - **Pé na porta (Freedman & Fraser 1966):** o primeiro pedido é pequeno (só o endereço, na landing); cada passo seguinte é só um pouco maior.
-- **Padrões inteligentes (Johnson & Goldstein 2003):** cor sorteada da paleta, "retirada" já marcada como forma de entrega, nome e WhatsApp já preenchidos. Ninguém precisa decidir nada para seguir.
-- **Menos escolhas (lei de Hick):** nada de seletor de cor livre nem listas no onboarding.
-- **Validação na hora certa (Wroblewski 2009):** validar ao sair do campo, não a cada tecla. Mensagem curta, em pt-BR, explicando o que fazer.
+- **Padrões inteligentes (Johnson & Goldstein 2003):** tema já escolhido, nome e WhatsApp já preenchidos.
+- **Menos escolhas (lei de Hick):** três temas, nada de seletor de cor livre no onboarding.
+- **Validação na hora certa (Wroblewski 2009):** ao sair do campo ou ao avançar, não a cada tecla.
 - **Fim marcante (regra do pico-fim, Kahneman):** a tela final é uma comemoração com algo útil para fazer em seguida (compartilhar), não um painel vazio.
 
-**Detalhes de interação:**
-
-- Botão principal grande e fixo na parte de baixo, ao alcance do polegar, acima do teclado.
-- Enter avança; foco automático no campo de cada tela; voltar não perde nada.
-- Rascunho salvo a cada passo: se a pessoa sair e voltar, continua de onde parou.
-- O endereço é verificado de novo ao publicar; se alguém pegou antes, sugerir alternativas parecidas em vez de só dar erro.
-- Funciona no navegador interno do Instagram e do TikTok (testar nos dois).
+**Detalhes de interação:** botão principal fixo embaixo, ao alcance do polegar; rascunho salvo no aparelho a cada mudança (sair e voltar retoma do mesmo passo); o endereço é verificado de novo ao publicar e, se alguém pegou antes, volta para o passo 1 com sugestões.
 
 **Critérios de aceite:**
 
-- [ ] A disponibilidade do endereço consulta o banco
-- [ ] Depois do cadastro, só endereço e nome da loja são obrigatórios (WhatsApp já vem da conta)
-- [ ] A loja fica no ar ao fim do fluxo, com prévia ao vivo durante ele
-- [ ] Dá para concluir pelo celular em menos de 2 minutos sem adicionar produto
-- [ ] Sair no meio e voltar retoma do mesmo passo
+- [x] A disponibilidade do endereço consulta o banco, com sugestões quando está ocupado
+- [x] Nome da loja e pelo menos um produto são obrigatórios; tema padrão já escolhido
+- [x] Mais de um produto no onboarding, até o limite do plano
+- [x] A loja fica no ar ao fim do fluxo, com prévia ao vivo durante ele
+- [x] Sair no meio e voltar retoma do mesmo passo
+- [x] Flag de onboarding: sem loja vai para o onboarding; com loja, direto para o painel
+- [ ] Testado no navegador interno do Instagram e do TikTok
 - [ ] Funil medido por passo (quantos chegam e quantos concluem cada tela)
 
 ### P2-04 · Upload de imagens ⬜
@@ -257,12 +254,12 @@ Listar os pedidos recebidos pela vitrine com status (novo, confirmado, concluíd
 - [ ] Mais recentes primeiro, filtro por status
 - [ ] Abrir um pedido mostra itens, totais e dados do cliente
 
-### P2-08 · Limites do plano grátis ⬜
+### P2-08 · Limites do plano grátis 🚧
 
 Aplicar na API os limites do plano grátis (número de produtos, fotos por produto).
 
-- [ ] Limites aplicados na API, com mensagens claras em pt-BR
-- [ ] O painel mostra o uso em relação ao limite
+- [x] Limites aplicados na API, com mensagens claras em pt-BR (lojas por conta e produtos na criação da loja; falta fotos por produto e o limite ao cadastrar produtos depois, no P2-05)
+- [x] O painel mostra o uso em relação ao limite ("2 de 10 produtos")
 
 ### P2-09 · Painel instalável (PWA) ⬜
 
@@ -271,17 +268,21 @@ Manifest, ícones e um shell que funciona offline para o lojista instalar o pain
 - [ ] Instalável no Android e no iOS
 - [ ] Abre direto no painel
 
-### P2-10 · Ativação depois do cadastro ⬜
+### P2-10 · Ativação depois do cadastro 🚧
 
 Fazer a loja recém-criada virar uma loja que vende. A pessoa já saiu do onboarding com a loja no ar; agora o painel puxa ela para os próximos passos.
 
-- **Checklist "Deixe sua loja completa"** no topo do painel: logo, cor, bio, primeiro (ou mais) produtos, Instagram e formas de entrega. A barra já começa andada pelo que foi feito no onboarding (progresso dado). Tarefas incompletas ficam na cabeça (efeito Zeigarnik): o checklist só some quando acabar ou quando a pessoa fechar.
-- **Momentos de comemoração:** primeira visita na loja, primeiro pedido. Mensagem curta no painel, com algo para fazer em seguida.
-- **E-mails de retorno** (depende do P3-03): "falta só o primeiro produto" para quem publicou a loja vazia, "sua loja está quase pronta" para quem criou a conta e não publicou, e um resumo da primeira semana (visitas e pedidos).
+**Layout do painel (feito em 2026-10-23):** sidebar + conteúdo. A sidebar tem o seletor de loja (uma loja por conta hoje; mais lojas podem vir com os planos pagos), o menu, o **mini wizard "Deixe sua loja completa"** e o usuário logado com o botão de sair. No celular, a sidebar vira um menu lateral.
 
-- [ ] Checklist com progresso no painel, que reflete o que já foi feito
+- **Checklist "Deixe sua loja completa"** (calculado na API, em `setup`): por enquanto logo, banner e descrição. Aparece na sidebar e em detalhe na página inicial; some quando tudo estiver feito. Tarefas incompletas ficam na cabeça (efeito Zeigarnik).
+- **Momentos de comemoração:** primeira visita na loja, primeiro pedido. Mensagem curta no painel, com algo para fazer em seguida.
+- **E-mails de retorno** (depende do P3-03): "sua loja está quase pronta" para quem criou a conta e não publicou, e um resumo da primeira semana (visitas e pedidos).
+
+- [x] Checklist com progresso na sidebar e no painel, que reflete o que já foi feito
+- [x] Descrição editável direto no checklist (aparece na vitrine na hora)
+- [ ] Logo e banner editáveis (depende do P2-04)
 - [ ] Comemoração do primeiro pedido
-- [ ] E-mail de lembrete para quem criou a conta e não publicou, e para quem publicou a loja sem produtos
+- [ ] E-mail de lembrete para quem criou a conta e não publicou
 
 ---
 
@@ -401,3 +402,12 @@ Possível extra do plano pago (`luluca.banquinha.app`), só se lojistas pedirem.
 Alternativa à senha: entrar com um código de 6 números enviado por WhatsApp ou por e-mail, sem senha para lembrar. Considerado no P2-02 e deixado para depois; pelo WhatsApp depende da API oficial da Meta (verificação da empresa, modelo de mensagem aprovado, custo por mensagem).
 
 - [ ] Código por WhatsApp ou e-mail como opção no cadastro e no login
+
+### P5-10 · Construtor de temas ⬜
+
+Temas são dados desde o P2-03 (tabela `themes`, tokens de cor e cantos, ajustes por loja), justamente para isso. O lojista de um plano pago cria e edita os próprios temas com uma prévia ao vivo, e aplica na loja. Caminho técnico em `docs/themes.md`.
+
+- [ ] Criar, editar e apagar temas próprios (só planos pagos, com limite por conta)
+- [ ] Prévia ao vivo usando a mesma vitrine
+- [ ] Contraste mínimo garantido entre texto e fundo, e entre botão e texto do botão
+- [ ] Mais tokens conforme a demanda (fontes, estilo dos botões, banner)

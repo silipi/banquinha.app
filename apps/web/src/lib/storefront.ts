@@ -6,9 +6,7 @@ import {
   storefrontGetProduct,
   storefrontGetStore,
 } from '@/lib/api';
-
-// Tagged per store so merchant edits (phase 2) can revalidate with updateTag(storeCacheTag(handle)).
-const storeCacheTag = (handle: string) => `store:${handle.toLowerCase()}`;
+import { storeCacheTag } from '@/lib/storefront-cache';
 
 /** Public store with its products, or null when the store does not exist. */
 export async function getStore(handle: string) {

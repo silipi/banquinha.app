@@ -16,7 +16,7 @@ import { placeOrder } from './actions';
 type Fulfillment = 'pickup' | 'delivery';
 
 const field =
-  'w-full rounded-2xl border bg-surface px-4 py-3 outline-none transition-shadow placeholder:text-muted-foreground focus:ring-2 focus:ring-store';
+  'w-full rounded-store-sm border bg-surface px-4 py-3 outline-none transition-shadow placeholder:text-muted-foreground focus:ring-2 focus:ring-store';
 
 export function BagView() {
   const cart = useCart();
@@ -40,20 +40,20 @@ export function BagView() {
       </h1>
 
       {cart.items === null ? (
-        <div className="mt-8 h-28 animate-pulse rounded-3xl bg-muted" />
+        <div className="mt-8 h-28 animate-pulse rounded-store bg-muted" />
       ) : cart.items.length === 0 ? (
-        <div className="mt-8 rounded-3xl bg-store-soft p-10 text-center">
+        <div className="mt-8 rounded-store bg-store-soft p-10 text-center">
           <p className="text-muted-foreground">Sua sacola está vazia.</p>
           <Link
             href={storePath(cart.handle)}
-            className="mt-6 inline-flex h-11 items-center rounded-full bg-store px-5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+            className="mt-6 inline-flex h-11 items-center rounded-full bg-store px-5 text-sm font-medium text-store-foreground transition-opacity hover:opacity-90"
           >
             Ver produtos
           </Link>
         </div>
       ) : (
         <>
-          <ul className="mt-8 divide-y rounded-3xl border bg-surface">
+          <ul className="mt-8 divide-y rounded-store border bg-surface">
             {cart.items.map((item) => (
               <BagItem
                 key={item.slug}
@@ -103,7 +103,7 @@ function BagItem({
     <li className="flex gap-4 p-4">
       <Link
         href={productPath(handle, item.slug)}
-        className="relative size-20 shrink-0 overflow-hidden rounded-2xl bg-store-soft"
+        className="relative size-20 shrink-0 overflow-hidden rounded-store-sm bg-store-soft"
       >
         {item.imageUrl && (
           <Image
@@ -278,7 +278,10 @@ function CheckoutForm({
       </label>
 
       {error && (
-        <p role="alert" className="rounded-2xl bg-brand-soft px-4 py-3 text-sm">
+        <p
+          role="alert"
+          className="rounded-store-sm bg-brand-soft px-4 py-3 text-sm"
+        >
           {error}
         </p>
       )}

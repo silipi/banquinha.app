@@ -13,6 +13,19 @@ describe('Storefront', () => {
   afterAll(() => app.close());
 
   describe('GET /storefront/:handle', () => {
+    it("renders with the theme's tokens plus the store's overrides", async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/storefront/luluca',
+      });
+      // Background and radius from the Docinho theme; the accent is Luluca's own.
+      expect(res.json().theme).toMatchObject({
+        version: 1,
+        colors: { background: '#fcf4f7', accent: '#7c5cbf' },
+        radius: 'large',
+      });
+    });
+
     it('returns the store with its products in display order', async () => {
       const res = await app.inject({
         method: 'GET',

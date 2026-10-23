@@ -18,7 +18,7 @@ export default function ProductNotFound() {
       </p>
       <Link
         href={storePath(handle)}
-        className="mt-8 inline-flex h-11 items-center rounded-full bg-store px-5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+        className="mt-8 inline-flex h-11 items-center rounded-full bg-store px-5 text-sm font-medium text-store-foreground transition-opacity hover:opacity-90"
       >
         Voltar para a loja
       </Link>

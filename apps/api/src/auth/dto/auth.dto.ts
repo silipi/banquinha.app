@@ -7,6 +7,8 @@ import {
   MinLength,
 } from 'class-validator';
 import { toWhatsappNumber } from '../../common/whatsapp-number.js';
+import type { PlanId } from '../../plans/plans.js';
+import { StoreSummaryDto } from '../../stores/dto/store.dto.js';
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '../password.js';
 
 const normalizeEmail = ({ value }: { value: unknown }) =>
@@ -79,6 +81,19 @@ export class MeDto {
   name: string | null;
   /** Null when the account came from Google and has not given it yet. */
   whatsapp: string | null;
+  plan: PlanDto;
+  /** False until the first store is created; the panel shows the onboarding until then. */
+  onboardingCompleted: boolean;
+  /** Stores this account owns (one on the free plan). */
+  stores: StoreSummaryDto[];
+}
+
+export class PlanDto {
+  id: PlanId;
+  name: string;
+  maxStores: number;
+  /** Products per store. */
+  maxProducts: number;
 }
 
 export class AuthConfigDto {

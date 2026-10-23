@@ -19,16 +19,10 @@ import {
   ResetPasswordDto,
   SignupDto,
 } from './dto/auth.dto.js';
+import { MeService } from './me.service.js';
 import { Public } from './public.decorator.js';
 import { SESSION_COOKIE, sessionCookieOptions } from './session-cookie.js';
 import { SessionsService } from './sessions.service.js';
-
-const toMe = (user: AuthUser): MeDto => ({
-  id: user.id,
-  email: user.email,
-  name: user.name,
-  whatsapp: user.whatsapp,
-});
 
 @Public()
 @Controller('auth')
@@ -36,6 +30,7 @@ export class AuthController {
   constructor(
     private readonly auth: AuthService,
     private readonly sessions: SessionsService,
+    private readonly me: MeService,
   ) {}
 
   /** Which sign-in methods are available. */
@@ -53,7 +48,7 @@ export class AuthController {
   ): Promise<MeDto> {
     const user = await this.auth.signup(body);
     await this.startSession(reply, user.id);
-    return toMe(user);
+    return this.me.build(user);
   }
 
   /** Signs in with email and password. 401 on wrong credentials, 429 after too many. */
@@ -65,7 +60,7 @@ export class AuthController {
   ): Promise<MeDto> {
     const user = await this.auth.login(body.email, body.password);
     await this.startSession(reply, user.id);
-    return toMe(user);
+    return this.me.build(user);
   }
 
   /** Emails a code to set a new password. Always 204, whether or not the email has an account. */
@@ -90,7 +85,7 @@ export class AuthController {
       body.password,
     );
     await this.startSession(reply, user.id);
-    return toMe(user);
+    return this.me.build(user);
   }
 
   /** Signs in or up with the credential from "Sign in with Google" and starts a session (cookie). */
@@ -102,7 +97,7 @@ export class AuthController {
   ): Promise<MeDto> {
     const user = await this.auth.signInWithGoogle(body.credential);
     await this.startSession(reply, user.id);
-    return toMe(user);
+    return this.me.build(user);
   }
 
   /** Ends the current session. */
@@ -125,9 +120,11 @@ export class AuthController {
 
 @Controller('me')
 export class MeController {
-  /** The signed-in merchant. 401 without a session. */
+  constructor(private readonly me: MeService) {}
+
+  /** The signed-in merchant, their plan and stores. 401 without a session. */
   @Get()
-  get(@CurrentUser() user: AuthUser): MeDto {
-    return toMe(user);
+  get(@CurrentUser() user: AuthUser): Promise<MeDto> {
+    return this.me.build(user);
   }
 }

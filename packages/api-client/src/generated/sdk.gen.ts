@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthConfigData, AuthConfigResponses, AuthGoogleData, AuthGoogleResponses, AuthLoginData, AuthLoginResponses, AuthLogoutData, AuthLogoutResponses, AuthRequestPasswordResetData, AuthRequestPasswordResetResponses, AuthResetPasswordData, AuthResetPasswordResponses, AuthSignupData, AuthSignupResponses, HealthCheckData, HealthCheckResponses, MeGetData, MeGetResponses, SitemapListStorefrontsData, SitemapListStorefrontsResponses, StorefrontCreateOrderData, StorefrontCreateOrderResponses, StorefrontGetProductData, StorefrontGetProductResponses, StorefrontGetStoreData, StorefrontGetStoreResponses, StoresCheckHandleData, StoresCheckHandleResponses } from './types.gen';
+import type { AuthConfigData, AuthConfigResponses, AuthGoogleData, AuthGoogleResponses, AuthLoginData, AuthLoginResponses, AuthLogoutData, AuthLogoutResponses, AuthRequestPasswordResetData, AuthRequestPasswordResetResponses, AuthResetPasswordData, AuthResetPasswordResponses, AuthSignupData, AuthSignupResponses, HealthCheckData, HealthCheckResponses, MeGetData, MeGetResponses, SitemapListStorefrontsData, SitemapListStorefrontsResponses, StorefrontCreateOrderData, StorefrontCreateOrderResponses, StorefrontGetProductData, StorefrontGetProductResponses, StorefrontGetStoreData, StorefrontGetStoreResponses, StoresCheckHandleData, StoresCheckHandleResponses, StoresCreateData, StoresCreateResponses, StoresGetData, StoresGetResponses, StoresUpdateData, StoresUpdateResponses, ThemesListData, ThemesListResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -91,14 +91,50 @@ export const authGoogle = <ThrowOnError extends boolean = false>(options: Option
 export const authLogout = <ThrowOnError extends boolean = false>(options?: Options<AuthLogoutData, ThrowOnError>): RequestResult<AuthLogoutResponses, unknown, ThrowOnError> => (options?.client ?? client).post<AuthLogoutResponses, unknown, ThrowOnError>({ url: '/auth/logout', ...options });
 
 /**
- * The signed-in merchant. 401 without a session.
+ * The signed-in merchant, their plan and stores. 401 without a session.
  */
 export const meGet = <ThrowOnError extends boolean = false>(options?: Options<MeGetData, ThrowOnError>): RequestResult<MeGetResponses, unknown, ThrowOnError> => (options?.client ?? client).get<MeGetResponses, unknown, ThrowOnError>({ url: '/me', ...options });
 
 /**
  * Checks whether an address (banquinha.app/<handle>) can be used by a new store.
+ * When another store has it, suggests free alternatives.
  */
 export const storesCheckHandle = <ThrowOnError extends boolean = false>(options: Options<StoresCheckHandleData, ThrowOnError>): RequestResult<StoresCheckHandleResponses, unknown, ThrowOnError> => (options.client ?? client).get<StoresCheckHandleResponses, unknown, ThrowOnError>({ url: '/stores/handle-availability', ...options });
+
+/**
+ * Creates the signed-in merchant's store with its first products (end of the onboarding).
+ * 409: handle taken. 403: the plan allows no more stores. 400: invalid data or too many products.
+ */
+export const storesCreate = <ThrowOnError extends boolean = false>(options: Options<StoresCreateData, ThrowOnError>): RequestResult<StoresCreateResponses, unknown, ThrowOnError> => (options.client ?? client).post<StoresCreateResponses, unknown, ThrowOnError>({
+    url: '/stores',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * One of the merchant's stores, with what is left to customize.
+ */
+export const storesGet = <ThrowOnError extends boolean = false>(options: Options<StoresGetData, ThrowOnError>): RequestResult<StoresGetResponses, unknown, ThrowOnError> => (options.client ?? client).get<StoresGetResponses, unknown, ThrowOnError>({ url: '/stores/{id}', ...options });
+
+/**
+ * Edits store details. Only the fields sent change.
+ */
+export const storesUpdate = <ThrowOnError extends boolean = false>(options: Options<StoresUpdateData, ThrowOnError>): RequestResult<StoresUpdateResponses, unknown, ThrowOnError> => (options.client ?? client).patch<StoresUpdateResponses, unknown, ThrowOnError>({
+    url: '/stores/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Platform themes with their design tokens, in display order.
+ */
+export const themesList = <ThrowOnError extends boolean = false>(options?: Options<ThemesListData, ThrowOnError>): RequestResult<ThemesListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ThemesListResponses, unknown, ThrowOnError>({ url: '/themes', ...options });
 
 /**
  * Public store page: store info and its active products.

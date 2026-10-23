@@ -1,10 +1,13 @@
+import { ThemeTokensDto } from '../../themes/dto/theme.dto.js';
+
 /** Public store identity, shown on every storefront page. */
 export class StorefrontStoreSummaryDto {
   handle: string;
   name: string;
   logoUrl: string | null;
-  /** Hex color used to theme the storefront. */
-  accentColor: string;
+  bannerUrl: string | null;
+  /** Design tokens to render with: the store's theme plus its own overrides. */
+  theme: ThemeTokensDto;
 }
 
 export class StorefrontContactDto {

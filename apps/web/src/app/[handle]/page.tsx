@@ -64,7 +64,10 @@ async function StoreHome({ params }: Pick<Props, 'params'>) {
             )}
             target="_blank"
             rel="noopener noreferrer"
-            className={cn(pill, 'bg-store text-white hover:opacity-85')}
+            className={cn(
+              pill,
+              'bg-store text-store-foreground hover:opacity-85',
+            )}
           >
             <MessageCircle /> WhatsApp
           </a>
@@ -110,7 +113,7 @@ async function StoreHome({ params }: Pick<Props, 'params'>) {
           ))}
         </ul>
       ) : (
-        <p className="mt-12 rounded-3xl bg-store-soft p-10 text-center text-muted-foreground">
+        <p className="mt-12 rounded-store bg-store-soft p-10 text-center text-muted-foreground">
           Essa loja ainda não tem produtos. Volte em breve!
         </p>
       )}
@@ -124,7 +127,7 @@ function StoreHomeSkeleton() {
       {Array.from({ length: 6 }, (_, i) => (
         <div
           key={i}
-          className="aspect-square animate-pulse rounded-3xl bg-muted"
+          className="aspect-square animate-pulse rounded-store bg-muted"
         />
       ))}
     </div>

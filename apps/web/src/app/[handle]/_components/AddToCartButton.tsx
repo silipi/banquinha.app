@@ -29,7 +29,7 @@ export function AddToCartButton({
         setAdded(true);
       }}
       className={cn(
-        'inline-flex h-13 items-center justify-center gap-2 rounded-full bg-store px-7 font-medium text-white transition-[opacity,transform] hover:opacity-90 active:scale-[0.98] [&_svg]:size-5',
+        'inline-flex h-13 items-center justify-center gap-2 rounded-full bg-store px-7 font-medium text-store-foreground transition-[opacity,transform] hover:opacity-90 active:scale-[0.98] [&_svg]:size-5',
         className,
       )}
     >

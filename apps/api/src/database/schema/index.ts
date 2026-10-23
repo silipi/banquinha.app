@@ -3,6 +3,7 @@ import {
   boolean,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -10,6 +11,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+import type { ThemeOverrides, ThemeTokens } from '../../themes/theme-tokens.js';
 
 const timestamps = {
   createdAt: timestamp('created_at', { withTimezone: true })
@@ -20,6 +22,9 @@ const timestamps = {
     .defaultNow()
     .$onUpdate(() => new Date()),
 };
+
+/** Limits per plan live in src/plans/plans.ts. */
+export const plan = pgEnum('plan', ['free']);
 
 // Merchants. They sign in with email and password, or with Google.
 export const users = pgTable('users', {
@@ -33,6 +38,7 @@ export const users = pgTable('users', {
   passwordHash: text('password_hash'),
   /** Google account id (`sub` claim), set on the first Google sign-in. */
   googleSub: text('google_sub').unique(),
+  plan: plan('plan').notNull().default('free'),
   ...timestamps,
 });
 
@@ -71,6 +77,31 @@ export const passwordResetCodes = pgTable(
   ],
 );
 
+/**
+ * Storefront themes as design tokens (src/themes/theme-tokens.ts). Platform themes have
+ * a slug and no owner and are synced from src/themes/system-themes.ts; themes made by a
+ * merchant (future theme builder) have an owner and no slug.
+ */
+export const themes = pgTable(
+  'themes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    slug: text('slug').unique(),
+    ownerId: uuid('owner_id').references(() => users.id, {
+      onDelete: 'cascade',
+    }),
+    name: text('name').notNull(),
+    description: text('description'),
+    /** Lowest plan that can use it. */
+    requiredPlan: plan('required_plan').notNull().default('free'),
+    tokens: jsonb('tokens').$type<ThemeTokens>().notNull(),
+    /** Display order, ascending. */
+    position: integer('position').notNull().default(0),
+    ...timestamps,
+  },
+  (table) => [index('themes_owner_idx').on(table.ownerId)],
+);
+
 export const stores = pgTable('stores', {
   id: uuid('id').primaryKey().defaultRandom(),
   /** Null for the example stores, which belong to the platform. */
@@ -83,8 +114,13 @@ export const stores = pgTable('stores', {
   bio: text('bio'),
   city: text('city'),
   logoUrl: text('logo_url'),
-  /** Hex color used to theme the storefront. */
-  accentColor: text('accent_color').notNull().default('#ff5a1f'),
+  /** Wide image at the top of the storefront. */
+  bannerUrl: text('banner_url'),
+  themeId: uuid('theme_id')
+    .notNull()
+    .references(() => themes.id),
+  /** The store's own changes on top of its theme's tokens. */
+  themeOverrides: jsonb('theme_overrides').$type<ThemeOverrides>(),
   /** Digits only, with country code (5541999999999). Orders are sent here. */
   whatsapp: text('whatsapp').notNull(),
   /** Username without the @. */
@@ -176,7 +212,8 @@ export const orderItems = pgTable(
   (table) => [index('order_items_order_idx').on(table.orderId)],
 );
 
-export const storesRelations = relations(stores, ({ many }) => ({
+export const storesRelations = relations(stores, ({ one, many }) => ({
+  theme: one(themes, { fields: [stores.themeId], references: [themes.id] }),
   products: many(products),
   orders: many(orders),
 }));

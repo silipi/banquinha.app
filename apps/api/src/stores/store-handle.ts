@@ -1,3 +1,5 @@
+import { toSlug } from '../common/slug.js';
+
 // The handle is the store's public path: banquinha.app/<handle>.
 // Only lowercase letters, digits and single hyphens, so it never needs URL encoding
 // and can't collide with files (no dots) or Next.js internals (no underscores).
@@ -94,14 +96,7 @@ const RESERVED_HANDLES = new Set<string>([
  * no accents, lowercase, only letters, digits and hyphens.
  */
 export function toStoreHandle(input: string): string {
-  return input
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, STORE_HANDLE_MAX_LENGTH)
-    .replace(/-+$/g, '');
+  return toSlug(input, STORE_HANDLE_MAX_LENGTH);
 }
 
 export type StoreHandleProblem = 'too_short' | 'invalid' | 'reserved';

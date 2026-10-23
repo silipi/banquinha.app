@@ -32,7 +32,7 @@ export default async function Image({
           width: '100%',
           height: '100%',
           display: 'flex',
-          background: softColor(product.store.accentColor),
+          background: softColor(product.store.theme.colors.accent),
           color: ogColors.ink,
           fontFamily: 'Bricolage',
         }}
@@ -59,7 +59,7 @@ export default async function Image({
                 marginTop: 20,
                 fontSize: 48,
                 fontWeight: 700,
-                color: product.store.accentColor,
+                color: product.store.theme.colors.accent,
               }}
             >
               {formatBRL(product.priceCents / 100)}

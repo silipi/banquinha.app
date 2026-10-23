@@ -3,6 +3,7 @@ import { and, asc, eq } from 'drizzle-orm';
 import type { Db } from '../database/database.js';
 import { DB } from '../database/database.module.js';
 import { productImages, products, stores } from '../database/schema/index.js';
+import { resolveTheme, type ThemeTokens } from '../themes/theme-tokens.js';
 import type {
   SitemapStoreDto,
   StorefrontProductDto,
@@ -18,14 +19,20 @@ const imagesInOrder = {
   orderBy: [asc(productImages.position)],
 };
 
-type StoreRow = typeof stores.$inferSelect;
+type StoreWithTheme = typeof stores.$inferSelect & {
+  theme: { tokens: ThemeTokens };
+};
 
-function toStoreSummary(store: StoreRow): StorefrontStoreSummaryDto {
+/** Loads the store's theme tokens with it. */
+const withTheme = { theme: { columns: { tokens: true as const } } };
+
+function toStoreSummary(store: StoreWithTheme): StorefrontStoreSummaryDto {
   return {
     handle: store.handle,
     name: store.name,
     logoUrl: store.logoUrl,
-    accentColor: store.accentColor,
+    bannerUrl: store.bannerUrl,
+    theme: resolveTheme(store.theme.tokens, store.themeOverrides),
   };
 }
 
@@ -38,6 +45,7 @@ export class StorefrontService {
     const store = await this.db.query.stores.findFirst({
       where: eq(stores.handle, handle.toLowerCase()),
       with: {
+        ...withTheme,
         products: {
           where: eq(products.active, true),
           orderBy: [asc(products.position), asc(products.createdAt)],
@@ -71,6 +79,7 @@ export class StorefrontService {
   ): Promise<StorefrontProductDto> {
     const store = await this.db.query.stores.findFirst({
       where: eq(stores.handle, handle.toLowerCase()),
+      with: withTheme,
     });
     if (!store) throw new NotFoundException(STORE_NOT_FOUND);
 
