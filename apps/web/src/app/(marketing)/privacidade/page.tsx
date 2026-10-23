@@ -70,13 +70,26 @@ export default function PrivacyPage() {
           ),
         },
         {
+          title: 'Estatísticas de acesso',
+          body: (
+            <p>
+              Medimos visitas ao site e às lojas de forma agregada, para saber
+              quais páginas são mais vistas e melhorar o serviço. Usamos o
+              Vercel Web Analytics, que não usa cookies e não identifica quem
+              você é: os dados são contagens de visitas, páginas, país e tipo de
+              dispositivo.
+            </p>
+          ),
+        },
+        {
           title: 'Com quem compartilhamos',
           body: (
             <p>
               Não vendemos dados pessoais. Compartilhamos dados só com
               fornecedores que nos ajudam a operar a plataforma (hospedagem,
-              banco de dados e armazenamento de imagens), com o lojista no caso
-              dos pedidos, e com autoridades quando a lei exigir.
+              banco de dados, armazenamento de imagens e estatísticas de
+              acesso), com o lojista no caso dos pedidos, e com autoridades
+              quando a lei exigir.
             </p>
           ),
         },

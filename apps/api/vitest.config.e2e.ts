@@ -6,6 +6,7 @@ export default defineConfig({
     globals: true,
     include: ['test/**/*.e2e-spec.ts'],
     globalSetup: ['./test/support/global-setup.ts'],
-    env: { DATABASE_URL: testDatabaseUrl() },
+    // High order limit so tests can place many orders; the limit has its own spec.
+    env: { DATABASE_URL: testDatabaseUrl(), ORDER_RATE_LIMIT: '1000' },
   },
 });

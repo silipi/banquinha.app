@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import {
   CreateOrderDto,
   type CreateOrderResponseDto,
@@ -7,6 +7,7 @@ import type {
   StorefrontProductDto,
   StorefrontStoreDto,
 } from './dto/storefront.dto.js';
+import { OrderThrottlerGuard } from './order-throttler.guard.js';
 import { StorefrontOrdersService } from './storefront-orders.service.js';
 import { StorefrontService } from './storefront.service.js';
 
@@ -34,9 +35,11 @@ export class StorefrontController {
 
   /**
    * Places an order from the cart. Prices come from the database, not the client.
-   * A 400 with `unavailableSlugs` means some products were removed or deactivated.
+   * A 400 with `unavailableSlugs` means some products were removed or deactivated;
+   * a 429 means the customer sent too many orders in a short time.
    */
   @Post(':handle/orders')
+  @UseGuards(OrderThrottlerGuard)
   createOrder(
     @Param('handle') handle: string,
     @Body() body: CreateOrderDto,

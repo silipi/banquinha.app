@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/next';
 import type { Metadata } from 'next';
 import { Bricolage_Grotesque, Geist } from 'next/font/google';
 import { openGraphDefaults, siteName, siteUrl } from '@/lib/site';
@@ -36,7 +37,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="pt-BR" className={`${geist.variable} ${bricolage.variable}`}>
-      <body className="flex min-h-dvh flex-col font-sans">{children}</body>
+      <body className="flex min-h-dvh flex-col font-sans">
+        {children}
+        {/* Cookieless page analytics; only reports when deployed on Vercel. */}
+        <Analytics />
+      </body>
     </html>
   );
 }

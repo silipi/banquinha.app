@@ -25,12 +25,12 @@ export function Footer() {
           </p>
         </div>
         <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:items-end">
-          <nav className="flex gap-4">
+          <nav className="-mx-2 flex flex-wrap">
             {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="transition-colors hover:text-foreground"
+                className="flex h-11 items-center px-2 transition-colors hover:text-foreground"
               >
                 {link.label}
               </Link>

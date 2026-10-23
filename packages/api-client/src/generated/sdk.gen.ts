@@ -37,7 +37,8 @@ export const storefrontGetProduct = <ThrowOnError extends boolean = false>(optio
 
 /**
  * Places an order from the cart. Prices come from the database, not the client.
- * A 400 with `unavailableSlugs` means some products were removed or deactivated.
+ * A 400 with `unavailableSlugs` means some products were removed or deactivated;
+ * a 429 means the customer sent too many orders in a short time.
  */
 export const storefrontCreateOrder = <ThrowOnError extends boolean = false>(options: Options<StorefrontCreateOrderData, ThrowOnError>): RequestResult<StorefrontCreateOrderResponses, unknown, ThrowOnError> => (options.client ?? client).post<StorefrontCreateOrderResponses, unknown, ThrowOnError>({
     url: '/storefront/{handle}/orders',

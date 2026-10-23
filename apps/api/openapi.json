@@ -160,7 +160,7 @@
             }
           }
         },
-        "summary": "Places an order from the cart. Prices come from the database, not the client.\nA 400 with `unavailableSlugs` means some products were removed or deactivated.",
+        "summary": "Places an order from the cart. Prices come from the database, not the client.\nA 400 with `unavailableSlugs` means some products were removed or deactivated;\na 429 means the customer sent too many orders in a short time.",
         "tags": [
           "Storefront"
         ]

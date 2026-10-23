@@ -1,5 +1,6 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { storefrontCreateOrder, type CreateOrderDto } from '@/lib/api';
 
 export type PlaceOrderResult =
@@ -7,6 +8,21 @@ export type PlaceOrderResult =
   | { ok: false; message: string; unavailableSlugs?: string[] };
 
 type ApiError = { message?: string | string[]; unavailableSlugs?: string[] };
+
+/**
+ * Orders reach the API from this server, so the API would see our IP for every
+ * customer. Forward the customer's IP with the shared key so the API can rate limit
+ * per customer (see OrderThrottlerGuard in apps/api).
+ */
+async function customerHeaders(): Promise<Record<string, string>> {
+  const key = process.env.INTERNAL_API_KEY;
+  const requestHeaders = await headers();
+  const ip =
+    requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    requestHeaders.get('x-real-ip');
+  if (!key || !ip) return {};
+  return { 'x-internal-key': key, 'x-client-ip': ip };
+}
 
 /** Sends the cart to the API, which validates, prices and records the order. */
 export async function placeOrder(
@@ -17,6 +33,7 @@ export async function placeOrder(
     const { data, error } = await storefrontCreateOrder({
       path: { handle },
       body: order,
+      headers: await customerHeaders(),
     });
     if (data) {
       return { ok: true, number: data.number, whatsappUrl: data.whatsappUrl };

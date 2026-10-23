@@ -22,7 +22,7 @@ O nome da loja só aceita letras minúsculas, números e hífens, e não pode se
 | Fase                                      | Objetivo                                            | Status |
 | ----------------------------------------- | --------------------------------------------------- | ------ |
 | [P0](#p0--base)                           | Base: monorepo, design system, client tipado da API | ✅     |
-| [P1](#p1--vitrine-e-landing)              | Vitrine, pedido pelo WhatsApp e landing pronta      | 🚧     |
+| [P1](#p1--vitrine-e-landing)              | Vitrine, pedido pelo WhatsApp e landing pronta      | ✅     |
 | [P2](#p2--painel-do-lojista-beta-fechado) | Painel do lojista, beta fechado                     | ⬜     |
 | [P3](#p3--lançamento-público)             | Deploy de produção e lançamento público             | ⬜     |
 | [P4](#p4--pagamentos)                     | Pagamentos com Mercado Pago                         | ⬜     |
@@ -130,42 +130,30 @@ As lojas ficam na raiz do site (`vendeu.store/luluca`), no mesmo formato no plan
 - [x] Landing, blog, FAQ, preços e imagens de compartilhamento mostram `vendeu.store/sualoja`
 - [x] Links de loja montados só em `src/lib/storefront-links.ts`
 
-### P1-10 · Proteção contra pedidos abusivos ⬜
+### P1-10 · Proteção contra pedidos abusivos ✅
 
-Os pedidos são públicos e sem login. Colocar limites básicos antes de lojistas reais usarem.
+Os pedidos são públicos e sem login. Cada cliente pode enviar até 5 pedidos por minuto (`ORDER_RATE_LIMIT`); passou disso, a API responde 429 com "Muitos pedidos em pouco tempo…" e registra a tentativa no log. Como os pedidos chegam à API pelo servidor do site, o site repassa o IP do cliente junto com uma chave interna (`INTERNAL_API_KEY`); sem a chave, a API usa o IP da própria conexão.
 
-- [ ] Limite de `POST /storefront/:handle/orders` por IP (por exemplo, alguns por minuto)
-- [ ] Recusar requisições absurdas (já validadas) e registrar as tentativas recusadas
-- [ ] Teste e2e do limite
+- [x] Limite por IP em `POST /storefront/:handle/orders` (`OrderThrottlerGuard`)
+- [x] O IP repassado pelo site só é aceito com a chave interna válida
+- [x] Tentativas bloqueadas aparecem no log da API
+- [x] Teste e2e do limite, do IP repassado e da chave inválida
 
-### P1-11 · Marca num lugar só ⬜
+### P1-11 · Ajustes da landing no celular ✅
 
-O produto vai trocar de nome (ver o `CLAUDE.md` da raiz). Concentrar nome e domínio da marca para a troca ser uma mudança pequena.
+Revisão de todas as seções entre 360 e 414px de largura.
 
-- [ ] Nome da marca, domínio e @ das redes vêm de `src/lib/site.ts`
-- [ ] Logo, metadata, imagens de compartilhamento, rodapé e selo da vitrine leem de lá
-- [ ] As ocorrências restantes (texto do blog, nomes dos pacotes) listadas no ticket da troca de nome
+- [x] Sem rolagem horizontal
+- [x] Áreas de toque com pelo menos 44px (logo, botão do topo, campo do endereço, links do rodapé)
+- [x] Menu no celular com as seções e o blog
+- [x] Tocar em `vendeu.store/` no campo do hero foca o campo
 
-### P1-12 · Limpeza das lojas de exemplo ⬜
+### P1-12 · Analytics ✅
 
-Remover o que sobrou do projeto antigo nas lojas de exemplo.
+Vercel Web Analytics em todas as páginas: sem cookies e sem identificar pessoas. Só envia dados quando o site está na Vercel.
 
-- [ ] Instagram `vendeustore` trocado ou removido
-- [ ] Confirmar os direitos de imagens e textos das lojas de exemplo (ou trocá-los)
-
-### P1-13 · Ajustes da landing no celular ⬜
-
-Revisar cada seção da landing entre 360 e 414px de largura.
-
-- [ ] Sem rolagem horizontal, texto legível, áreas de toque com pelo menos 44px
-- [ ] A navegação no celular dá acesso às seções e ao blog
-
-### P1-14 · Analytics ⬜
-
-Analytics de páginas, respeitando privacidade, para landing, blog e vitrines.
-
-- [ ] Vercel Analytics (ou equivalente) instalado
-- [ ] A política de privacidade menciona o analytics
+- [x] `<Analytics />` no layout raiz
+- [x] A política de privacidade menciona as estatísticas de acesso
 
 ---
 
@@ -252,6 +240,9 @@ Vercel (web), hospedagem da API, Neon (Postgres) e R2, com os domínios `vendeu.
 - [ ] Ambientes de produção e de preview com bancos separados
 - [ ] Migrations rodam no deploy
 - [ ] DNS e TLS para o site, `app.` e `api.`
+- [ ] `INTERNAL_API_KEY` configurada no site e na API
+- [ ] Limite de pedidos com armazenamento compartilhado (Redis ou similar) se a API rodar em mais de uma instância; hoje o contador fica na memória
+- [ ] API configurada para ler o IP real atrás do proxy do provedor (`trustProxy`)
 
 ### P3-02 · Cadastro aberto ⬜
 
