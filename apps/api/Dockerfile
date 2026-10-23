@@ -13,13 +13,13 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/
 
 FROM manifests AS build
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --filter @vendeu/api
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --filter @banquinha/api --fail-if-no-match
 COPY tsconfig.base.json ./
 COPY apps/api apps/api
-RUN pnpm --filter @vendeu/api build
+RUN pnpm --filter @banquinha/api --fail-if-no-match build
 
 FROM manifests AS prod-deps
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --filter @vendeu/api --prod
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --filter @banquinha/api --fail-if-no-match --prod
 
 FROM node:24-slim AS runtime
 ENV NODE_ENV=production \
