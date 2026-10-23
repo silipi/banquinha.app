@@ -115,7 +115,7 @@ Until then the merchant area is at `/painel` on the site.
 
 ## Sign-in configuration (API)
 
-Both are optional; the matching sign-in method stays off without them.
+Both are optional: without `GOOGLE_CLIENT_ID` the Google button is hidden, and without `RESEND_API_KEY` "forgot password" cannot send its email.
 
 | Name               | Where                                                             |
 | ------------------ | ----------------------------------------------------------------- |

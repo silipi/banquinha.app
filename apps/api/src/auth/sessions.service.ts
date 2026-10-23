@@ -45,4 +45,9 @@ export class SessionsService {
       .delete(sessions)
       .where(eq(sessions.tokenHash, hashToken(token)));
   }
+
+  /** Signs the account out everywhere, e.g. after a password change. */
+  async deleteAllForUser(userId: string): Promise<void> {
+    await this.db.delete(sessions).where(eq(sessions.userId, userId));
+  }
 }

@@ -16,22 +16,42 @@ export type AuthConfigDto = {
     googleClientId: string | null;
 };
 
-export type RequestLoginCodeDto = {
-    email: string;
-};
-
-export type VerifyLoginCodeDto = {
-    email: string;
+export type SignupDto = {
+    name: string;
     /**
-     * The 6 digits from the email.
+     * Any common format; stored as digits with the country code (5541999999999).
      */
-    code: string;
+    whatsapp: string;
+    password: string;
+    email: string;
 };
 
 export type MeDto = {
     id: string;
     email: string;
     name: string | null;
+    /**
+     * Null when the account came from Google and has not given it yet.
+     */
+    whatsapp: string | null;
+};
+
+export type LoginDto = {
+    password: string;
+    email: string;
+};
+
+export type RequestPasswordResetDto = {
+    email: string;
+};
+
+export type ResetPasswordDto = {
+    /**
+     * The 6 digits from the email.
+     */
+    code: string;
+    password: string;
+    email: string;
 };
 
 export type GoogleSignInDto = {
@@ -186,31 +206,57 @@ export type AuthConfigResponses = {
 
 export type AuthConfigResponse = AuthConfigResponses[keyof AuthConfigResponses];
 
-export type AuthRequestCodeData = {
-    body: RequestLoginCodeDto;
+export type AuthSignupData = {
+    body: SignupDto;
     path?: never;
     query?: never;
-    url: '/auth/email-code';
+    url: '/auth/signup';
 };
 
-export type AuthRequestCodeResponses = {
-    204: void;
+export type AuthSignupResponses = {
+    201: MeDto;
 };
 
-export type AuthRequestCodeResponse = AuthRequestCodeResponses[keyof AuthRequestCodeResponses];
+export type AuthSignupResponse = AuthSignupResponses[keyof AuthSignupResponses];
 
-export type AuthVerifyCodeData = {
-    body: VerifyLoginCodeDto;
+export type AuthLoginData = {
+    body: LoginDto;
     path?: never;
     query?: never;
-    url: '/auth/email-code/verify';
+    url: '/auth/login';
 };
 
-export type AuthVerifyCodeResponses = {
+export type AuthLoginResponses = {
     200: MeDto;
 };
 
-export type AuthVerifyCodeResponse = AuthVerifyCodeResponses[keyof AuthVerifyCodeResponses];
+export type AuthLoginResponse = AuthLoginResponses[keyof AuthLoginResponses];
+
+export type AuthRequestPasswordResetData = {
+    body: RequestPasswordResetDto;
+    path?: never;
+    query?: never;
+    url: '/auth/password-reset';
+};
+
+export type AuthRequestPasswordResetResponses = {
+    204: void;
+};
+
+export type AuthRequestPasswordResetResponse = AuthRequestPasswordResetResponses[keyof AuthRequestPasswordResetResponses];
+
+export type AuthResetPasswordData = {
+    body: ResetPasswordDto;
+    path?: never;
+    query?: never;
+    url: '/auth/password-reset/confirm';
+};
+
+export type AuthResetPasswordResponses = {
+    200: MeDto;
+};
+
+export type AuthResetPasswordResponse = AuthResetPasswordResponses[keyof AuthResetPasswordResponses];
 
 export type AuthGoogleData = {
     body: GoogleSignInDto;

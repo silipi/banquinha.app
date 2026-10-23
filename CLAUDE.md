@@ -76,7 +76,8 @@ Web on Vercel, API on Cloud Run, Postgres on Neon. Pipeline, GitHub settings and
 - DTOs use `class-validator`; the global `ValidationPipe` runs with `whitelist` and `transform`.
 - Drizzle client is injected with the `DB` token (`src/database/database.module.ts`); schema in `src/database/schema`.
 - Env is validated with zod in `src/env.ts`.
-- **Auth:** every route needs a merchant session (global `AuthGuard`); mark public ones with `@Public()` and read the merchant with `@CurrentUser()`. Passwordless: Google (`GOOGLE_CLIENT_ID`) or a 6-digit code by email (`src/auth`). Sessions are an httpOnly cookie whose SHA-256 is stored in `sessions`. Without `RESEND_API_KEY`, codes are printed in the API log in dev (and kept in `LogEmailSender.outbox` for tests).
+- **Auth:** every route needs a merchant session (global `AuthGuard`); mark public ones with `@Public()` and read the merchant with `@CurrentUser()`. Sign-up is name, email, WhatsApp and password (scrypt, `src/auth/password.ts`); login is email + password or Google (`GOOGLE_CLIENT_ID`); "forgot password" emails a 6-digit code. Sessions are an httpOnly cookie whose SHA-256 is stored in `sessions`. Without `RESEND_API_KEY`, reset codes are printed in the API log in dev (and kept in `LogEmailSender.outbox` for tests).
+- WhatsApp numbers are stored as digits with the country code (`5541999999999`); normalize input with `toWhatsappNumber()` (`src/common/whatsapp-number.ts`).
 - E2E tests run against a real Postgres: `test/support/global-setup.ts` creates `<db>_test`, migrates and seeds it. `pnpm db:up` must be running.
 
 ## Roadmap

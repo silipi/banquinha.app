@@ -44,41 +44,48 @@
         ]
       }
     },
-    "/auth/email-code": {
+    "/auth/signup": {
       "post": {
-        "operationId": "authRequestCode",
+        "operationId": "authSignup",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RequestLoginCodeDto"
+                "$ref": "#/components/schemas/SignupDto"
               }
             }
           }
         },
         "responses": {
-          "204": {
-            "description": ""
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeDto"
+                }
+              }
+            }
           }
         },
-        "summary": "Emails a 6-digit code. Signing in and signing up are the same flow. A 429 means too many codes were requested.",
+        "summary": "Creates the account and starts a session (cookie). A 409 means the email already has an account.",
         "tags": [
           "Auth"
         ]
       }
     },
-    "/auth/email-code/verify": {
+    "/auth/login": {
       "post": {
-        "operationId": "authVerifyCode",
+        "operationId": "authLogin",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/VerifyLoginCodeDto"
+                "$ref": "#/components/schemas/LoginDto"
               }
             }
           }
@@ -95,7 +102,64 @@
             }
           }
         },
-        "summary": "Checks the code and starts a session (cookie). Creates the account on first sign-in.",
+        "summary": "Signs in with email and password. 401 on wrong credentials, 429 after too many.",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/password-reset": {
+      "post": {
+        "operationId": "authRequestPasswordReset",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestPasswordResetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Emails a code to set a new password. Always 204, whether or not the email has an account.",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/password-reset/confirm": {
+      "post": {
+        "operationId": "authResetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Sets a new password with the emailed code, signs out other devices and starts a session.",
         "tags": [
           "Auth"
         ]
@@ -127,7 +191,7 @@
             }
           }
         },
-        "summary": "Signs in with the credential from \"Sign in with Google\" and starts a session (cookie).",
+        "summary": "Signs in or up with the credential from \"Sign in with Google\" and starts a session (cookie).",
         "tags": [
           "Auth"
         ]
@@ -386,36 +450,35 @@
           "googleClientId"
         ]
       },
-      "RequestLoginCodeDto": {
+      "SignupDto": {
         "type": "object",
         "properties": {
-          "email": {
+          "name": {
             "type": "string",
-            "maxLength": 254,
-            "format": "email"
-          }
-        },
-        "required": [
-          "email"
-        ]
-      },
-      "VerifyLoginCodeDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "maxLength": 254,
-            "format": "email"
+            "minLength": 2,
+            "maxLength": 80
           },
-          "code": {
+          "whatsapp": {
             "type": "string",
-            "description": "The 6 digits from the email.",
-            "pattern": "^\\d{6}$"
+            "description": "Any common format; stored as digits with the country code (5541999999999).",
+            "pattern": "^55\\d{11}$"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email"
           }
         },
         "required": [
-          "email",
-          "code"
+          "name",
+          "whatsapp",
+          "password",
+          "email"
         ]
       },
       "MeDto": {
@@ -430,12 +493,75 @@
           "name": {
             "type": "string",
             "nullable": true
+          },
+          "whatsapp": {
+            "type": "string",
+            "nullable": true,
+            "description": "Null when the account came from Google and has not given it yet."
           }
         },
         "required": [
           "id",
           "email",
-          "name"
+          "name",
+          "whatsapp"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email"
+          }
+        },
+        "required": [
+          "password",
+          "email"
+        ]
+      },
+      "RequestPasswordResetDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "The 6 digits from the email.",
+            "pattern": "^\\d{6}$"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email"
+          }
+        },
+        "required": [
+          "code",
+          "password",
+          "email"
         ]
       },
       "GoogleSignInDto": {

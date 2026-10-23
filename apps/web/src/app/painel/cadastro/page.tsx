@@ -1,21 +1,25 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { AuthPage } from '../_components/AuthPage';
 import { ChosenHandle } from '../_components/ChosenHandle';
-import { SignIn } from '../_components/SignIn';
+import { SignupForm } from '../_components/SignupForm';
 
 export const metadata: Metadata = { title: 'Criar loja' };
 
-// Sign-up is the same passwordless flow as sign-in. P2-03 adds the store steps after it.
+// Account first; P2-03 adds the store steps after it.
 export default function SignupPage() {
   return (
-    <SignIn
-      heading="Crie sua loja grátis"
-      description="Comece com seu e-mail. Em menos de 2 minutos sua loja está no ar."
+    <AuthPage
       badge={
         <Suspense>
           <ChosenHandle />
         </Suspense>
       }
-    />
+      heading="Crie sua loja grátis"
+      description="Primeiro, sua conta. Depois a gente monta a loja junto, em poucos minutos."
+      footer={{ text: 'Já tem conta?', link: 'Entrar', href: 'login' }}
+    >
+      <SignupForm />
+    </AuthPage>
   );
 }

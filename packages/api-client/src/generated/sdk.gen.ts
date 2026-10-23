@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthConfigData, AuthConfigResponses, AuthGoogleData, AuthGoogleResponses, AuthLogoutData, AuthLogoutResponses, AuthRequestCodeData, AuthRequestCodeResponses, AuthVerifyCodeData, AuthVerifyCodeResponses, HealthCheckData, HealthCheckResponses, MeGetData, MeGetResponses, SitemapListStorefrontsData, SitemapListStorefrontsResponses, StorefrontCreateOrderData, StorefrontCreateOrderResponses, StorefrontGetProductData, StorefrontGetProductResponses, StorefrontGetStoreData, StorefrontGetStoreResponses, StoresCheckHandleData, StoresCheckHandleResponses } from './types.gen';
+import type { AuthConfigData, AuthConfigResponses, AuthGoogleData, AuthGoogleResponses, AuthLoginData, AuthLoginResponses, AuthLogoutData, AuthLogoutResponses, AuthRequestPasswordResetData, AuthRequestPasswordResetResponses, AuthResetPasswordData, AuthResetPasswordResponses, AuthSignupData, AuthSignupResponses, HealthCheckData, HealthCheckResponses, MeGetData, MeGetResponses, SitemapListStorefrontsData, SitemapListStorefrontsResponses, StorefrontCreateOrderData, StorefrontCreateOrderResponses, StorefrontGetProductData, StorefrontGetProductResponses, StorefrontGetStoreData, StorefrontGetStoreResponses, StoresCheckHandleData, StoresCheckHandleResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -26,10 +26,10 @@ export const healthCheck = <ThrowOnError extends boolean = false>(options?: Opti
 export const authConfig = <ThrowOnError extends boolean = false>(options?: Options<AuthConfigData, ThrowOnError>): RequestResult<AuthConfigResponses, unknown, ThrowOnError> => (options?.client ?? client).get<AuthConfigResponses, unknown, ThrowOnError>({ url: '/auth/config', ...options });
 
 /**
- * Emails a 6-digit code. Signing in and signing up are the same flow. A 429 means too many codes were requested.
+ * Creates the account and starts a session (cookie). A 409 means the email already has an account.
  */
-export const authRequestCode = <ThrowOnError extends boolean = false>(options: Options<AuthRequestCodeData, ThrowOnError>): RequestResult<AuthRequestCodeResponses, unknown, ThrowOnError> => (options.client ?? client).post<AuthRequestCodeResponses, unknown, ThrowOnError>({
-    url: '/auth/email-code',
+export const authSignup = <ThrowOnError extends boolean = false>(options: Options<AuthSignupData, ThrowOnError>): RequestResult<AuthSignupResponses, unknown, ThrowOnError> => (options.client ?? client).post<AuthSignupResponses, unknown, ThrowOnError>({
+    url: '/auth/signup',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -38,10 +38,10 @@ export const authRequestCode = <ThrowOnError extends boolean = false>(options: O
 });
 
 /**
- * Checks the code and starts a session (cookie). Creates the account on first sign-in.
+ * Signs in with email and password. 401 on wrong credentials, 429 after too many.
  */
-export const authVerifyCode = <ThrowOnError extends boolean = false>(options: Options<AuthVerifyCodeData, ThrowOnError>): RequestResult<AuthVerifyCodeResponses, unknown, ThrowOnError> => (options.client ?? client).post<AuthVerifyCodeResponses, unknown, ThrowOnError>({
-    url: '/auth/email-code/verify',
+export const authLogin = <ThrowOnError extends boolean = false>(options: Options<AuthLoginData, ThrowOnError>): RequestResult<AuthLoginResponses, unknown, ThrowOnError> => (options.client ?? client).post<AuthLoginResponses, unknown, ThrowOnError>({
+    url: '/auth/login',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -50,7 +50,31 @@ export const authVerifyCode = <ThrowOnError extends boolean = false>(options: Op
 });
 
 /**
- * Signs in with the credential from "Sign in with Google" and starts a session (cookie).
+ * Emails a code to set a new password. Always 204, whether or not the email has an account.
+ */
+export const authRequestPasswordReset = <ThrowOnError extends boolean = false>(options: Options<AuthRequestPasswordResetData, ThrowOnError>): RequestResult<AuthRequestPasswordResetResponses, unknown, ThrowOnError> => (options.client ?? client).post<AuthRequestPasswordResetResponses, unknown, ThrowOnError>({
+    url: '/auth/password-reset',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Sets a new password with the emailed code, signs out other devices and starts a session.
+ */
+export const authResetPassword = <ThrowOnError extends boolean = false>(options: Options<AuthResetPasswordData, ThrowOnError>): RequestResult<AuthResetPasswordResponses, unknown, ThrowOnError> => (options.client ?? client).post<AuthResetPasswordResponses, unknown, ThrowOnError>({
+    url: '/auth/password-reset/confirm',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Signs in or up with the credential from "Sign in with Google" and starts a session (cookie).
  */
 export const authGoogle = <ThrowOnError extends boolean = false>(options: Options<AuthGoogleData, ThrowOnError>): RequestResult<AuthGoogleResponses, unknown, ThrowOnError> => (options.client ?? client).post<AuthGoogleResponses, unknown, ThrowOnError>({
     url: '/auth/google',

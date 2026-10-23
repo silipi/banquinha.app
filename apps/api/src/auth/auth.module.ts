@@ -4,6 +4,7 @@ import { loadEnv } from '../env.js';
 import { AuthController, MeController } from './auth.controller.js';
 import { AuthGuard } from './auth.guard.js';
 import { AuthService } from './auth.service.js';
+import { LoginAttempts } from './login-attempts.js';
 import {
   EmailSender,
   LogEmailSender,
@@ -15,6 +16,7 @@ import { SessionsService } from './sessions.service.js';
   controllers: [AuthController, MeController],
   providers: [
     AuthService,
+    LoginAttempts,
     SessionsService,
     { provide: APP_GUARD, useClass: AuthGuard },
     {

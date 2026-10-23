@@ -27,8 +27,8 @@ const envSchema = z.object({
   /** OAuth client id for "Sign in with Google". Google sign-in is off when unset. */
   GOOGLE_CLIENT_ID: optional(z.string()),
   /**
-   * Resend API key for sign-in emails. Without it, codes are logged in development
-   * and email sign-in is unavailable in production.
+   * Resend API key for password reset emails. Without it, codes are logged in development
+   * and password reset is unavailable in production.
    */
   RESEND_API_KEY: optional(z.string()),
   EMAIL_FROM: z.string().default('banquinha.app <oi@banquinha.app>'),

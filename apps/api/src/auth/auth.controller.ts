@@ -13,9 +13,11 @@ import { CurrentUser, type AuthUser } from './current-user.decorator.js';
 import {
   AuthConfigDto,
   GoogleSignInDto,
+  LoginDto,
   MeDto,
-  RequestLoginCodeDto,
-  VerifyLoginCodeDto,
+  RequestPasswordResetDto,
+  ResetPasswordDto,
+  SignupDto,
 } from './dto/auth.dto.js';
 import { Public } from './public.decorator.js';
 import { SESSION_COOKIE, sessionCookieOptions } from './session-cookie.js';
@@ -25,6 +27,7 @@ const toMe = (user: AuthUser): MeDto => ({
   id: user.id,
   email: user.email,
   name: user.name,
+  whatsapp: user.whatsapp,
 });
 
 @Public()
@@ -41,26 +44,56 @@ export class AuthController {
     return { googleClientId: this.auth.googleClientIdOrNull };
   }
 
-  /** Emails a 6-digit code. Signing in and signing up are the same flow. A 429 means too many codes were requested. */
-  @Post('email-code')
-  @HttpCode(204)
-  async requestCode(@Body() body: RequestLoginCodeDto): Promise<void> {
-    await this.auth.requestCode(body.email);
-  }
-
-  /** Checks the code and starts a session (cookie). Creates the account on first sign-in. */
-  @Post('email-code/verify')
-  @HttpCode(200)
-  async verifyCode(
-    @Body() body: VerifyLoginCodeDto,
+  /** Creates the account and starts a session (cookie). A 409 means the email already has an account. */
+  @Post('signup')
+  @HttpCode(201)
+  async signup(
+    @Body() body: SignupDto,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<MeDto> {
-    const user = await this.auth.verifyCode(body.email, body.code);
+    const user = await this.auth.signup(body);
     await this.startSession(reply, user.id);
     return toMe(user);
   }
 
-  /** Signs in with the credential from "Sign in with Google" and starts a session (cookie). */
+  /** Signs in with email and password. 401 on wrong credentials, 429 after too many. */
+  @Post('login')
+  @HttpCode(200)
+  async login(
+    @Body() body: LoginDto,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ): Promise<MeDto> {
+    const user = await this.auth.login(body.email, body.password);
+    await this.startSession(reply, user.id);
+    return toMe(user);
+  }
+
+  /** Emails a code to set a new password. Always 204, whether or not the email has an account. */
+  @Post('password-reset')
+  @HttpCode(204)
+  async requestPasswordReset(
+    @Body() body: RequestPasswordResetDto,
+  ): Promise<void> {
+    await this.auth.requestPasswordReset(body.email);
+  }
+
+  /** Sets a new password with the emailed code, signs out other devices and starts a session. */
+  @Post('password-reset/confirm')
+  @HttpCode(200)
+  async resetPassword(
+    @Body() body: ResetPasswordDto,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ): Promise<MeDto> {
+    const user = await this.auth.resetPassword(
+      body.email,
+      body.code,
+      body.password,
+    );
+    await this.startSession(reply, user.id);
+    return toMe(user);
+  }
+
+  /** Signs in or up with the credential from "Sign in with Google" and starts a session (cookie). */
   @Post('google')
   @HttpCode(200)
   async google(

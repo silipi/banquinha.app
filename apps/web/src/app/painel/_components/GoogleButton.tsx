@@ -25,9 +25,11 @@ declare global {
 /** Google's own "Continue with Google" button; hands back the ID token to send to the API. */
 export function GoogleButton({
   clientId,
+  text,
   onCredential,
 }: {
   clientId: string;
+  text: 'signup_with' | 'continue_with';
   onCredential: (credential: string) => void;
 }) {
   const container = useRef<HTMLDivElement>(null);
@@ -49,11 +51,11 @@ export function GoogleButton({
       theme: 'outline',
       size: 'large',
       shape: 'pill',
-      text: 'continue_with',
+      text,
       locale: 'pt-BR',
       width: container.current.offsetWidth,
     });
-  }, [ready, clientId]);
+  }, [ready, clientId, text]);
 
   return (
     <>

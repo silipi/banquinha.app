@@ -52,7 +52,7 @@ export class LogEmailSender extends EmailSender {
   async send(message: EmailMessage): Promise<void> {
     if (process.env.NODE_ENV === 'production') {
       throw new ServiceUnavailableException(
-        'Entrar por e-mail está indisponível no momento.',
+        'Não conseguimos enviar o e-mail agora. Tente de novo mais tarde.',
       );
     }
     this.outbox.push(message);

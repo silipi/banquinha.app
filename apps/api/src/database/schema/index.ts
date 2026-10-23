@@ -21,12 +21,16 @@ const timestamps = {
     .$onUpdate(() => new Date()),
 };
 
-// Merchants. Passwordless: they sign in with Google or a code sent by email.
+// Merchants. They sign in with email and password, or with Google.
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   /** Always lowercased. */
   email: text('email').notNull().unique(),
   name: text('name'),
+  /** Digits only, with country code (5541999999999). Null until asked, for Google sign-ups. */
+  whatsapp: text('whatsapp'),
+  /** scrypt hash (see auth/password.ts). Null for accounts created with Google. */
+  passwordHash: text('password_hash'),
   /** Google account id (`sub` claim), set on the first Google sign-in. */
   googleSub: text('google_sub').unique(),
   ...timestamps,
@@ -47,12 +51,14 @@ export const sessions = pgTable(
   (table) => [index('sessions_user_idx').on(table.userId)],
 );
 
-/** Six-digit sign-in codes sent by email. */
-export const loginCodes = pgTable(
-  'login_codes',
+/** Six-digit codes sent by email to set a new password. */
+export const passwordResetCodes = pgTable(
+  'password_reset_codes',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    email: text('email').notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     codeHash: text('code_hash').notNull(),
     /** Wrong guesses; the code stops working after a few. */
     attempts: integer('attempts').notNull().default(0),
@@ -60,7 +66,9 @@ export const loginCodes = pgTable(
     consumedAt: timestamp('consumed_at', { withTimezone: true }),
     createdAt: timestamps.createdAt,
   },
-  (table) => [index('login_codes_email_idx').on(table.email, table.createdAt)],
+  (table) => [
+    index('password_reset_codes_user_idx').on(table.userId, table.createdAt),
+  ],
 );
 
 export const stores = pgTable('stores', {
