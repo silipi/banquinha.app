@@ -168,7 +168,7 @@ Definir a marca final antes de lojistas reais começarem a divulgar links. Escol
 - [ ] Pesquisa no INPI (classes 35, 42 e 9)
 - [ ] Domínio `banquinha.app` e @ das redes registrados
 
-### P2-02 · Contas de lojista e login ⬜
+### P2-02 · Contas de lojista e login 🚧
 
 Área logada do lojista em `app.banquinha.app`, com as rotas `/login`, `/cadastro`, `/configuracoes`, `/produtos`, `/pedidos` etc. Sessões controladas pela API.
 
@@ -178,15 +178,19 @@ Definir a marca final antes de lojistas reais começarem a divulgar links. Escol
 - **Link mágico não serve:** ele abre no navegador padrão do celular, e a sessão fica longe da aba onde a pessoa estava. Já o código é digitado na mesma tela.
 - O campo do código usa `autocomplete="one-time-code"` e `inputmode="numeric"`, aceita colar e envia sozinho ao completar 6 dígitos.
 
-Cookie de sessão `httpOnly` no domínio `.banquinha.app`. Depende do domínio próprio (P3-01): com o site em `vercel.app` e a API em `run.app`, o Safari bloqueia o cookie entre sites.
+Cookie de sessão `httpOnly`. O site repassa `/api/*` para a API, então o painel chama a API no próprio domínio e o cookie é "de primeira parte": funciona no Safari mesmo antes do domínio próprio, com o site em `vercel.app` e a API em `run.app`.
 
-- [ ] A área do lojista roda em `app.banquinha.app` (em dev, `app.localhost:3000` ou uma porta própria)
-- [ ] `banquinha.app/cadastro` passa a redirecionar para `app.banquinha.app/cadastro`, levando o nome escolhido na landing
-- [ ] O lojista consegue se cadastrar, entrar e sair com Google ou código por e-mail
-- [ ] No navegador interno do Instagram, TikTok e Facebook, o fluxo funciona só com o código por e-mail
-- [ ] Código expira em 10 minutos, tem limite de tentativas e de reenvio
-- [ ] As rotas da API são protegidas por padrão; rotas públicas são marcadas explicitamente
-- [ ] `stores` ganha um dono (migration)
+Para o login por e-mail funcionar em produção falta um provedor de e-mail (Resend) com o domínio verificado, que depende de comprar `banquinha.app` (P2-01). Sem isso, a tela avisa que o login por e-mail está indisponível.
+
+- [x] A área do lojista roda em `app.banquinha.app` (em dev, `app.localhost:3000`; sem o domínio, em `/painel`)
+- [x] `banquinha.app/cadastro` passa a redirecionar para `app.banquinha.app/cadastro`, levando o nome escolhido na landing
+- [x] O lojista consegue se cadastrar, entrar e sair com código por e-mail
+- [ ] Entrar com Google testado de ponta a ponta (falta criar o OAuth client no Google Cloud)
+- [ ] Testado de verdade no navegador interno do Instagram, TikTok e Facebook (o botão do Google some; o código funciona)
+- [ ] Envio de e-mail em produção (Resend + domínio verificado)
+- [x] Código expira em 10 minutos, tem limite de tentativas e de reenvio
+- [x] As rotas da API são protegidas por padrão; rotas públicas são marcadas explicitamente
+- [x] `stores` ganha um dono (migration)
 
 ### P2-03 · Criação da loja (onboarding) ⬜
 

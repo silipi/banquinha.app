@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Public } from '../auth/public.decorator.js';
 import {
   CreateOrderDto,
   type CreateOrderResponseDto,
@@ -11,6 +12,7 @@ import { OrderThrottlerGuard } from './order-throttler.guard.js';
 import { StorefrontOrdersService } from './storefront-orders.service.js';
 import { StorefrontService } from './storefront.service.js';
 
+@Public()
 @Controller('storefront')
 export class StorefrontController {
   constructor(

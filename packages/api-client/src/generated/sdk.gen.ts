@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { HealthCheckData, HealthCheckResponses, SitemapListStorefrontsData, SitemapListStorefrontsResponses, StorefrontCreateOrderData, StorefrontCreateOrderResponses, StorefrontGetProductData, StorefrontGetProductResponses, StorefrontGetStoreData, StorefrontGetStoreResponses, StoresCheckHandleData, StoresCheckHandleResponses } from './types.gen';
+import type { AuthConfigData, AuthConfigResponses, AuthGoogleData, AuthGoogleResponses, AuthLogoutData, AuthLogoutResponses, AuthRequestCodeData, AuthRequestCodeResponses, AuthVerifyCodeData, AuthVerifyCodeResponses, HealthCheckData, HealthCheckResponses, MeGetData, MeGetResponses, SitemapListStorefrontsData, SitemapListStorefrontsResponses, StorefrontCreateOrderData, StorefrontCreateOrderResponses, StorefrontGetProductData, StorefrontGetProductResponses, StorefrontGetStoreData, StorefrontGetStoreResponses, StoresCheckHandleData, StoresCheckHandleResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -19,6 +19,57 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 };
 
 export const healthCheck = <ThrowOnError extends boolean = false>(options?: Options<HealthCheckData, ThrowOnError>): RequestResult<HealthCheckResponses, unknown, ThrowOnError> => (options?.client ?? client).get<HealthCheckResponses, unknown, ThrowOnError>({ url: '/health', ...options });
+
+/**
+ * Which sign-in methods are available.
+ */
+export const authConfig = <ThrowOnError extends boolean = false>(options?: Options<AuthConfigData, ThrowOnError>): RequestResult<AuthConfigResponses, unknown, ThrowOnError> => (options?.client ?? client).get<AuthConfigResponses, unknown, ThrowOnError>({ url: '/auth/config', ...options });
+
+/**
+ * Emails a 6-digit code. Signing in and signing up are the same flow. A 429 means too many codes were requested.
+ */
+export const authRequestCode = <ThrowOnError extends boolean = false>(options: Options<AuthRequestCodeData, ThrowOnError>): RequestResult<AuthRequestCodeResponses, unknown, ThrowOnError> => (options.client ?? client).post<AuthRequestCodeResponses, unknown, ThrowOnError>({
+    url: '/auth/email-code',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Checks the code and starts a session (cookie). Creates the account on first sign-in.
+ */
+export const authVerifyCode = <ThrowOnError extends boolean = false>(options: Options<AuthVerifyCodeData, ThrowOnError>): RequestResult<AuthVerifyCodeResponses, unknown, ThrowOnError> => (options.client ?? client).post<AuthVerifyCodeResponses, unknown, ThrowOnError>({
+    url: '/auth/email-code/verify',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Signs in with the credential from "Sign in with Google" and starts a session (cookie).
+ */
+export const authGoogle = <ThrowOnError extends boolean = false>(options: Options<AuthGoogleData, ThrowOnError>): RequestResult<AuthGoogleResponses, unknown, ThrowOnError> => (options.client ?? client).post<AuthGoogleResponses, unknown, ThrowOnError>({
+    url: '/auth/google',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Ends the current session.
+ */
+export const authLogout = <ThrowOnError extends boolean = false>(options?: Options<AuthLogoutData, ThrowOnError>): RequestResult<AuthLogoutResponses, unknown, ThrowOnError> => (options?.client ?? client).post<AuthLogoutResponses, unknown, ThrowOnError>({ url: '/auth/logout', ...options });
+
+/**
+ * The signed-in merchant. 401 without a session.
+ */
+export const meGet = <ThrowOnError extends boolean = false>(options?: Options<MeGetData, ThrowOnError>): RequestResult<MeGetResponses, unknown, ThrowOnError> => (options?.client ?? client).get<MeGetResponses, unknown, ThrowOnError>({ url: '/me', ...options });
 
 /**
  * Checks whether an address (banquinha.app/<handle>) can be used by a new store.

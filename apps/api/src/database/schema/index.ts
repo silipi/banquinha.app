@@ -21,9 +21,54 @@ const timestamps = {
     .$onUpdate(() => new Date()),
 };
 
-// The owning merchant arrives in phase 2 with auth.
+// Merchants. Passwordless: they sign in with Google or a code sent by email.
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  /** Always lowercased. */
+  email: text('email').notNull().unique(),
+  name: text('name'),
+  /** Google account id (`sub` claim), set on the first Google sign-in. */
+  googleSub: text('google_sub').unique(),
+  ...timestamps,
+});
+
+export const sessions = pgTable(
+  'sessions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    /** SHA-256 of the cookie token; the token itself is never stored. */
+    tokenHash: text('token_hash').notNull().unique(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt: timestamps.createdAt,
+  },
+  (table) => [index('sessions_user_idx').on(table.userId)],
+);
+
+/** Six-digit sign-in codes sent by email. */
+export const loginCodes = pgTable(
+  'login_codes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    email: text('email').notNull(),
+    codeHash: text('code_hash').notNull(),
+    /** Wrong guesses; the code stops working after a few. */
+    attempts: integer('attempts').notNull().default(0),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    consumedAt: timestamp('consumed_at', { withTimezone: true }),
+    createdAt: timestamps.createdAt,
+  },
+  (table) => [index('login_codes_email_idx').on(table.email, table.createdAt)],
+);
+
 export const stores = pgTable('stores', {
   id: uuid('id').primaryKey().defaultRandom(),
+  /** Null for the example stores, which belong to the platform. */
+  ownerId: uuid('owner_id').references(() => users.id, {
+    onDelete: 'set null',
+  }),
   /** Public path: banquinha.app/<handle>. Always normalized (see store-handle.ts). */
   handle: text('handle').notNull().unique(),
   name: text('name').notNull(),

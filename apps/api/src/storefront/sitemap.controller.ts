@@ -1,7 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
+import { Public } from '../auth/public.decorator.js';
 import type { SitemapStoreDto } from './dto/storefront.dto.js';
 import { StorefrontService } from './storefront.service.js';
 
+@Public()
 @Controller('sitemap')
 export class SitemapController {
   constructor(private readonly storefrontService: StorefrontService) {}

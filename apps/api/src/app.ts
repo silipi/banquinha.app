@@ -1,3 +1,4 @@
+import fastifyCookie from '@fastify/cookie';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import {
@@ -24,6 +25,8 @@ export async function createApp(
     }),
     { logger: ['error', 'warn', 'log'] },
   );
+  // Reads the session cookie (see auth/session-cookie.ts).
+  await app.register(fastifyCookie);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   return app;
 }

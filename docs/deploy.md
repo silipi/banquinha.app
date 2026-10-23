@@ -108,5 +108,19 @@ The web app needs the same `INTERNAL_API_KEY`:
 | `NEXT_PUBLIC_SITE_URL` | Public site URL, no trailing slash                                                 | Production, Preview |
 | `INTERNAL_API_KEY`     | `gcloud secrets versions access latest --secret=internal-api-key` (mark Sensitive) | Production, Preview |
 
+Once `app.banquinha.app` points to Vercel, add `NEXT_PUBLIC_APP_URL=https://app.banquinha.app`.
+Until then the merchant area is at `/painel` on the site.
+
 `NEXT_PUBLIC_*` values are inlined at build time: redeploy after changing them.
+
+## Sign-in configuration (API)
+
+Both are optional; the matching sign-in method stays off without them.
+
+| Name               | Where                                                             |
+| ------------------ | ----------------------------------------------------------------- |
+| `GOOGLE_CLIENT_ID` | OAuth client (Web) in Google Cloud → Credentials; plain env var   |
+| `RESEND_API_KEY`   | Resend, after verifying the sending domain; Secret Manager secret |
+
+Add them to the `gcloud run deploy` flags in `ci.yml` (`--set-env-vars` / `--set-secrets`) when they exist.
 Function region: `gru1` (Settings → Functions).

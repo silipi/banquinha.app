@@ -6,8 +6,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      // Bags are per visitor and have nothing to index.
-      disallow: ['/*/sacola', '/cadastro'],
+      // Bags are per visitor and the merchant area is private: nothing to index.
+      disallow: ['/*/sacola', '/cadastro', '/painel'],
     },
     sitemap: absoluteUrl('/sitemap.xml'),
   };

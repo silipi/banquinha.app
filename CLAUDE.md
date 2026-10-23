@@ -15,7 +15,8 @@ Tooling: **pnpm** workspaces + **Turborepo**. Everything is ESM (`"type": "modul
 ## URLs
 
 - `banquinha.app/<handle>`: storefronts, served by the root dynamic route `apps/web/src/app/[handle]`. Static routes win over it, and the API reserves every root path in `PLATFORM_ROOT_PATHS` (`apps/api/src/stores/store-handle.ts`). **When adding a route at the root of the web app, add it there too** (a unit test covers the list).
-- `app.banquinha.app`: merchant area (phase 2). `api.banquinha.app`: the API.
+- `app.banquinha.app`: merchant area, served by `apps/web/src/app/painel` through a host rewrite in `next.config.ts` (`app.localhost:3000` in dev; without the `app.` host, reach it at `/painel`). `banquinha.app/cadastro` redirects there.
+- `/api/*` on the web app is proxied to the API, so the merchant area calls it same-origin and the session cookie is first-party. `api.banquinha.app`: the API itself.
 
 ## Architecture rules
 
@@ -58,7 +59,8 @@ Env: copy `.env.example` to `.env` at the root. The API loads `../../.env` in de
 
 ## Web (apps/web)
 
-- Next 16 with `cacheComponents` and `partialPrefetching`. APIs differ from Next 13–15: read `apps/web/AGENTS.md` and `node_modules/next/dist/docs/` before using something new. Middleware is now called **proxy** (`src/proxy.ts`).
+- Next 16 with `cacheComponents` and `partialPrefetching`. APIs differ from Next 13–15: read `apps/web/AGENTS.md` and `node_modules/next/dist/docs/` before using something new. Middleware is now called **proxy** (none in use: host routing is a rewrite in `next.config.ts`).
+- Merchant area (`src/app/painel`) is client-rendered: it calls the API with `panelApi` from `@/lib/panel` (base URL `/api`) and navigates with `panelPath()`, which works on both the `app.` host and `/painel`.
 - Unstable values (`new Date()`, `Math.random()`) in Server Components break prerendering: use `'use cache'` + `cacheLife`, or move them to the client.
 - Design tokens live in `src/app/globals.css` (`bg-ink`, `bg-brand`, `bg-sage`, `font-display`, ...). Use tokens, not ad-hoc colors.
 - Base components in `src/components/ui` (shadcn style: `cva` + `cn`). Marketing routes in `src/app/(marketing)`.
@@ -74,6 +76,7 @@ Web on Vercel, API on Cloud Run, Postgres on Neon. Pipeline, GitHub settings and
 - DTOs use `class-validator`; the global `ValidationPipe` runs with `whitelist` and `transform`.
 - Drizzle client is injected with the `DB` token (`src/database/database.module.ts`); schema in `src/database/schema`.
 - Env is validated with zod in `src/env.ts`.
+- **Auth:** every route needs a merchant session (global `AuthGuard`); mark public ones with `@Public()` and read the merchant with `@CurrentUser()`. Passwordless: Google (`GOOGLE_CLIENT_ID`) or a 6-digit code by email (`src/auth`). Sessions are an httpOnly cookie whose SHA-256 is stored in `sessions`. Without `RESEND_API_KEY`, codes are printed in the API log in dev (and kept in `LogEmailSender.outbox` for tests).
 - E2E tests run against a real Postgres: `test/support/global-setup.ts` creates `<db>_test`, migrates and seeds it. `pnpm db:up` must be running.
 
 ## Roadmap

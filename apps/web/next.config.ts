@@ -7,10 +7,44 @@ if (existsSync('../../.env')) {
   process.loadEnvFile('../../.env');
 }
 
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
+// Merchant area origin (app.banquinha.app). Unset before the custom domain: then the
+// area is reached at /painel on the site's own host.
+const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   transpilePackages: ['@banquinha/api-client'],
+  async rewrites() {
+    return {
+      beforeFiles: [
+        // Browser calls from the merchant area go through here, so the API's session
+        // cookie is first-party and needs no CORS.
+        { source: '/api/:path*', destination: `${apiUrl}/:path*` },
+        // app.<domain>/x is served by src/app/painel/x.
+        {
+          source: '/:path((?!api/|_next/|favicon\\.ico).*)',
+          has: [{ type: 'host', value: 'app\\..+' }],
+          destination: '/painel/:path',
+        },
+      ],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
+  async redirects() {
+    // The landing's "create store" buttons land on the merchant area's sign-up.
+    return [
+      {
+        source: '/cadastro',
+        // On the merchant host itself, /cadastro is the sign-up page.
+        missing: [{ type: 'host', value: 'app\\..+' }],
+        destination: appUrl ? `${appUrl}/cadastro` : '/painel/cadastro',
+        permanent: false,
+      },
+    ];
+  },
   // The default bottom-left spot covers the storefront's floating bag button.
   devIndicators: { position: 'bottom-right' },
   // Share images read these fonts from disk at runtime (src/lib/og.tsx).

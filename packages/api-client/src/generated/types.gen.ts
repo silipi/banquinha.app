@@ -9,6 +9,38 @@ export type HealthResponseDto = {
     database: 'up' | 'down';
 };
 
+export type AuthConfigDto = {
+    /**
+     * Present when "Sign in with Google" is enabled.
+     */
+    googleClientId: string | null;
+};
+
+export type RequestLoginCodeDto = {
+    email: string;
+};
+
+export type VerifyLoginCodeDto = {
+    email: string;
+    /**
+     * The 6 digits from the email.
+     */
+    code: string;
+};
+
+export type MeDto = {
+    id: string;
+    email: string;
+    name: string | null;
+};
+
+export type GoogleSignInDto = {
+    /**
+     * ID token returned by Google Identity Services.
+     */
+    credential: string;
+};
+
 export type CheckHandleResponseDto = {
     /**
      * Normalized handle, as it would appear in the store URL.
@@ -140,6 +172,84 @@ export type HealthCheckResponses = {
 };
 
 export type HealthCheckResponse = HealthCheckResponses[keyof HealthCheckResponses];
+
+export type AuthConfigData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/auth/config';
+};
+
+export type AuthConfigResponses = {
+    200: AuthConfigDto;
+};
+
+export type AuthConfigResponse = AuthConfigResponses[keyof AuthConfigResponses];
+
+export type AuthRequestCodeData = {
+    body: RequestLoginCodeDto;
+    path?: never;
+    query?: never;
+    url: '/auth/email-code';
+};
+
+export type AuthRequestCodeResponses = {
+    204: void;
+};
+
+export type AuthRequestCodeResponse = AuthRequestCodeResponses[keyof AuthRequestCodeResponses];
+
+export type AuthVerifyCodeData = {
+    body: VerifyLoginCodeDto;
+    path?: never;
+    query?: never;
+    url: '/auth/email-code/verify';
+};
+
+export type AuthVerifyCodeResponses = {
+    200: MeDto;
+};
+
+export type AuthVerifyCodeResponse = AuthVerifyCodeResponses[keyof AuthVerifyCodeResponses];
+
+export type AuthGoogleData = {
+    body: GoogleSignInDto;
+    path?: never;
+    query?: never;
+    url: '/auth/google';
+};
+
+export type AuthGoogleResponses = {
+    200: MeDto;
+};
+
+export type AuthGoogleResponse = AuthGoogleResponses[keyof AuthGoogleResponses];
+
+export type AuthLogoutData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/auth/logout';
+};
+
+export type AuthLogoutResponses = {
+    204: void;
+};
+
+export type AuthLogoutResponse = AuthLogoutResponses[keyof AuthLogoutResponses];
+
+export type MeGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/me';
+};
+
+export type MeGetResponses = {
+    200: MeDto;
+};
+
+export type MeGetResponse = MeGetResponses[keyof MeGetResponses];
 
 export type StoresCheckHandleData = {
     body?: never;

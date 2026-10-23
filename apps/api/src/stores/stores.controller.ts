@@ -1,10 +1,12 @@
 import { Controller, Get, Query } from '@nestjs/common';
+import { Public } from '../auth/public.decorator.js';
 import {
   CheckHandleQueryDto,
   CheckHandleResponseDto,
 } from './dto/check-handle.dto.js';
 import { StoresService } from './stores.service.js';
 
+@Public()
 @Controller('stores')
 export class StoresController {
   constructor(private readonly storesService: StoresService) {}

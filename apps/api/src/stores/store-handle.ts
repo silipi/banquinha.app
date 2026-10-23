@@ -12,10 +12,12 @@ const STORE_HANDLE_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
  * Keep in sync when adding a route at the root of the web app.
  */
 export const PLATFORM_ROOT_PATHS = [
+  'api', // proxied to the API (next.config.ts)
   'blog',
-  'cadastro',
+  'cadastro', // redirects to the merchant area
   'lojas', // public/lojas: example store images
   'opengraph-image',
+  'painel', // merchant area (app.banquinha.app)
   'privacidade',
   'robots',
   'sitemap',
@@ -27,14 +29,12 @@ const RESERVED_HANDLES = new Set<string>([
   ...PLATFORM_ROOT_PATHS,
   // Platform hosts and areas
   'admin',
-  'api',
   'app',
   'cdn',
   'dashboard',
   'dev',
   'docs',
   'mail',
-  'painel',
   'staging',
   'static',
   'status',
