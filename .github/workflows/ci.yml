@@ -33,3 +33,55 @@ jobs:
       - name: Generated API client is up to date
         run: pnpm generate && git diff --exit-code -- apps/api/openapi.json packages/api-client/src/generated
       - run: pnpm check
+
+  # Ships the API to Cloud Run after checks pass on main. GCP setup: docs/deploy.md.
+  deploy-api:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency: deploy-api
+    permissions:
+      contents: read
+      id-token: write # Workload Identity Federation: GitHub OIDC token -> GCP, no stored key
+    env:
+      REGION: southamerica-east1
+      IMAGE: southamerica-east1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/banquinha/api:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Before the new revision goes live, so migrations must stay compatible with the running one.
+      - name: Migrate production database
+        run: pnpm db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_DIRECT }}
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SA }}
+      - uses: google-github-actions/setup-gcloud@v3
+      - name: Build and push image
+        run: |
+          gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+          docker build -f apps/api/Dockerfile -t "$IMAGE" .
+          docker push "$IMAGE"
+      # One instance at most: the order rate limit counter lives in memory (see ROADMAP P3-01).
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy banquinha-api \
+            --image "$IMAGE" \
+            --region "$REGION" \
+            --service-account "banquinha-api@${{ vars.GCP_PROJECT_ID }}.iam.gserviceaccount.com" \
+            --allow-unauthenticated \
+            --port 8080 \
+            --cpu 1 \
+            --memory 512Mi \
+            --min-instances 0 \
+            --max-instances 1 \
+            --cpu-boost \
+            --set-env-vars "WEB_ORIGIN=${{ vars.WEB_ORIGIN }}" \
+            --set-secrets "DATABASE_URL=database-url:latest,INTERNAL_API_KEY=internal-api-key:latest"

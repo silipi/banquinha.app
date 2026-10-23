@@ -64,6 +64,10 @@ Env: copy `.env.example` to `.env` at the root. The API loads `../../.env` in de
 - Base components in `src/components/ui` (shadcn style: `cva` + `cn`). Marketing routes in `src/app/(marketing)`.
 - Blog: post metadata in `src/lib/blog.ts`, body in `src/content/blog/<slug>.mdx` (`@next/mdx`, GFM, heading ids via rehype-slug). To add a post, add both; the list, sitemap, RSS (`/blog/rss.xml`), share image and JSON-LD pick it up. `/blog` lives outside `(marketing)` so its generated share image URLs stay unhashed.
 
+## Deploy
+
+Web on Vercel, API on Cloud Run, Postgres on Neon. Pipeline, GitHub settings and one-time GCP setup: [`docs/deploy.md`](docs/deploy.md).
+
 ## API (apps/api)
 
 - Nest 12 on the Fastify adapter. `createApp()` in `src/app.ts` holds global setup (validation pipe) and is shared by `main.ts`, tests and `openapi.ts`.
