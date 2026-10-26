@@ -7,8 +7,10 @@ describe('buildCustomerMessages', () => {
     number: 7,
     customerName: ' Marina  Souza ',
     fulfillment: 'pickup' as const,
+    hasServices: false,
     address: null,
     totalCents: 7800,
+    priceToConfirm: false,
   };
 
   it('greets by first name and names the order', () => {
@@ -61,9 +63,60 @@ describe('buildCustomerMessages', () => {
 
   it('thanks and cancels', () => {
     const messages = buildCustomerMessages(pickup);
-    expect(messages.completed).toContain('Obrigado pela compra, Marina!');
+    expect(messages.completed).toContain('Obrigado, Marina!');
     expect(messages.canceled).toContain(
       'Seu pedido #7 na loja Plantinhas do Paulo foi cancelado.',
+    );
+  });
+});
+
+describe('buildCustomerMessages for services', () => {
+  const service = {
+    storeName: 'Tech do Rafa',
+    locationUrl: null,
+    number: 3,
+    customerName: 'Ana',
+    fulfillment: 'delivery' as const,
+    hasServices: true,
+    address: 'Rua das Flores, 10',
+    totalCents: 12000,
+    priceToConfirm: true,
+  };
+
+  it('confirms with what is still to settle', () => {
+    expect(buildCustomerMessages(service).confirmed).toBe(
+      [
+        'Olá, Ana! Seu pedido #3 na loja Tech do Rafa está confirmado ✅',
+        '',
+        'Total: R$ 120,00 + itens a combinar',
+        'Qualquer mudança, me avisa por aqui.',
+      ].join('\n'),
+    );
+  });
+
+  it('says the merchant is on the way, or ready to start', () => {
+    expect(buildCustomerMessages(service).ready).toBe(
+      [
+        'Olá, Ana! Estou a caminho para o atendimento do pedido #3 🚗',
+        '',
+        'Endereço: Rua das Flores, 10',
+      ].join('\n'),
+    );
+    expect(
+      buildCustomerMessages({
+        ...service,
+        fulfillment: 'online',
+        address: null,
+      }).ready,
+    ).toContain('Tudo pronto para o seu atendimento online do pedido #3');
+    expect(
+      buildCustomerMessages({
+        ...service,
+        fulfillment: 'pickup',
+        address: null,
+      }).ready,
+    ).toBe(
+      'Olá, Ana! Tudo pronto para o seu atendimento do pedido #3. Te espero! 🙌',
     );
   });
 });
@@ -76,8 +129,10 @@ describe('customerLinks', () => {
       number: 1,
       customerName: 'Ana',
       fulfillment: 'pickup',
+      hasServices: false,
       address: null,
       totalCents: 1000,
+      priceToConfirm: false,
     });
     expect(Object.keys(links).sort()).toEqual(
       ['canceled', 'chat', 'completed', 'confirmed', 'ready'].sort(),

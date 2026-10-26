@@ -4,8 +4,13 @@ import { ArrowLeft, MessageCircle, Minus, Plus, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useTransition, type FormEvent } from 'react';
+import {
+  formatItemPrice,
+  formatLineTotal,
+  formatTotal,
+} from '@/lib/item-price';
 import { productPath, storePath } from '@/lib/storefront-links';
-import { cn, formatBRL } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { formatWhatsappInput, isCompleteWhatsapp } from '@/lib/whatsapp-input';
 import {
   MAX_ITEM_QUANTITY,
@@ -14,12 +19,53 @@ import {
 } from '../_components/use-cart';
 import { placeOrder } from './actions';
 
-type Fulfillment = 'pickup' | 'delivery';
+type Fulfillment = 'pickup' | 'delivery' | 'online';
+type DayPeriod = 'morning' | 'afternoon' | 'evening';
+type Wording = 'products' | 'services';
 
-const FULFILLMENT_LABELS: Record<Fulfillment, string> = {
-  pickup: 'Vou retirar',
-  delivery: 'Quero entrega',
+/** How to receive, worded for a bag of products or for one with services. */
+const FULFILLMENT_LABELS: Record<Wording, Record<Fulfillment, string>> = {
+  products: {
+    pickup: 'Vou retirar',
+    delivery: 'Quero entrega',
+    online: 'Online',
+  },
+  services: {
+    pickup: 'Vou até a loja',
+    delivery: 'No meu endereço',
+    online: 'Online',
+  },
 };
+
+/** Shown when the store offers a single way, so there's nothing to pick. */
+const SINGLE_FULFILLMENT_NOTES: Record<Wording, Record<Fulfillment, string>> = {
+  products: {
+    pickup:
+      'Essa loja trabalha com retirada: você combina com ela onde e quando buscar.',
+    delivery: 'Essa loja trabalha com entrega: informe o endereço abaixo.',
+    online: 'Essa loja atende online.',
+  },
+  services: {
+    pickup:
+      'O atendimento é no endereço da loja: você combina os detalhes com ela.',
+    delivery: 'O atendimento é no seu endereço: informe onde abaixo.',
+    online:
+      'O atendimento é online: a loja te passa os detalhes pelo WhatsApp.',
+  },
+};
+
+const DAY_PERIODS: { value: DayPeriod; label: string }[] = [
+  { value: 'morning', label: 'Manhã' },
+  { value: 'afternoon', label: 'Tarde' },
+  { value: 'evening', label: 'Noite' },
+];
+
+/** Today as YYYY-MM-DD in the customer's own time zone, the earliest day to pick. */
+function today() {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
 
 const field =
   'w-full rounded-store-sm border bg-surface px-4 py-3 outline-none transition-shadow placeholder:text-muted-foreground focus:ring-2 focus:ring-store';
@@ -30,6 +76,7 @@ export function BagView({ fulfillment }: { fulfillment: Fulfillment[] }) {
   const [placed, setPlaced] = useState<{
     number: number;
     whatsappUrl: string;
+    onlyServices: boolean;
   }>();
 
   if (placed) return <OrderPlaced {...placed} handle={cart.handle} />;
@@ -43,7 +90,7 @@ export function BagView({ fulfillment }: { fulfillment: Fulfillment[] }) {
         <ArrowLeft className="size-4" /> Continuar comprando
       </Link>
       <h1 className="mt-4 font-display text-4xl font-bold tracking-tight">
-        Sua sacola
+        {cart.onlyServices ? 'Sua solicitação' : 'Sua sacola'}
       </h1>
 
       {cart.items === null ? (
@@ -73,17 +120,24 @@ export function BagView({ fulfillment }: { fulfillment: Fulfillment[] }) {
               />
             ))}
           </ul>
-          <div className="mt-4 flex items-center justify-between px-2 text-lg">
+          <div className="mt-4 flex items-center justify-between gap-4 px-2 text-lg">
             <span className="text-muted-foreground">Total</span>
-            <span className="font-display text-2xl font-bold">
-              {formatBRL(cart.subtotalCents / 100)}
+            <span className="text-right font-display text-2xl font-bold">
+              {formatTotal(cart.subtotalCents, cart.priceToConfirm)}
             </span>
           </div>
+          {cart.priceToConfirm && (
+            <p className="mt-1 px-2 text-right text-sm text-muted-foreground">
+              O valor dos itens “a partir de” e “sob orçamento” você combina com
+              a loja.
+            </p>
+          )}
           <CheckoutForm
             fulfillmentOptions={fulfillment}
             onPlaced={(order) => {
+              const onlyServices = cart.onlyServices;
               cart.clear();
-              setPlaced(order);
+              setPlaced({ ...order, onlyServices });
               window.location.assign(order.whatsappUrl);
             }}
           />
@@ -92,6 +146,12 @@ export function BagView({ fulfillment }: { fulfillment: Fulfillment[] }) {
     </>
   );
 }
+
+/** Shown right after the quantity: "4 h", "2 d". */
+const QUANTITY_UNITS: Partial<Record<CartItem['priceType'], string>> = {
+  hourly: ' h',
+  daily: ' d',
+};
 
 function BagItem({
   item,
@@ -125,7 +185,15 @@ function BagItem({
       </Link>
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-start justify-between gap-2">
-          <p className="truncate font-medium">{item.name}</p>
+          <div className="min-w-0">
+            <p className="truncate font-medium">{item.name}</p>
+            {/* The line total already reads "a partir de…" or "Sob orçamento". */}
+            {(item.priceType === 'hourly' || item.priceType === 'daily') && (
+              <p className="text-sm text-muted-foreground">
+                {formatItemPrice(item)}
+              </p>
+            )}
+          </div>
           <button
             type="button"
             onClick={onRemove}
@@ -146,8 +214,9 @@ function BagItem({
             >
               <Minus />
             </button>
-            <span className="w-7 text-center text-sm font-medium tabular-nums">
+            <span className="min-w-7 text-center text-sm font-medium tabular-nums">
               {item.quantity}
+              {QUANTITY_UNITS[item.priceType]}
             </span>
             <button
               type="button"
@@ -159,8 +228,8 @@ function BagItem({
               <Plus />
             </button>
           </div>
-          <p className="font-medium">
-            {formatBRL((item.priceCents * item.quantity) / 100)}
+          <p className="text-right text-sm font-medium sm:text-base">
+            {formatLineTotal(item)}
           </p>
         </div>
       </div>
@@ -176,9 +245,15 @@ function CheckoutForm({
   onPlaced: (order: { number: number; whatsappUrl: string }) => void;
 }) {
   const cart = useCart();
-  const [fulfillment, setFulfillment] = useState<Fulfillment>(
-    fulfillmentOptions[0] ?? 'pickup',
+  const wording: Wording = cart.hasServices ? 'services' : 'products';
+  // Online is only for services.
+  const options = fulfillmentOptions.filter(
+    (option) => option !== 'online' || cart.onlyServices,
   );
+  const [picked, setFulfillment] = useState<Fulfillment>();
+  const fulfillment = picked && options.includes(picked) ? picked : options[0];
+  const [preferredDate, setPreferredDate] = useState('');
+  const [preferredPeriod, setPreferredPeriod] = useState<DayPeriod>();
   const [whatsapp, setWhatsapp] = useState('');
   const [whatsappError, setWhatsappError] = useState<string>();
   const [error, setError] = useState<string>();
@@ -195,6 +270,7 @@ function CheckoutForm({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!fulfillment) return;
     if (!checkWhatsapp()) {
       document.getElementById('customer-whatsapp')?.focus();
       return;
@@ -210,6 +286,10 @@ function CheckoutForm({
         fulfillment,
         address: fulfillment === 'delivery' ? text('address') : undefined,
         note: text('note') || undefined,
+        preferredDate: cart.hasServices
+          ? preferredDate || undefined
+          : undefined,
+        preferredPeriod: cart.hasServices ? preferredPeriod : undefined,
         items: (cart.items ?? []).map(({ slug, quantity }) => ({
           slug,
           quantity,
@@ -277,25 +357,37 @@ function CheckoutForm({
         </p>
       </div>
 
-      {fulfillmentOptions.length === 1 ? (
+      {!fulfillment ? (
+        <p className="rounded-store-sm bg-brand-soft px-4 py-3 text-sm">
+          Essa loja só atende online, que é para serviços. Tire os produtos da
+          sacola para enviar.
+        </p>
+      ) : options.length === 1 ? (
         <p className="rounded-store-sm bg-store-soft px-4 py-3 text-sm">
-          {fulfillment === 'pickup'
-            ? 'Essa loja trabalha com retirada: você combina com ela onde e quando buscar.'
-            : 'Essa loja trabalha com entrega: informe o endereço abaixo.'}
+          {SINGLE_FULFILLMENT_NOTES[wording][fulfillment]}
         </p>
       ) : (
         <fieldset>
           <legend className="mb-2 text-sm font-medium">
-            Como prefere receber?
+            {cart.hasServices
+              ? 'Onde vai ser o atendimento?'
+              : 'Como prefere receber?'}
           </legend>
-          <div className="grid grid-cols-2 gap-3">
-            {fulfillmentOptions
-              .map((value) => [value, FULFILLMENT_LABELS[value]] as const)
+          <div
+            className={cn(
+              'grid gap-3',
+              options.length === 3 ? 'grid-cols-3' : 'grid-cols-2',
+            )}
+          >
+            {options
+              .map(
+                (value) => [value, FULFILLMENT_LABELS[wording][value]] as const,
+              )
               .map(([value, label]) => (
                 <label
                   key={value}
                   className={cn(
-                    'flex h-12 cursor-pointer items-center justify-center rounded-full border bg-surface text-sm font-medium transition-colors has-focus-visible:ring-2 has-focus-visible:ring-store',
+                    'flex min-h-12 cursor-pointer items-center justify-center rounded-full border bg-surface px-3 py-2 text-center text-sm leading-tight font-medium transition-colors has-focus-visible:ring-2 has-focus-visible:ring-store',
                     fulfillment === value && 'border-store bg-store-soft',
                   )}
                 >
@@ -317,7 +409,9 @@ function CheckoutForm({
       {fulfillment === 'delivery' && (
         <label className="block">
           <span className="mb-2 block text-sm font-medium">
-            Endereço de entrega
+            {cart.hasServices
+              ? 'Endereço do atendimento'
+              : 'Endereço de entrega'}
           </span>
           <textarea
             name="address"
@@ -330,6 +424,50 @@ function CheckoutForm({
             className={field}
           />
         </label>
+      )}
+
+      {cart.hasServices && (
+        <fieldset>
+          <legend className="mb-2 text-sm font-medium">
+            Quando você prefere?{' '}
+            <span className="font-normal text-muted-foreground">
+              (opcional)
+            </span>
+          </legend>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <input
+              type="date"
+              aria-label="Data preferida"
+              value={preferredDate}
+              min={today()}
+              onChange={(event) => setPreferredDate(event.target.value)}
+              className={cn(field, 'sm:w-auto')}
+            />
+            <div className="grid flex-1 grid-cols-3 gap-2">
+              {DAY_PERIODS.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={preferredPeriod === value}
+                  onClick={() =>
+                    setPreferredPeriod((current) =>
+                      current === value ? undefined : value,
+                    )
+                  }
+                  className={cn(
+                    'h-12 rounded-full border bg-surface text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-store focus-visible:outline-none',
+                    preferredPeriod === value && 'border-store bg-store-soft',
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            A loja confirma o dia e o horário com você pelo WhatsApp.
+          </p>
+        </fieldset>
       )}
 
       <label className="block">
@@ -357,14 +495,20 @@ function CheckoutForm({
       <div>
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || !fulfillment}
           className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-whatsapp px-7 font-medium text-white transition-[opacity,transform] hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
         >
           <MessageCircle className="size-5" />
-          {pending ? 'Enviando…' : 'Enviar pedido pelo WhatsApp'}
+          {pending
+            ? 'Enviando…'
+            : cart.onlyServices
+              ? 'Enviar solicitação pelo WhatsApp'
+              : 'Enviar pedido pelo WhatsApp'}
         </button>
         <p className="mt-3 text-center text-sm text-muted-foreground">
-          Você combina o pagamento e a entrega direto com a loja.
+          {cart.hasServices
+            ? 'Você combina o pagamento e o horário direto com a loja.'
+            : 'Você combina o pagamento e a entrega direto com a loja.'}
         </p>
       </div>
     </form>
@@ -374,10 +518,12 @@ function CheckoutForm({
 function OrderPlaced({
   number,
   whatsappUrl,
+  onlyServices,
   handle,
 }: {
   number: number;
   whatsappUrl: string;
+  onlyServices: boolean;
   handle: string;
 }) {
   return (
@@ -386,7 +532,9 @@ function OrderPlaced({
         <MessageCircle className="size-8" />
       </span>
       <h1 className="mt-6 font-display text-3xl font-bold tracking-tight">
-        Pedido #{number} criado!
+        {onlyServices
+          ? `Solicitação #${number} criada!`
+          : `Pedido #${number} criado!`}
       </h1>
       <p className="mt-3 max-w-sm text-pretty text-muted-foreground">
         Agora é só enviar a mensagem no WhatsApp para a loja confirmar. Se ele

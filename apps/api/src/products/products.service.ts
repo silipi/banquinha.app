@@ -19,6 +19,7 @@ import type {
   ProductListDto,
   UpdateProductDto,
 } from './dto/product.dto.js';
+import { checkPricing } from './pricing.js';
 import { uniqueProductSlug } from './product-slug.js';
 
 const PRODUCT_NOT_FOUND = 'Produto não encontrado';
@@ -59,6 +60,11 @@ export class ProductsService {
     input: CreateProductDto,
   ): Promise<ProductDto> {
     await this.stores.findOwned(user, storeId);
+    const pricing = checkPricing({
+      kind: input.kind ?? 'product',
+      priceType: input.priceType ?? 'fixed',
+      priceCents: input.priceCents,
+    });
     const plan = PLANS[user.plan];
     const existing = await this.db
       .select({ slug: products.slug, position: products.position })
@@ -79,7 +85,7 @@ export class ProductsService {
           new Set(existing.map((p) => p.slug)),
         ),
         name: input.name,
-        priceCents: input.priceCents,
+        ...pricing,
         description: input.description ?? null,
         active: input.active ?? true,
         position: Math.max(-1, ...existing.map((p) => p.position)) + 1,
@@ -94,10 +100,26 @@ export class ProductsService {
     productId: string,
     input: UpdateProductDto,
   ): Promise<ProductDto> {
-    await this.findOwned(user, storeId, productId);
+    const product = await this.findOwned(user, storeId, productId);
     const changes: Partial<typeof products.$inferInsert> = {};
     if (input.name !== undefined) changes.name = input.name;
-    if (input.priceCents !== undefined) changes.priceCents = input.priceCents;
+    if (
+      input.kind !== undefined ||
+      input.priceType !== undefined ||
+      input.priceCents !== undefined
+    ) {
+      Object.assign(
+        changes,
+        checkPricing({
+          kind: input.kind ?? product.kind,
+          priceType: input.priceType ?? product.priceType,
+          priceCents:
+            input.priceCents !== undefined
+              ? input.priceCents
+              : product.priceCents,
+        }),
+      );
+    }
     if (input.description !== undefined) {
       changes.description = input.description;
     }
@@ -256,6 +278,8 @@ function toProductDto(
     slug: product.slug,
     name: product.name,
     description: product.description,
+    kind: product.kind,
+    priceType: product.priceType,
     priceCents: product.priceCents,
     active: product.active,
     images: product.images.map(({ id, url }) => ({ id, url })),

@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, ShoppingBag } from 'lucide-react';
+import { Check, MessageSquareText, Plus, ShoppingBag } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useCart, type CartItem } from './use-cart';
@@ -13,6 +13,20 @@ export function AddToCartButton({
   className?: string;
 }) {
   const { add } = useCart();
+  const label =
+    product.priceType === 'quote'
+      ? {
+          icon: <MessageSquareText />,
+          idle: 'Pedir orçamento',
+          done: 'Adicionado',
+        }
+      : product.kind === 'service'
+        ? { icon: <Plus />, idle: 'Quero esse serviço', done: 'Adicionado' }
+        : {
+            icon: <ShoppingBag />,
+            idle: 'Adicionar à sacola',
+            done: 'Adicionado à sacola',
+          };
   const [added, setAdded] = useState(false);
 
   useEffect(() => {
@@ -35,11 +49,11 @@ export function AddToCartButton({
     >
       {added ? (
         <>
-          <Check /> Adicionado à sacola
+          <Check /> {label.done}
         </>
       ) : (
         <>
-          <ShoppingBag /> Adicionar à sacola
+          {label.icon} {label.idle}
         </>
       )}
     </button>

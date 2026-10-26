@@ -1,13 +1,21 @@
+import type { ItemKind, PriceType } from './item-price';
+
 // The onboarding draft lives in the browser until the store is published, so people
 // can leave and come back to the same step. Storage can be unavailable (private mode),
 // so every access is guarded.
 
 const KEY = 'banquinha:onboarding';
 
+/** What the store sells, asked on the products step; it only sets defaults. */
+export type Offering = 'products' | 'services' | 'both';
+
 export interface DraftProduct {
   /** Stable key for React lists. */
   key: string;
   name: string;
+  kind: ItemKind;
+  priceType: PriceType;
+  /** 0 while empty. */
   priceCents: number;
   description: string;
 }
@@ -21,6 +29,7 @@ export interface OnboardingDraft {
   whatsapp: string;
   /** Id of a theme from GET /themes. */
   themeId: string;
+  offering: Offering;
   products: DraftProduct[];
 }
 

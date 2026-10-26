@@ -17,10 +17,11 @@ import {
 import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { formatItemPrice } from '@/lib/item-price';
 import { apiErrorMessage, panelApi } from '@/lib/panel';
 import { absoluteUrl } from '@/lib/site';
 import { productPath } from '@/lib/storefront-links';
-import { cn, formatBRL } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { refreshStorefront } from '../../actions';
 import { usePanel } from '../_components/panel-context';
 import { ProductEditor } from './_components/ProductEditor';
@@ -124,7 +125,7 @@ export default function ProductsPage() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-bold tracking-tight">
-            Produtos
+            Produtos e serviços
           </h1>
           <p className="mt-1 text-muted-foreground">
             {products.length} de {maxProducts} no plano {me.plan.name}
@@ -135,21 +136,23 @@ export default function ProductsPage() {
           disabled={atLimit}
           onClick={() => setEditing('new')}
         >
-          <Plus /> Novo produto
+          <Plus /> Novo item
         </Button>
       </header>
 
       {atLimit && (
         <p className="rounded-2xl bg-butter px-4 py-3 text-sm">
-          Você chegou ao limite de {maxProducts} produtos do plano{' '}
-          {me.plan.name}. Apague um para cadastrar outro.
+          Você chegou ao limite de {maxProducts} itens do plano {me.plan.name}.
+          Apague um para cadastrar outro.
         </p>
       )}
 
       {products.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-3xl border border-dashed p-10 text-center">
           <ImageIcon className="size-8 text-muted-foreground" />
-          <p className="font-medium">Sua loja ainda não tem produtos</p>
+          <p className="font-medium">
+            Sua loja ainda não tem produtos nem serviços
+          </p>
           <Button variant="brand" onClick={() => setEditing('new')}>
             <Plus /> Cadastrar o primeiro
           </Button>
@@ -187,7 +190,12 @@ export default function ProductsPage() {
                     {product.name}
                   </span>
                   <span className="flex items-center gap-2 text-sm text-muted-foreground">
-                    {formatBRL(product.priceCents / 100)}
+                    {formatItemPrice(product)}
+                    {product.kind === 'service' && (
+                      <span className="rounded-full bg-sky px-2 py-0.5 text-xs text-ink">
+                        Serviço
+                      </span>
+                    )}
                     {!product.active && (
                       <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
                         Escondido

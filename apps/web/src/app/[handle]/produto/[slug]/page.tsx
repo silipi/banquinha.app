@@ -6,8 +6,8 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { getProduct } from '@/lib/storefront';
 import { openGraphDefaults } from '@/lib/site';
+import { formatItemPrice } from '@/lib/item-price';
 import { productPath, storePath } from '@/lib/storefront-links';
-import { formatBRL } from '@/lib/utils';
 import { AddToCartButton } from '../../_components/AddToCartButton';
 import { StoreAvatar } from '../../_components/StoreAvatar';
 
@@ -34,7 +34,7 @@ async function ProductDetails({ params }: Pick<Props, 'params'>) {
   if (!product) notFound();
 
   const { store } = product;
-  const price = formatBRL(product.priceCents / 100);
+  const price = formatItemPrice(product);
   const [cover, ...gallery] = product.images;
 
   return (
@@ -97,6 +97,8 @@ async function ProductDetails({ params }: Pick<Props, 'params'>) {
             product={{
               slug: product.slug,
               name: product.name,
+              kind: product.kind,
+              priceType: product.priceType,
               priceCents: product.priceCents,
               imageUrl: cover?.url ?? null,
             }}

@@ -1,12 +1,30 @@
+import { formatItemPrice, type PriceType } from './item-price';
+
 // Fictional stores used on the landing page to show what a storefront looks like.
+export type ExampleProduct = {
+  name: string;
+  /** In reais; null for "quote". */
+  price: number | null;
+  /** Fixed when omitted. */
+  priceType?: PriceType;
+  image: string;
+};
+
 export type ExampleStore = {
   handle: string;
   name: string;
   tagline: string;
   city: string;
   accent: string;
-  products: { name: string; price: number; image: string }[];
+  products: ExampleProduct[];
 };
+
+/** "R$ 45,00", "R$ 60,00/hora", "Sob orçamento"... */
+export const examplePrice = (product: ExampleProduct) =>
+  formatItemPrice({
+    priceType: product.priceType ?? 'fixed',
+    priceCents: product.price === null ? null : product.price * 100,
+  });
 
 export const exampleStores: ExampleStore[] = [
   {
@@ -100,6 +118,39 @@ export const exampleStores: ExampleStore[] = [
         name: 'Pulseira Encanto',
         price: 129,
         image: '/lojas/clarajoias/pulseira-encanto.webp',
+      },
+    ],
+  },
+  {
+    handle: 'techdorafa',
+    name: 'Tech do Rafa',
+    tagline:
+      'Formatação, limpeza e montagem de computadores, em casa ou a distância.',
+    city: 'Porto Alegre, RS',
+    accent: 'bg-sky',
+    products: [
+      {
+        name: 'Formatação de computador',
+        price: 120,
+        image: '/lojas/techdorafa/formatacao-de-computador.webp',
+      },
+      {
+        name: 'Suporte remoto',
+        price: 60,
+        priceType: 'hourly',
+        image: '/lojas/techdorafa/suporte-remoto.webp',
+      },
+      {
+        name: 'Limpeza interna de notebook',
+        price: 90,
+        priceType: 'from',
+        image: '/lojas/techdorafa/limpeza-de-notebook.webp',
+      },
+      {
+        name: 'Montagem de PC gamer',
+        price: null,
+        priceType: 'quote',
+        image: '/lojas/techdorafa/montagem-de-pc-gamer.webp',
       },
     ],
   },

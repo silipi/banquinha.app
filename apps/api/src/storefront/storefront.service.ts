@@ -60,6 +60,7 @@ export class StorefrontService {
       ...toStoreSummary(store),
       bio: store.bio,
       city: store.city,
+      serviceArea: store.serviceArea,
       contact: {
         whatsapp: store.whatsapp,
         instagram: store.instagram,
@@ -69,6 +70,8 @@ export class StorefrontService {
       products: store.products.map((product) => ({
         slug: product.slug,
         name: product.name,
+        kind: product.kind,
+        priceType: product.priceType,
         priceCents: product.priceCents,
         imageUrl: product.images[0]?.url ?? null,
       })),
@@ -99,6 +102,8 @@ export class StorefrontService {
       slug: product.slug,
       name: product.name,
       description: product.description,
+      kind: product.kind,
+      priceType: product.priceType,
       priceCents: product.priceCents,
       images: product.images,
       store: toStoreSummary(store),

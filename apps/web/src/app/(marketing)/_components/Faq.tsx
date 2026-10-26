@@ -18,6 +18,11 @@ const faq = [
       'O cliente escolhe os produtos na sua loja e, ao finalizar, o pedido chega organizado no seu WhatsApp, com itens, total e contato. Aí é só combinar pagamento e entrega com ele.',
   },
   {
+    question: 'Funciona para quem presta serviço?',
+    answer:
+      'Sim. Técnicos, diaristas, professores particulares e outros profissionais cadastram serviços com preço fixo, por hora, por dia, "a partir de" ou sob orçamento. O cliente escolhe o serviço, diz onde e quando prefere o atendimento, e a solicitação chega no seu WhatsApp.',
+  },
+  {
     question: 'E pagamento por Pix ou cartão?',
     answer:
       'Está chegando. Em breve você vai poder receber por Pix e cartão direto na loja, com o dinheiro caindo na sua conta.',

@@ -1,9 +1,9 @@
 import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { exampleStores } from '@/lib/example-stores';
+import { examplePrice, exampleStores } from '@/lib/example-stores';
 import { storeDisplayUrl, storePath } from '@/lib/storefront-links';
-import { cn, formatBRL } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { SectionHeading } from './SectionHeading';
 
 export function ExampleStores() {
@@ -12,9 +12,9 @@ export function ExampleStores() {
       <SectionHeading
         eyebrow="Inspire-se"
         title="Pequenos negócios não precisam parecer pequenos."
-        description="Cada loja ganha uma vitrine bonita, com a identidade de quem vende."
+        description="Quem vende produtos ou presta serviços ganha uma vitrine bonita, com a sua identidade."
       />
-      <ul className="mx-auto mt-14 grid max-w-6xl gap-6 md:grid-cols-3">
+      <ul className="mx-auto mt-14 grid max-w-6xl gap-6 md:grid-cols-2 xl:grid-cols-4">
         {exampleStores.map((store) => (
           <li key={store.handle}>
             <Link
@@ -60,7 +60,7 @@ export function ExampleStores() {
                       {product.name}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {formatBRL(product.price)}
+                      {examplePrice(product)}
                     </p>
                   </div>
                 ))}

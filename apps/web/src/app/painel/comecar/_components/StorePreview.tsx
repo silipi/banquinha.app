@@ -1,13 +1,15 @@
 import type { ThemeTokensDto } from '@banquinha/api-client';
 import { ImageIcon, MessageCircle } from 'lucide-react';
 import { StoreAvatar } from '@/app/[handle]/_components/StoreAvatar';
+import { formatItemPrice, type PriceType } from '@/lib/item-price';
 import { themeStyle } from '@/lib/store-theme';
 import { storeDisplayUrl } from '@/lib/storefront-links';
-import { formatBRL } from '@/lib/utils';
 
 export interface PreviewProduct {
   key: string;
   name: string;
+  priceType: PriceType;
+  /** 0 while empty. */
   priceCents: number;
 }
 
@@ -30,7 +32,14 @@ export function StorePreview({
   const shown =
     products.length > 0
       ? products
-      : [{ key: 'empty', name: '', priceCents: 0 }];
+      : [
+          {
+            key: 'empty',
+            name: '',
+            priceType: 'fixed' as const,
+            priceCents: 0,
+          },
+        ];
 
   return (
     <div
@@ -59,9 +68,7 @@ export function StorePreview({
                 {product.name || 'Seu produto'}
               </p>
               <p className="text-xs text-muted-foreground">
-                {product.priceCents
-                  ? formatBRL(product.priceCents / 100)
-                  : 'R$ 0,00'}
+                {formatItemPrice(product)}
               </p>
             </div>
           ))}

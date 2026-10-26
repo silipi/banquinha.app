@@ -3,9 +3,13 @@ const audience = [
   'Influenciadores',
   'Artesãs e artesãos',
   'Confeitarias caseiras',
+  'Técnicos e consertos',
   'Brechós',
+  'Diaristas',
   'Criadores de conteúdo',
+  'Professores particulares',
   'Lojas de bairro',
+  'Prestadores de serviço',
   'Pequenas empresas',
 ];
 

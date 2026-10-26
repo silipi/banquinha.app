@@ -19,7 +19,9 @@ import {
 } from '../database/schema/index.js';
 import { ImagesService } from '../images/images.service.js';
 import { PLANS } from '../plans/plans.js';
+import { checkPricing } from '../products/pricing.js';
 import { uniqueProductSlug } from '../products/product-slug.js';
+import { assertSomeFulfillment } from '../storefront/fulfillment.js';
 import { readableTextOn } from '../themes/contrast.js';
 import { resolveTheme, type ThemeOverrides } from '../themes/theme-tokens.js';
 import { ThemesService } from '../themes/themes.service.js';
@@ -145,6 +147,20 @@ export class StoresService {
         : new BadRequestException(handleCheck.message);
     }
 
+    const pricing = input.products.map((product) =>
+      checkPricing({
+        kind: product.kind ?? 'product',
+        priceType: product.priceType ?? 'fixed',
+        priceCents: product.priceCents,
+      }),
+    );
+    const fulfillment = {
+      pickupEnabled: input.pickupEnabled ?? true,
+      deliveryEnabled: input.deliveryEnabled ?? true,
+      onlineEnabled: input.onlineEnabled ?? false,
+    };
+    assertSomeFulfillment(fulfillment);
+
     const theme = await this.themes.findUsable(user, input.themeId);
     const takenSlugs = new Set<string>();
     const slugs = input.products.map(({ name }) =>
@@ -161,6 +177,7 @@ export class StoresService {
             name: input.name,
             whatsapp: input.whatsapp,
             themeId: theme.id,
+            ...fulfillment,
           })
           .returning({
             id: stores.id,
@@ -174,7 +191,7 @@ export class StoresService {
             storeId: store.id,
             slug: slugs[position]!,
             name: product.name,
-            priceCents: product.priceCents,
+            ...pricing[position]!,
             description: product.description ?? null,
             position,
           })),
@@ -231,6 +248,8 @@ export class StoresService {
       locationUrl: store.locationUrl,
       pickupEnabled: store.pickupEnabled,
       deliveryEnabled: store.deliveryEnabled,
+      onlineEnabled: store.onlineEnabled,
+      serviceArea: store.serviceArea,
       productCount,
       maxProducts: PLANS[user.plan].maxProducts,
       orderCount: orderCounts.total,
@@ -260,6 +279,8 @@ export class StoresService {
       'locationUrl',
       'pickupEnabled',
       'deliveryEnabled',
+      'onlineEnabled',
+      'serviceArea',
     ] as const) {
       if (input[field] !== undefined) {
         (changes as Record<string, unknown>)[field] = input[field];
@@ -275,13 +296,11 @@ export class StoresService {
       );
     }
 
-    const pickup = changes.pickupEnabled ?? store.pickupEnabled;
-    const delivery = changes.deliveryEnabled ?? store.deliveryEnabled;
-    if (!pickup && !delivery) {
-      throw new BadRequestException(
-        'Deixe pelo menos uma forma de receber ligada: retirada ou entrega.',
-      );
-    }
+    assertSomeFulfillment({
+      pickupEnabled: changes.pickupEnabled ?? store.pickupEnabled,
+      deliveryEnabled: changes.deliveryEnabled ?? store.deliveryEnabled,
+      onlineEnabled: changes.onlineEnabled ?? store.onlineEnabled,
+    });
 
     if (Object.keys(changes).length > 0) {
       await this.db.update(stores).set(changes).where(eq(stores.id, id));

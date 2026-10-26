@@ -12,15 +12,16 @@ import { ArrowLeft, Check, LoaderCircle, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
+import { PRICE_TYPES_BY_KIND, type ItemKind } from '@/lib/item-price';
 import {
   clearDraft,
   readDraft,
   saveDraft,
   type DraftProduct,
   type OnboardingDraft,
+  type Offering,
 } from '@/lib/onboarding-draft';
 import { apiErrorMessage, panelApi } from '@/lib/panel';
-import { formatPriceInput, parsePriceInput } from '@/lib/price-input';
 import { formatStoreHandleInput } from '@/lib/store-handle-input';
 import { themeStyle } from '@/lib/store-theme';
 import { brandDomain } from '@/lib/site';
@@ -28,6 +29,11 @@ import { cn } from '@/lib/utils';
 import { formatWhatsappInput, isCompleteWhatsapp } from '@/lib/whatsapp-input';
 import { NETWORK_ERROR } from '../../_components/auth-shared';
 import { Field, FormError } from '../../_components/fields';
+import {
+  PricingFields,
+  priceForApi,
+  pricingError,
+} from '../../_components/PricingFields';
 import { Published } from './Published';
 import { StorePreview } from './StorePreview';
 
@@ -41,12 +47,45 @@ interface HandleCheck {
   suggestions?: string[];
 }
 
-const newProduct = (): DraftProduct => ({
+const kindFor = (offering: Offering): ItemKind =>
+  offering === 'services' ? 'service' : 'product';
+
+const newProduct = (kind: ItemKind): DraftProduct => ({
   key: crypto.randomUUID(),
   name: '',
+  kind,
+  priceType: 'fixed',
   priceCents: 0,
   description: '',
 });
+
+/** Wording of the products step for each answer to "what do you offer?". */
+const OFFERING_COPY: Record<
+  Offering,
+  { title: string; item: string; add: string }
+> = {
+  products: {
+    title: 'O que você vende?',
+    item: 'Produto',
+    add: 'Adicionar outro produto',
+  },
+  services: {
+    title: 'Quais serviços você oferece?',
+    item: 'Serviço',
+    add: 'Adicionar outro serviço',
+  },
+  both: {
+    title: 'O que você oferece?',
+    item: 'Item',
+    add: 'Adicionar outro item',
+  },
+};
+
+const OFFERINGS: { value: Offering; label: string }[] = [
+  { value: 'products', label: 'Produtos' },
+  { value: 'services', label: 'Serviços' },
+  { value: 'both', label: 'Os dois' },
+];
 
 // Portuguese connectors stay lowercase in names ("Flores da Maria").
 const LOWERCASE_WORDS = new Set([
@@ -81,6 +120,13 @@ const handleFromName = (name: string) =>
 function initialDraft(me: MeDto): OnboardingDraft {
   const saved = readDraft();
   const handle = saved.handle ?? '';
+  const offering = saved.offering ?? 'products';
+  // Drafts saved before services existed have no kind or price type.
+  const products = saved.products?.map((product) => ({
+    ...product,
+    kind: product.kind ?? 'product',
+    priceType: product.priceType ?? 'fixed',
+  }));
   return {
     step: saved.step ?? 0,
     handle,
@@ -90,7 +136,8 @@ function initialDraft(me: MeDto): OnboardingDraft {
       saved.whatsapp ?? formatWhatsappInput(me.whatsapp?.slice(2) ?? ''),
     // Set to the first platform theme (the default) once the themes load.
     themeId: saved.themeId ?? '',
-    products: saved.products?.length ? saved.products : [newProduct()],
+    offering,
+    products: products?.length ? products : [newProduct(kindFor(offering))],
   };
 }
 
@@ -180,10 +227,10 @@ export function Onboarding({ me }: { me: MeDto }) {
     if (draft.step === 2) {
       draft.products.forEach((product) => {
         if (product.name.trim().length < 2) {
-          found[`${product.key}.name`] = 'Dê um nome ao produto';
+          found[`${product.key}.name`] = 'Dê um nome';
         }
-        if (!product.priceCents)
-          found[`${product.key}.price`] = 'Informe o preço';
+        const priceError = pricingError(product);
+        if (priceError) found[`${product.key}.price`] = priceError;
       });
       setErrors(found);
     }
@@ -211,9 +258,15 @@ export function Onboarding({ me }: { me: MeDto }) {
           name: draft.name,
           whatsapp: draft.whatsapp,
           themeId: draft.themeId || undefined,
+          // Someone who only offers services usually goes to the customer.
+          ...(draft.offering === 'services'
+            ? { pickupEnabled: false, deliveryEnabled: true }
+            : {}),
           products: draft.products.map((product) => ({
             name: product.name,
-            priceCents: product.priceCents,
+            kind: product.kind,
+            priceType: product.priceType,
+            priceCents: priceForApi(product),
             description: product.description.trim() || undefined,
           })),
         },
@@ -277,10 +330,32 @@ export function Onboarding({ me }: { me: MeDto }) {
           )}
           {draft.step === 2 && (
             <ProductsStep
+              offering={draft.offering}
               products={draft.products}
               errors={errors}
               maxProducts={maxProducts}
               planName={me.plan.name}
+              onOfferingChange={(offering) => {
+                // Products or services only: every item follows the answer.
+                const kind = offering === 'both' ? null : kindFor(offering);
+                update({
+                  offering,
+                  products: draft.products.map((product) =>
+                    kind && product.kind !== kind
+                      ? {
+                          ...product,
+                          kind,
+                          priceType: PRICE_TYPES_BY_KIND[kind].includes(
+                            product.priceType,
+                          )
+                            ? product.priceType
+                            : 'fixed',
+                        }
+                      : product,
+                  ),
+                });
+                setErrors({});
+              }}
               onChange={(products) => {
                 update({ products });
                 setErrors({});
@@ -551,31 +626,56 @@ function ThemeStep({
 }
 
 function ProductsStep({
+  offering,
   products,
   errors,
   maxProducts,
   planName,
+  onOfferingChange,
   onChange,
 }: {
+  offering: Offering;
   products: DraftProduct[];
   errors: Errors;
   maxProducts: number;
   planName: string;
+  onOfferingChange: (offering: Offering) => void;
   onChange: (products: DraftProduct[]) => void;
 }) {
   const edit = (key: string, changes: Partial<DraftProduct>) =>
     onChange(products.map((p) => (p.key === key ? { ...p, ...changes } : p)));
+  const copy = OFFERING_COPY[offering];
 
   return (
     <>
       <StepHeading
-        title="O que você vende?"
-        text="Cadastre pelo menos um produto para a loja ir ao ar. As fotos você coloca depois, no painel."
+        title={copy.title}
+        text="Cadastre pelo menos um item para a loja ir ao ar. As fotos você coloca depois, no painel."
       />
+      <div
+        role="radiogroup"
+        aria-label="O que você oferece"
+        className="grid grid-cols-3 gap-1 rounded-full border bg-muted/60 p-1"
+      >
+        {OFFERINGS.map(({ value, label }) => (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={offering === value}
+            onClick={() => onOfferingChange(value)}
+            className="h-11 rounded-full text-sm font-medium transition-colors aria-checked:bg-surface aria-checked:shadow-sm"
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       {products.map((product, index) => (
         <ProductCard
           key={product.key}
           index={index}
+          label={copy.item}
+          showKind={offering === 'both'}
           product={product}
           errors={errors}
           canRemove={products.length > 1}
@@ -589,12 +689,12 @@ function ProductsStep({
         <Button
           variant="outline"
           disabled={products.length >= maxProducts}
-          onClick={() => onChange([...products, newProduct()])}
+          onClick={() => onChange([...products, newProduct(kindFor(offering))])}
         >
-          <Plus /> Adicionar outro produto
+          <Plus /> {copy.add}
         </Button>
         <p className="text-sm text-muted-foreground">
-          {products.length} de {maxProducts} produtos no plano {planName}.
+          {products.length} de {maxProducts} itens no plano {planName}.
         </p>
       </div>
     </>
@@ -603,6 +703,8 @@ function ProductsStep({
 
 function ProductCard({
   index,
+  label,
+  showKind,
   product,
   errors,
   canRemove,
@@ -610,27 +712,34 @@ function ProductCard({
   onRemove,
 }: {
   index: number;
+  /** "Produto", "Serviço" or "Item". */
+  label: string;
+  /** Asks product or service, for stores that offer both. */
+  showKind: boolean;
   product: DraftProduct;
   errors: Errors;
   canRemove: boolean;
   onEdit: (changes: Partial<DraftProduct>) => void;
   onRemove: () => void;
 }) {
-  const priceId = useId();
   const descriptionId = useId();
-  const priceError = errors[`${product.key}.price`];
+  const service = product.kind === 'service';
 
   return (
     <fieldset className="flex flex-col gap-4 rounded-3xl border bg-surface/60 p-4">
-      <legend className="sr-only">Produto {index + 1}</legend>
+      <legend className="sr-only">
+        {label} {index + 1}
+      </legend>
       <div className="flex items-center justify-between">
-        <span className="text-sm font-semibold">Produto {index + 1}</span>
+        <span className="text-sm font-semibold">
+          {label} {index + 1}
+        </span>
         {canRemove && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onRemove}
-            aria-label={`Remover produto ${index + 1}`}
+            aria-label={`Remover ${label.toLowerCase()} ${index + 1}`}
           >
             <Trash2 />
           </Button>
@@ -642,38 +751,19 @@ function ProductCard({
         error={errors[`${product.key}.name`]}
         autoFocus={index > 0}
         autoCapitalize="sentences"
-        placeholder="Ex.: Bolo de pote de chocolate"
+        placeholder={
+          service
+            ? 'Ex.: Formatação de computador'
+            : 'Ex.: Bolo de pote de chocolate'
+        }
         onChange={(event) => onEdit({ name: event.target.value })}
       />
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor={priceId} className="text-sm font-medium">
-          Preço
-        </label>
-        <div
-          className={cn(
-            'flex h-13 items-center gap-2 rounded-2xl border bg-surface px-4 focus-within:border-foreground/40',
-            priceError && 'border-red-400',
-          )}
-        >
-          <span className="text-muted-foreground">R$</span>
-          <input
-            id={priceId}
-            inputMode="numeric"
-            value={formatPriceInput(product.priceCents)}
-            placeholder="0,00"
-            aria-invalid={Boolean(priceError)}
-            onChange={(event) =>
-              onEdit({ priceCents: parsePriceInput(event.target.value) })
-            }
-            className="h-full min-w-0 flex-1 bg-transparent text-base font-medium tabular-nums outline-none placeholder:text-muted-foreground/60"
-          />
-        </div>
-        {priceError && (
-          <p role="alert" className="text-sm text-red-600">
-            {priceError}
-          </p>
-        )}
-      </div>
+      <PricingFields
+        value={product}
+        error={errors[`${product.key}.price`]}
+        showKind={showKind}
+        onChange={onEdit}
+      />
       <div className="flex flex-col gap-1.5">
         <label htmlFor={descriptionId} className="text-sm font-medium">
           Descrição{' '}
@@ -684,7 +774,11 @@ function ProductCard({
           value={product.description}
           rows={2}
           maxLength={500}
-          placeholder="Tamanho, sabor, material…"
+          placeholder={
+            service
+              ? 'O que está incluso, quanto tempo leva…'
+              : 'Tamanho, sabor, material…'
+          }
           onChange={(event) => onEdit({ description: event.target.value })}
           className="w-full resize-none rounded-2xl border bg-surface px-4 py-3 text-base outline-none placeholder:text-muted-foreground/60 focus:border-foreground/40"
         />

@@ -10,21 +10,29 @@ import {
 } from '@banquinha/api-client';
 import {
   Bike,
+  CalendarClock,
   Check,
   Copy,
   LoaderCircle,
   MapPin,
   MessageCircle,
+  Monitor,
   Receipt,
   Store,
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
+import {
+  formatItemPrice,
+  formatLineTotal,
+  formatQuantity,
+  formatTotal,
+} from '@/lib/item-price';
 import { apiErrorMessage, panelApi } from '@/lib/panel';
 import { absoluteUrl } from '@/lib/site';
 import { storePath } from '@/lib/storefront-links';
-import { cn, formatBRL } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { formatWhatsappInput } from '@/lib/whatsapp-input';
 import { Dialog } from '../../_components/Dialog';
 import { FormError } from '../../_components/fields';
@@ -68,16 +76,58 @@ type MessageKey = Exclude<keyof CustomerLinks, 'chat'>;
 function messageLabels(order: OrderDto): { key: MessageKey; label: string }[] {
   return [
     { key: 'confirmed', label: 'Pedido confirmado' },
-    {
-      key: 'ready',
-      label:
-        order.fulfillment === 'delivery'
-          ? 'Saiu para entrega'
-          : 'Pronto para retirada',
-    },
-    { key: 'completed', label: 'Obrigado pela compra' },
+    { key: 'ready', label: readyLabel(order) },
+    { key: 'completed', label: 'Agradecimento' },
     { key: 'canceled', label: 'Pedido cancelado' },
   ];
+}
+
+function readyLabel(order: OrderDto): string {
+  if (order.hasServices) {
+    return order.fulfillment === 'delivery' ? 'A caminho' : 'Tudo pronto';
+  }
+  return order.fulfillment === 'delivery'
+    ? 'Saiu para entrega'
+    : 'Pronto para retirada';
+}
+
+/** How the order is received, worded for products or for services. */
+function fulfillmentLabel(
+  order: Pick<OrderSummaryDto, 'fulfillment' | 'hasServices'>,
+): string {
+  if (order.fulfillment === 'online') return 'Online';
+  if (order.hasServices) {
+    return order.fulfillment === 'delivery'
+      ? 'No endereço do cliente'
+      : 'No endereço da loja';
+  }
+  return order.fulfillment === 'delivery' ? 'Entrega' : 'Retirada';
+}
+
+const PERIOD_LABELS: Record<
+  NonNullable<OrderDto['preferredPeriod']>,
+  string
+> = {
+  morning: 'manhã',
+  afternoon: 'tarde',
+  evening: 'noite',
+};
+
+const preferredDay = new Intl.DateTimeFormat('pt-BR', {
+  weekday: 'long',
+  day: '2-digit',
+  month: '2-digit',
+  timeZone: 'UTC',
+});
+
+/** "sexta-feira, 30/10 · tarde", or null when the customer chose neither. */
+function preferredTime(order: OrderDto): string | null {
+  const parts = [
+    order.preferredDate &&
+      preferredDay.format(new Date(`${order.preferredDate}T12:00:00Z`)),
+    order.preferredPeriod && PERIOD_LABELS[order.preferredPeriod],
+  ].filter(Boolean);
+  return parts.length ? parts.join(' · ') : null;
 }
 
 /** The message offered right after the merchant moves an order to a status. */
@@ -268,9 +318,7 @@ export default function OrdersPage() {
                       <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
                         {orderDate(order.createdAt)}
                         <span aria-hidden>·</span>
-                        {order.fulfillment === 'delivery'
-                          ? 'Entrega'
-                          : 'Retirada'}
+                        {fulfillmentLabel(order)}
                         <span aria-hidden>·</span>
                         {order.itemCount}{' '}
                         {order.itemCount === 1 ? 'item' : 'itens'}
@@ -278,7 +326,7 @@ export default function OrdersPage() {
                     </span>
                     <span className="flex shrink-0 flex-col items-end gap-1">
                       <span className="font-medium tabular-nums">
-                        {formatBRL(order.totalCents / 100)}
+                        {formatTotal(order.totalCents, order.priceToConfirm)}
                       </span>
                       <StatusBadge status={order.status} />
                     </span>
@@ -571,15 +619,26 @@ function OrderDetail({
                 >
                   <span>
                     <span className="font-medium tabular-nums">
-                      {item.quantity}×
+                      {item.priceType === 'hourly' || item.priceType === 'daily'
+                        ? formatQuantity(item.priceType, item.quantity)
+                        : `${item.quantity}×`}
                     </span>{' '}
                     {item.name}
                     <span className="block text-xs text-muted-foreground">
-                      {formatBRL(item.unitPriceCents / 100)} cada
+                      {item.priceType === 'fixed'
+                        ? `${formatItemPrice({ priceType: item.priceType, priceCents: item.unitPriceCents })} cada`
+                        : formatItemPrice({
+                            priceType: item.priceType,
+                            priceCents: item.unitPriceCents,
+                          })}
                     </span>
                   </span>
-                  <span className="tabular-nums">
-                    {formatBRL((item.unitPriceCents * item.quantity) / 100)}
+                  <span className="shrink-0 text-right tabular-nums">
+                    {formatLineTotal({
+                      priceType: item.priceType,
+                      priceCents: item.unitPriceCents,
+                      quantity: item.quantity,
+                    })}
                   </span>
                 </li>
               ))}
@@ -587,21 +646,29 @@ function OrderDetail({
             <p className="flex justify-between border-t px-4 py-3 font-display text-lg font-bold">
               Total{' '}
               <span className="tabular-nums">
-                {formatBRL(order.totalCents / 100)}
+                {formatTotal(order.totalCents, order.priceToConfirm)}
               </span>
             </p>
+            {order.priceToConfirm && (
+              <p className="border-t px-4 py-3 text-sm text-muted-foreground">
+                Combine com o cliente o valor dos itens “a partir de” e “sob
+                orçamento”.
+              </p>
+            )}
           </section>
 
           <section className="flex flex-col gap-3 text-sm">
             <p className="flex items-start gap-3">
               {order.fulfillment === 'delivery' ? (
                 <Bike className="mt-0.5 size-4 shrink-0" />
+              ) : order.fulfillment === 'online' ? (
+                <Monitor className="mt-0.5 size-4 shrink-0" />
               ) : (
                 <Store className="mt-0.5 size-4 shrink-0" />
               )}
               <span>
                 <span className="block font-medium">
-                  {order.fulfillment === 'delivery' ? 'Entrega' : 'Retirada'}
+                  {fulfillmentLabel(order)}
                 </span>
                 {order.address && (
                   <span className="text-muted-foreground">{order.address}</span>
@@ -617,6 +684,17 @@ function OrderDetail({
               >
                 <MapPin className="size-4" /> Abrir endereço no mapa
               </a>
+            )}
+            {preferredTime(order) && (
+              <p className="flex items-start gap-3">
+                <CalendarClock className="mt-0.5 size-4 shrink-0" />
+                <span>
+                  <span className="block font-medium">Quando prefere</span>
+                  <span className="text-muted-foreground">
+                    {preferredTime(order)}
+                  </span>
+                </span>
+              </p>
             )}
             {order.note && (
               <p className="rounded-2xl bg-butter px-4 py-3">

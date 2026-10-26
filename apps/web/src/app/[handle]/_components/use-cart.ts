@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
+import { isFirmPrice, type ItemKind, type PriceType } from '@/lib/item-price';
 
 // The cart lives in localStorage, one per store. Prices here are for display only:
 // the API reprices the order when it is placed.
@@ -9,7 +10,10 @@ import { useCallback, useMemo, useSyncExternalStore } from 'react';
 export type CartItem = {
   slug: string;
   name: string;
-  priceCents: number;
+  kind: ItemKind;
+  priceType: PriceType;
+  /** Null for "quote". */
+  priceCents: number | null;
   imageUrl: string | null;
   quantity: number;
 };
@@ -38,7 +42,14 @@ function readCart(handle: string): CartItem[] {
   let items = EMPTY;
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (Array.isArray(parsed)) items = parsed as CartItem[];
+    // Carts saved before services existed have no kind or price type.
+    if (Array.isArray(parsed)) {
+      items = (parsed as CartItem[]).map((item) => ({
+        ...item,
+        kind: item.kind ?? 'product',
+        priceType: item.priceType ?? 'fixed',
+      }));
+    }
   } catch {
     // Corrupt value; start over.
   }
@@ -126,17 +137,26 @@ export function useCart() {
 
   const clear = useCallback(() => writeCart(handle, []), [handle]);
 
-  const summary = useMemo(
-    () => ({
-      count: items?.reduce((sum, item) => sum + item.quantity, 0) ?? 0,
-      subtotalCents:
-        items?.reduce(
-          (sum, item) => sum + item.priceCents * item.quantity,
-          0,
-        ) ?? 0,
-    }),
-    [items],
-  );
+  const summary = useMemo(() => {
+    const list = items ?? [];
+    return {
+      count: list.reduce((sum, item) => sum + item.quantity, 0),
+      /** Items with a firm price only; see priceToConfirm. */
+      subtotalCents: list.reduce(
+        (sum, item) =>
+          isFirmPrice(item.priceType) && item.priceCents !== null
+            ? sum + item.priceCents * item.quantity
+            : sum,
+        0,
+      ),
+      /** Some items are priced "from" or "quote", to be settled with the store. */
+      priceToConfirm: list.some((item) => !isFirmPrice(item.priceType)),
+      hasServices: list.some((item) => item.kind === 'service'),
+      /** A request for services rather than a bag of products. */
+      onlyServices:
+        list.length > 0 && list.every((item) => item.kind === 'service'),
+    };
+  }, [items]);
 
   return { handle, items, ...summary, add, setQuantity, remove, clear };
 }

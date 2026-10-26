@@ -44,6 +44,8 @@ describe('Storefront', () => {
       expect(store.products[0]).toEqual({
         slug: 'costela-de-adao',
         name: 'Costela-de-Adão',
+        kind: 'product',
+        priceType: 'fixed',
         priceCents: 4500,
         imageUrl: '/lojas/pauloplantas/costela-de-adao.webp',
       });

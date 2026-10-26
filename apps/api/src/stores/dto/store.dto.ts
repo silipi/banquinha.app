@@ -4,6 +4,7 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsBoolean,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -21,6 +22,12 @@ import {
   toInstagramUsername,
 } from '../../common/instagram.js';
 import { toWhatsappNumber } from '../../common/whatsapp-number.js';
+import {
+  ITEM_KINDS,
+  PRICE_TYPES,
+  type ItemKind,
+  type PriceType,
+} from '../../products/pricing.js';
 import { ThemeTokensDto } from '../../themes/dto/theme.dto.js';
 
 const trim = ({ value }: { value: unknown }) =>
@@ -39,11 +46,25 @@ export class CreateStoreProductDto {
   @MaxLength(80, { message: 'Nome do produto muito longo' })
   name: string;
 
-  /** Price in cents (R$ 25,90 = 2590). */
+  /** A product by default. */
+  @IsOptional()
+  @IsIn(ITEM_KINDS)
+  kind?: ItemKind;
+
+  /** How the price reads; fixed by default. Hourly and daily are for services only. */
+  @IsOptional()
+  @IsIn(PRICE_TYPES, { message: 'Escolha como cobrar' })
+  priceType?: PriceType;
+
+  /**
+   * Price in cents (R$ 25,90 = 2590): per hour or per day for those price types, the
+   * starting price for "from". Required except for "quote", which has none.
+   */
+  @IsOptional()
   @IsInt({ message: 'Informe o preço' })
   @Min(1, { message: 'Informe o preço' })
   @Max(MAX_PRICE_CENTS, { message: 'Preço muito alto' })
-  priceCents: number;
+  priceCents?: number | null;
 
   @IsOptional()
   @Transform(trimOrNull)
@@ -78,6 +99,19 @@ export class CreateStoreDto {
   @IsOptional()
   @IsUUID('all', { message: 'Escolha um dos temas' })
   themeId?: string;
+
+  /** Ways to receive orders; pickup and delivery on, online off when omitted. */
+  @IsOptional()
+  @IsBoolean()
+  pickupEnabled?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  deliveryEnabled?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  onlineEnabled?: boolean;
 
   /** At least one; at most what the plan allows. */
   @ValidateNested({ each: true })
@@ -159,10 +193,22 @@ export class UpdateStoreDto {
   @IsBoolean()
   pickupEnabled?: boolean;
 
-  /** Customers may ask for delivery. */
+  /** Customers may ask for delivery, or for a service at their place. */
   @IsOptional()
   @IsBoolean()
   deliveryEnabled?: boolean;
+
+  /** Services done remotely; only offered for orders made of services. */
+  @IsOptional()
+  @IsBoolean()
+  onlineEnabled?: boolean;
+
+  /** Where the store works, shown on the storefront. Empty removes it. */
+  @IsOptional()
+  @Transform(trimOrNull)
+  @IsString()
+  @MaxLength(120, { message: 'Região muito longa (até 120 caracteres)' })
+  serviceArea?: string | null;
 }
 
 export const STORE_IMAGE_SLOTS = ['logo', 'banner'] as const;
@@ -210,6 +256,8 @@ export class StoreDashboardDto extends StoreSummaryDto {
   locationUrl: string | null;
   pickupEnabled: boolean;
   deliveryEnabled: boolean;
+  onlineEnabled: boolean;
+  serviceArea: string | null;
   orderCount: number;
   /** Orders still marked as new. */
   newOrderCount: number;

@@ -3,13 +3,14 @@
 import { ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { formatTotal } from '@/lib/item-price';
 import { bagPath } from '@/lib/storefront-links';
-import { formatBRL } from '@/lib/utils';
 import { useCart } from './use-cart';
 
 /** Floating shortcut to the bag, shown on store pages once something is in it. */
 export function CartBar() {
-  const { handle, count, subtotalCents } = useCart();
+  const { handle, count, subtotalCents, priceToConfirm, onlyServices } =
+    useCart();
   const pathname = usePathname();
 
   if (count === 0 || pathname === bagPath(handle)) return null;
@@ -26,8 +27,12 @@ export function CartBar() {
             {count}
           </span>
         </span>
-        <span className="flex-1 font-medium">Ver sacola</span>
-        <span className="font-medium">{formatBRL(subtotalCents / 100)}</span>
+        <span className="flex-1 font-medium">
+          {onlyServices ? 'Ver solicitação' : 'Ver sacola'}
+        </span>
+        <span className="font-medium">
+          {formatTotal(subtotalCents, priceToConfirm)}
+        </span>
       </Link>
     </div>
   );

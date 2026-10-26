@@ -1,4 +1,5 @@
-import { formatCents, whatsappUrl } from '../storefront/order-message.js';
+import type { FulfillmentMethod } from '../storefront/dto/create-order.dto.js';
+import { totalLine, whatsappUrl } from '../storefront/order-message.js';
 import type { OrderCustomerLinksDto } from './dto/order.dto.js';
 
 export type CustomerMessageInput = {
@@ -7,44 +8,74 @@ export type CustomerMessageInput = {
   locationUrl: string | null;
   number: number;
   customerName: string;
-  fulfillment: 'pickup' | 'delivery';
+  fulfillment: FulfillmentMethod;
+  /** Service orders get wording about an appointment instead of a package. */
+  hasServices: boolean;
   address: string | null;
   totalCents: number;
+  priceToConfirm: boolean;
 };
 
 type CustomerMessages = Record<keyof OrderCustomerLinksDto, string>;
+
+/** Joins lines, leaving out the ones that are null. */
+const lines = (...parts: (string | null)[]) =>
+  parts.filter((part) => part !== null).join('\n');
+
+/** A blank line and then `text`, or nothing when there is no text. */
+const extra = (label: string, text: string | null) =>
+  text ? ['', `${label}: ${text}`] : [];
+
+function readyMessage(order: CustomerMessageInput, greeting: string): string {
+  const number = `#${order.number}`;
+  if (order.hasServices) {
+    if (order.fulfillment === 'delivery') {
+      return lines(
+        `${greeting} Estou a caminho para o atendimento do pedido ${number} 🚗`,
+        ...extra('Endereço', order.address),
+      );
+    }
+    if (order.fulfillment === 'online') {
+      return `${greeting} Tudo pronto para o seu atendimento online do pedido ${number}. Me avisa quando puder começar 💻`;
+    }
+    return lines(
+      `${greeting} Tudo pronto para o seu atendimento do pedido ${number}. Te espero! 🙌`,
+      ...extra('Onde fica', order.locationUrl),
+    );
+  }
+  if (order.fulfillment === 'delivery') {
+    return lines(
+      `${greeting} Seu pedido ${number} saiu para entrega 🛵`,
+      ...extra('Endereço', order.address),
+    );
+  }
+  return lines(
+    `${greeting} Seu pedido ${number} está pronto para retirada 🛍️`,
+    ...extra('Onde retirar', order.locationUrl),
+  );
+}
 
 /** The pt-BR messages the merchant sends to the customer at each step of an order. */
 export function buildCustomerMessages(
   order: CustomerMessageInput,
 ): CustomerMessages {
   const firstName = order.customerName.trim().split(/\s+/)[0];
-  const pickup = order.fulfillment === 'pickup';
-  const lines = (...parts: (string | false | null)[]) =>
-    parts.filter((part) => part !== false && part !== null).join('\n');
+  const greeting = `Olá, ${firstName}!`;
 
   return {
-    chat: `Olá, ${firstName}! Aqui é da loja ${order.storeName}, sobre o seu pedido #${order.number}.`,
+    chat: `${greeting} Aqui é da loja ${order.storeName}, sobre o seu pedido #${order.number}.`,
     confirmed: lines(
-      `Olá, ${firstName}! Seu pedido #${order.number} na loja ${order.storeName} está confirmado ✅`,
+      `${greeting} Seu pedido #${order.number} na loja ${order.storeName} está confirmado ✅`,
       '',
-      `Total: ${formatCents(order.totalCents)}`,
-      pickup
-        ? 'Te aviso aqui quando estiver pronto para retirar.'
-        : 'Te aviso aqui quando sair para entrega.',
+      totalLine(order.totalCents, order.priceToConfirm),
+      order.hasServices
+        ? 'Qualquer mudança, me avisa por aqui.'
+        : order.fulfillment === 'delivery'
+          ? 'Te aviso aqui quando sair para entrega.'
+          : 'Te aviso aqui quando estiver pronto para retirar.',
     ),
-    ready: pickup
-      ? lines(
-          `Olá, ${firstName}! Seu pedido #${order.number} está pronto para retirada 🛍️`,
-          order.locationUrl && '',
-          order.locationUrl && `Onde retirar: ${order.locationUrl}`,
-        )
-      : lines(
-          `Olá, ${firstName}! Seu pedido #${order.number} saiu para entrega 🛵`,
-          order.address && '',
-          order.address && `Endereço: ${order.address}`,
-        ),
-    completed: `Obrigado pela compra, ${firstName}! 💛 Qualquer coisa sobre o pedido #${order.number}, é só me chamar aqui.`,
+    ready: readyMessage(order, greeting),
+    completed: `Obrigado, ${firstName}! 💛 Qualquer coisa sobre o pedido #${order.number}, é só me chamar aqui.`,
     canceled: `Olá, ${firstName}. Seu pedido #${order.number} na loja ${order.storeName} foi cancelado. Se quiser, me chama aqui para a gente ver outra opção.`,
   };
 }

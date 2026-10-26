@@ -8,7 +8,7 @@ import {
   softColor,
 } from '@/lib/og';
 import { getProduct } from '@/lib/storefront';
-import { formatBRL } from '@/lib/utils';
+import { formatItemPrice } from '@/lib/item-price';
 
 export const alt = 'Produto na banquinha.app';
 export const size = ogSize;
@@ -62,7 +62,7 @@ export default async function Image({
                 color: product.store.theme.colors.accent,
               }}
             >
-              {formatBRL(product.priceCents / 100)}
+              {formatItemPrice(product)}
             </div>
           </div>
           <OgWordmark size={28} />

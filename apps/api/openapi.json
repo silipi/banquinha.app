@@ -1370,9 +1370,29 @@
             "minLength": 2,
             "maxLength": 80
           },
+          "kind": {
+            "type": "string",
+            "description": "A product by default.",
+            "enum": [
+              "product",
+              "service"
+            ]
+          },
+          "priceType": {
+            "type": "string",
+            "description": "How the price reads; fixed by default. Hourly and daily are for services only.",
+            "enum": [
+              "fixed",
+              "hourly",
+              "daily",
+              "from",
+              "quote"
+            ]
+          },
           "priceCents": {
             "type": "number",
-            "description": "Price in cents (R$ 25,90 = 2590).",
+            "nullable": true,
+            "description": "Price in cents (R$ 25,90 = 2590): per hour or per day for those price types, the\nstarting price for \"from\". Required except for \"quote\", which has none.",
             "minimum": 1,
             "maximum": 10000000
           },
@@ -1383,8 +1403,7 @@
           }
         },
         "required": [
-          "name",
-          "priceCents"
+          "name"
         ]
       },
       "CreateStoreDto": {
@@ -1409,6 +1428,16 @@
             "type": "string",
             "description": "A theme from GET /themes. The first platform theme when omitted.",
             "format": "uuid"
+          },
+          "pickupEnabled": {
+            "type": "boolean",
+            "description": "Ways to receive orders; pickup and delivery on, online off when omitted."
+          },
+          "deliveryEnabled": {
+            "type": "boolean"
+          },
+          "onlineEnabled": {
+            "type": "boolean"
           },
           "products": {
             "description": "At least one; at most what the plan allows.",
@@ -1592,6 +1621,13 @@
           "deliveryEnabled": {
             "type": "boolean"
           },
+          "onlineEnabled": {
+            "type": "boolean"
+          },
+          "serviceArea": {
+            "type": "string",
+            "nullable": true
+          },
           "orderCount": {
             "type": "number"
           },
@@ -1619,6 +1655,8 @@
           "locationUrl",
           "pickupEnabled",
           "deliveryEnabled",
+          "onlineEnabled",
+          "serviceArea",
           "orderCount",
           "newOrderCount"
         ]
@@ -1690,7 +1728,17 @@
           },
           "deliveryEnabled": {
             "type": "boolean",
-            "description": "Customers may ask for delivery."
+            "description": "Customers may ask for delivery, or for a service at their place."
+          },
+          "onlineEnabled": {
+            "type": "boolean",
+            "description": "Services done remotely; only offered for orders made of services."
+          },
+          "serviceArea": {
+            "type": "string",
+            "nullable": true,
+            "description": "Where the store works, shown on the storefront. Empty removes it.",
+            "maxLength": 120
           }
         }
       },
@@ -1765,8 +1813,27 @@
             "type": "string",
             "nullable": true
           },
+          "kind": {
+            "enum": [
+              "product",
+              "service"
+            ],
+            "type": "string"
+          },
+          "priceType": {
+            "enum": [
+              "from",
+              "fixed",
+              "hourly",
+              "daily",
+              "quote"
+            ],
+            "type": "string"
+          },
           "priceCents": {
-            "type": "number"
+            "type": "number",
+            "nullable": true,
+            "description": "Null for \"quote\"."
           },
           "active": {
             "type": "boolean"
@@ -1784,6 +1851,8 @@
           "slug",
           "name",
           "description",
+          "kind",
+          "priceType",
           "priceCents",
           "active",
           "images"
@@ -1821,9 +1890,29 @@
             "minLength": 2,
             "maxLength": 80
           },
+          "kind": {
+            "description": "A product by default.",
+            "enum": [
+              "product",
+              "service"
+            ],
+            "type": "string"
+          },
+          "priceType": {
+            "description": "How the price reads; fixed by default. Hourly and daily are for services only.",
+            "enum": [
+              "fixed",
+              "hourly",
+              "daily",
+              "from",
+              "quote"
+            ],
+            "type": "string"
+          },
           "priceCents": {
             "type": "number",
-            "description": "Price in cents (R$ 25,90 = 2590).",
+            "nullable": true,
+            "description": "Price in cents (R$ 25,90 = 2590): per hour or per day for those price types, the\nstarting price for \"from\". Required except for \"quote\", which has none.",
             "minimum": 1,
             "maximum": 10000000
           },
@@ -1838,8 +1927,7 @@
           }
         },
         "required": [
-          "name",
-          "priceCents"
+          "name"
         ]
       },
       "ReorderProductsDto": {
@@ -1867,9 +1955,29 @@
             "minLength": 2,
             "maxLength": 80
           },
+          "kind": {
+            "description": "A product by default.",
+            "enum": [
+              "product",
+              "service"
+            ],
+            "type": "string"
+          },
+          "priceType": {
+            "description": "How the price reads; fixed by default. Hourly and daily are for services only.",
+            "enum": [
+              "fixed",
+              "hourly",
+              "daily",
+              "from",
+              "quote"
+            ],
+            "type": "string"
+          },
           "priceCents": {
             "type": "number",
-            "description": "Price in cents (R$ 25,90 = 2590).",
+            "nullable": true,
+            "description": "Price in cents (R$ 25,90 = 2590): per hour or per day for those price types, the\nstarting price for \"from\". Required except for \"quote\", which has none.",
             "minimum": 1,
             "maximum": 10000000
           },
@@ -1918,11 +2026,21 @@
             "type": "string",
             "enum": [
               "pickup",
-              "delivery"
+              "delivery",
+              "online"
             ]
           },
           "totalCents": {
-            "type": "number"
+            "type": "number",
+            "description": "Items with a firm price only; see priceToConfirm."
+          },
+          "priceToConfirm": {
+            "type": "boolean",
+            "description": "Some items are priced \"from\" or \"quote\", to be settled with the customer."
+          },
+          "hasServices": {
+            "type": "boolean",
+            "description": "At least one item is a service."
           },
           "status": {
             "type": "string",
@@ -1947,6 +2065,8 @@
           "customerName",
           "fulfillment",
           "totalCents",
+          "priceToConfirm",
+          "hasServices",
           "status",
           "itemCount",
           "createdAt"
@@ -2017,7 +2137,7 @@
           },
           "ready": {
             "type": "string",
-            "description": "\"Ready for pickup\" or \"out for delivery\", by the order's fulfillment."
+            "description": "The order is ready: for pickup or out for delivery, or for services ready to start\nor on the way, by the order's fulfillment."
           },
           "completed": {
             "type": "string"
@@ -2039,10 +2159,29 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Name and price as they were when the order was placed."
+            "description": "Name and pricing as they were when the order was placed."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "product",
+              "service"
+            ]
+          },
+          "priceType": {
+            "type": "string",
+            "enum": [
+              "from",
+              "fixed",
+              "hourly",
+              "daily",
+              "quote"
+            ]
           },
           "unitPriceCents": {
-            "type": "number"
+            "type": "number",
+            "nullable": true,
+            "description": "Null for \"quote\"."
           },
           "quantity": {
             "type": "number"
@@ -2055,6 +2194,8 @@
         },
         "required": [
           "name",
+          "kind",
+          "priceType",
           "unitPriceCents",
           "quantity",
           "productId"
@@ -2076,12 +2217,22 @@
           "fulfillment": {
             "enum": [
               "pickup",
-              "delivery"
+              "delivery",
+              "online"
             ],
             "type": "string"
           },
           "totalCents": {
-            "type": "number"
+            "type": "number",
+            "description": "Items with a firm price only; see priceToConfirm."
+          },
+          "priceToConfirm": {
+            "type": "boolean",
+            "description": "Some items are priced \"from\" or \"quote\", to be settled with the customer."
+          },
+          "hasServices": {
+            "type": "boolean",
+            "description": "At least one item is a service."
           },
           "status": {
             "enum": [
@@ -2117,11 +2268,25 @@
           "address": {
             "type": "string",
             "nullable": true,
-            "description": "Delivery address; null for pickup."
+            "description": "Delivery address (or where to do the service); null for pickup and online."
           },
           "note": {
             "type": "string",
             "nullable": true
+          },
+          "preferredDate": {
+            "type": "string",
+            "nullable": true,
+            "description": "For services: the day the customer would like, as YYYY-MM-DD."
+          },
+          "preferredPeriod": {
+            "nullable": true,
+            "enum": [
+              "morning",
+              "afternoon",
+              "evening"
+            ],
+            "type": "string"
           },
           "items": {
             "type": "array",
@@ -2136,6 +2301,8 @@
           "customerName",
           "fulfillment",
           "totalCents",
+          "priceToConfirm",
+          "hasServices",
           "status",
           "itemCount",
           "createdAt",
@@ -2143,6 +2310,8 @@
           "customerLinks",
           "address",
           "note",
+          "preferredDate",
+          "preferredPeriod",
           "items"
         ]
       },
@@ -2195,8 +2364,27 @@
           "name": {
             "type": "string"
           },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "product",
+              "service"
+            ]
+          },
+          "priceType": {
+            "type": "string",
+            "enum": [
+              "from",
+              "fixed",
+              "hourly",
+              "daily",
+              "quote"
+            ]
+          },
           "priceCents": {
-            "type": "number"
+            "type": "number",
+            "nullable": true,
+            "description": "Null for \"quote\"."
           },
           "imageUrl": {
             "type": "string",
@@ -2207,6 +2395,8 @@
         "required": [
           "slug",
           "name",
+          "kind",
+          "priceType",
           "priceCents",
           "imageUrl"
         ]
@@ -2222,17 +2412,23 @@
             "type": "string",
             "nullable": true
           },
+          "serviceArea": {
+            "type": "string",
+            "nullable": true,
+            "description": "Where the store works (\"Curitiba e região metropolitana\")."
+          },
           "contact": {
             "$ref": "#/components/schemas/StorefrontContactDto"
           },
           "fulfillment": {
             "type": "array",
-            "description": "Ways to receive an order the store offers. Never empty.",
+            "description": "Ways to receive an order the store offers. Never empty. Online is only for services.",
             "items": {
               "type": "string",
               "enum": [
                 "pickup",
-                "delivery"
+                "delivery",
+                "online"
               ]
             }
           },
@@ -2269,6 +2465,7 @@
         "required": [
           "bio",
           "city",
+          "serviceArea",
           "contact",
           "fulfillment",
           "products",
@@ -2337,8 +2534,27 @@
             "type": "string",
             "nullable": true
           },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "product",
+              "service"
+            ]
+          },
+          "priceType": {
+            "type": "string",
+            "enum": [
+              "from",
+              "fixed",
+              "hourly",
+              "daily",
+              "quote"
+            ]
+          },
           "priceCents": {
-            "type": "number"
+            "type": "number",
+            "nullable": true,
+            "description": "Null for \"quote\"."
           },
           "images": {
             "description": "Cover first.",
@@ -2355,6 +2571,8 @@
           "slug",
           "name",
           "description",
+          "kind",
+          "priceType",
           "priceCents",
           "images",
           "store"
@@ -2396,7 +2614,8 @@
             "type": "string",
             "enum": [
               "pickup",
-              "delivery"
+              "delivery",
+              "online"
             ]
           },
           "address": {
@@ -2408,6 +2627,20 @@
           "note": {
             "type": "string",
             "maxLength": 500
+          },
+          "preferredDate": {
+            "type": "string",
+            "description": "For services: the day the customer would like, as YYYY-MM-DD. Ignored without services.",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "preferredPeriod": {
+            "type": "string",
+            "description": "For services: the part of the day the customer would like. Ignored without services.",
+            "enum": [
+              "morning",
+              "afternoon",
+              "evening"
+            ]
           },
           "items": {
             "minItems": 1,
@@ -2433,7 +2666,12 @@
             "description": "Sequential within the store."
           },
           "totalCents": {
-            "type": "number"
+            "type": "number",
+            "description": "Items with a firm price only; see priceToConfirm."
+          },
+          "priceToConfirm": {
+            "type": "boolean",
+            "description": "Some items are priced \"from\" or \"quote\", to be settled with the store."
           },
           "whatsappUrl": {
             "type": "string",
@@ -2443,6 +2681,7 @@
         "required": [
           "number",
           "totalCents",
+          "priceToConfirm",
           "whatsappUrl"
         ]
       },

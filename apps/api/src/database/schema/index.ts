@@ -1,6 +1,8 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
+  check,
+  date,
   index,
   integer,
   jsonb,
@@ -102,6 +104,16 @@ export const themes = pgTable(
   (table) => [index('themes_owner_idx').on(table.ownerId)],
 );
 
+/** Values and rules in src/products/pricing.ts. */
+export const itemKind = pgEnum('item_kind', ['product', 'service']);
+export const priceType = pgEnum('price_type', [
+  'fixed',
+  'hourly',
+  'daily',
+  'from',
+  'quote',
+]);
+
 export const stores = pgTable('stores', {
   id: uuid('id').primaryKey().defaultRandom(),
   /** Null for the example stores, which belong to the platform. */
@@ -126,9 +138,16 @@ export const stores = pgTable('stores', {
   /** Username without the @. */
   instagram: text('instagram'),
   locationUrl: text('location_url'),
-  /** How customers can receive orders. At least one is on. */
+  /**
+   * How customers can receive orders. At least one is on. Pickup also means a service done
+   * at the store's place, delivery a service done at the customer's.
+   */
   pickupEnabled: boolean('pickup_enabled').notNull().default(true),
   deliveryEnabled: boolean('delivery_enabled').notNull().default(true),
+  /** Services done remotely. Only for orders made of services. */
+  onlineEnabled: boolean('online_enabled').notNull().default(false),
+  /** Where the store works, as free text ("Curitiba e região metropolitana"). */
+  serviceArea: text('service_area'),
   ...timestamps,
 });
 
@@ -143,7 +162,10 @@ export const products = pgTable(
     slug: text('slug').notNull(),
     name: text('name').notNull(),
     description: text('description'),
-    priceCents: integer('price_cents').notNull(),
+    kind: itemKind('kind').notNull().default('product'),
+    priceType: priceType('price_type').notNull().default('fixed'),
+    /** Per hour or per day for those price types, the starting price for "from"; null for "quote". */
+    priceCents: integer('price_cents'),
     /** Display order on the storefront, ascending. */
     position: integer('position').notNull().default(0),
     active: boolean('active').notNull().default(true),
@@ -151,6 +173,10 @@ export const products = pgTable(
   },
   (table) => [
     uniqueIndex('products_store_slug_idx').on(table.storeId, table.slug),
+    check(
+      'products_price_check',
+      sql`${table.priceCents} is not null or ${table.priceType} = 'quote'`,
+    ),
   ],
 );
 
@@ -170,9 +196,18 @@ export const productImages = pgTable(
   (table) => [index('product_images_product_idx').on(table.productId)],
 );
 
+/** Online is for orders made only of services. */
 export const fulfillmentMethod = pgEnum('fulfillment_method', [
   'pickup',
   'delivery',
+  'online',
+]);
+
+/** When the customer prefers a service to happen. */
+export const dayPeriod = pgEnum('day_period', [
+  'morning',
+  'afternoon',
+  'evening',
 ]);
 
 /** Where an order stands, set by the merchant from the dashboard. */
@@ -199,7 +234,12 @@ export const orders = pgTable(
     fulfillment: fulfillmentMethod('fulfillment').notNull(),
     address: text('address'),
     note: text('note'),
+    /** Sum of the items with a firm price; see priceToConfirm. */
     totalCents: integer('total_cents').notNull(),
+    /** Some items are priced "from" or "quote", to be settled with the store. */
+    priceToConfirm: boolean('price_to_confirm').notNull().default(false),
+    preferredDate: date('preferred_date', { mode: 'string' }),
+    preferredPeriod: dayPeriod('preferred_period'),
     status: orderStatus('status').notNull().default('new'),
     createdAt: timestamps.createdAt,
     updatedAt: timestamps.updatedAt,
@@ -222,7 +262,10 @@ export const orderItems = pgTable(
       onDelete: 'set null',
     }),
     name: text('name').notNull(),
-    unitPriceCents: integer('unit_price_cents').notNull(),
+    kind: itemKind('kind').notNull().default('product'),
+    priceType: priceType('price_type').notNull().default('fixed'),
+    /** Null for "quote". */
+    unitPriceCents: integer('unit_price_cents'),
     quantity: integer('quantity').notNull(),
   },
   (table) => [index('order_items_order_idx').on(table.orderId)],

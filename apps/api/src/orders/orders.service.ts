@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, count, desc, eq, lt, sum } from 'drizzle-orm';
+import { and, count, desc, eq, lt, sql, sum } from 'drizzle-orm';
 import type { AuthUser } from '../auth/current-user.decorator.js';
 import type { Db } from '../database/database.js';
 import { DB } from '../database/database.module.js';
@@ -18,12 +18,18 @@ const PAGE_SIZE = 30;
 
 type OrderRow = typeof orders.$inferSelect;
 
-const toSummary = (order: OrderRow, itemCount: number): OrderSummaryDto => ({
+const toSummary = (
+  order: OrderRow,
+  itemCount: number,
+  hasServices: boolean,
+): OrderSummaryDto => ({
   id: order.id,
   number: order.number,
   customerName: order.customerName,
   fulfillment: order.fulfillment,
   totalCents: order.totalCents,
+  priceToConfirm: order.priceToConfirm,
+  hasServices,
   status: order.status,
   itemCount,
   createdAt: order.createdAt.toISOString(),
@@ -47,6 +53,7 @@ export class OrdersService {
       .select({
         order: orders,
         itemCount: sum(orderItems.quantity).mapWith(Number),
+        hasServices: sql<boolean>`coalesce(bool_or(${orderItems.kind} = 'service'), false)`,
       })
       .from(orders)
       .leftJoin(orderItems, eq(orderItems.orderId, orders.id))
@@ -64,8 +71,8 @@ export class OrdersService {
 
     const page = rows.slice(0, PAGE_SIZE);
     return {
-      orders: page.map(({ order, itemCount }) =>
-        toSummary(order, itemCount ?? 0),
+      orders: page.map(({ order, itemCount, hasServices }) =>
+        toSummary(order, itemCount ?? 0, hasServices),
       ),
       nextBefore:
         rows.length > PAGE_SIZE ? page[page.length - 1]!.order.number : null,
@@ -85,10 +92,12 @@ export class OrdersService {
     });
     if (!order) throw new NotFoundException('Pedido não encontrado');
 
+    const hasServices = order.items.some((item) => item.kind === 'service');
     return {
       ...toSummary(
         order,
         order.items.reduce((total, item) => total + item.quantity, 0),
+        hasServices,
       ),
       customerWhatsapp: order.customerWhatsapp,
       customerLinks: order.customerWhatsapp
@@ -98,14 +107,20 @@ export class OrdersService {
             number: order.number,
             customerName: order.customerName,
             fulfillment: order.fulfillment,
+            hasServices,
             address: order.address,
             totalCents: order.totalCents,
+            priceToConfirm: order.priceToConfirm,
           })
         : null,
       address: order.address,
       note: order.note,
+      preferredDate: order.preferredDate,
+      preferredPeriod: order.preferredPeriod,
       items: order.items.map((item) => ({
         name: item.name,
+        kind: item.kind,
+        priceType: item.priceType,
         unitPriceCents: item.unitPriceCents,
         quantity: item.quantity,
         productId: item.productId,

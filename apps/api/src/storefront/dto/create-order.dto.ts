@@ -16,8 +16,12 @@ import {
 } from 'class-validator';
 import { toWhatsappNumber } from '../../common/whatsapp-number.js';
 
-export const FULFILLMENT_METHODS = ['pickup', 'delivery'] as const;
+/** Online is only for orders made of services. */
+export const FULFILLMENT_METHODS = ['pickup', 'delivery', 'online'] as const;
 export type FulfillmentMethod = (typeof FULFILLMENT_METHODS)[number];
+
+export const DAY_PERIODS = ['morning', 'afternoon', 'evening'] as const;
+export type DayPeriod = (typeof DAY_PERIODS)[number];
 
 export const MAX_ITEM_QUANTITY = 99;
 
@@ -66,6 +70,16 @@ export class CreateOrderDto {
   @MaxLength(500, { message: 'Observação muito longa' })
   note?: string;
 
+  /** For services: the day the customer would like, as YYYY-MM-DD. Ignored without services. */
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'Escolha uma data válida' })
+  preferredDate?: string;
+
+  /** For services: the part of the day the customer would like. Ignored without services. */
+  @IsOptional()
+  @IsIn(DAY_PERIODS, { message: 'Escolha manhã, tarde ou noite' })
+  preferredPeriod?: DayPeriod;
+
   @ValidateNested({ each: true })
   @Type(() => CreateOrderItemDto)
   @ArrayMinSize(1, { message: 'Sua sacola está vazia' })
@@ -76,7 +90,10 @@ export class CreateOrderDto {
 export class CreateOrderResponseDto {
   /** Sequential within the store. */
   number: number;
+  /** Items with a firm price only; see priceToConfirm. */
   totalCents: number;
+  /** Some items are priced "from" or "quote", to be settled with the store. */
+  priceToConfirm: boolean;
   /** wa.me link with the order message, ready to open. */
   whatsappUrl: string;
 }

@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { handle } = await params;
   const store = await getStore(handle);
   if (!store) return { title: 'Loja não encontrada' };
-  const description = store.bio ?? `Confira os produtos de ${store.name}.`;
+  const description = store.bio ?? `Confira o que ${store.name} oferece.`;
   return {
     title: store.name,
     description,
@@ -76,6 +76,11 @@ async function StoreHome({ params }: Pick<Props, 'params'>) {
         {store.bio && (
           <p className="mt-3 max-w-md text-pretty text-muted-foreground">
             {store.bio}
+          </p>
+        )}
+        {store.serviceArea && (
+          <p className="mt-2 max-w-md text-sm text-pretty text-muted-foreground">
+            Região de atendimento: {store.serviceArea}
           </p>
         )}
         <div className="mt-6 flex flex-wrap justify-center gap-2">

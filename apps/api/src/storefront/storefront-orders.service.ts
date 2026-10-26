@@ -13,6 +13,7 @@ import {
   products,
   stores,
 } from '../database/schema/index.js';
+import { isFirmPrice } from '../products/pricing.js';
 import {
   MAX_ITEM_QUANTITY,
   type CreateOrderDto,
@@ -33,6 +34,40 @@ function mergeItems(items: CreateOrderItemDto[]): Map<string, number> {
 }
 
 const clean = (value?: string) => value?.trim() || null;
+
+const FULFILLMENT_OFF = {
+  pickup:
+    'Essa loja não trabalha com retirada. Escolha outra forma de receber.',
+  delivery:
+    'Essa loja não faz entrega nem atende no seu endereço. Escolha outra forma de receber.',
+  online: 'Essa loja não atende online. Escolha outra forma de receber.',
+} as const;
+
+/** How far ahead a customer may ask for a service. */
+const MAX_DAYS_AHEAD = 366;
+
+const isoDay = (date: Date, timeZone?: string) =>
+  new Intl.DateTimeFormat('en-CA', { timeZone }).format(date);
+
+/** A preferred date from today (in Brazil) up to a year ahead; throws otherwise. */
+function checkPreferredDate(date: string): string {
+  const parsed = new Date(`${date}T12:00:00Z`);
+  // Rejects impossible days like 2026-02-31, which Date rolls over.
+  const valid =
+    !Number.isNaN(parsed.getTime()) && isoDay(parsed, 'UTC') === date;
+  const now = new Date();
+  const today = isoDay(now, 'America/Sao_Paulo');
+  const last = isoDay(
+    new Date(now.getTime() + MAX_DAYS_AHEAD * 24 * 60 * 60 * 1000),
+    'America/Sao_Paulo',
+  );
+  if (!valid || date < today || date > last) {
+    throw new BadRequestException(
+      'Escolha uma data de hoje em diante para o serviço.',
+    );
+  }
+  return date;
+}
 
 @Injectable()
 export class StorefrontOrdersService {
@@ -58,11 +93,7 @@ export class StorefrontOrdersService {
         .for('update');
       if (!store) throw new NotFoundException('Loja não encontrada');
       if (!offeredFulfillment(store).includes(input.fulfillment)) {
-        throw new BadRequestException(
-          input.fulfillment === 'delivery'
-            ? 'Essa loja não faz entrega. Escolha retirar o pedido.'
-            : 'Essa loja só faz entrega. Informe o endereço.',
-        );
+        throw new BadRequestException(FULFILLMENT_OFF[input.fulfillment]);
       }
 
       const found = await tx
@@ -70,6 +101,8 @@ export class StorefrontOrdersService {
           id: products.id,
           slug: products.slug,
           name: products.name,
+          kind: products.kind,
+          priceType: products.priceType,
           priceCents: products.priceCents,
         })
         .from(products)
@@ -96,14 +129,38 @@ export class StorefrontOrdersService {
         return {
           productId: product.id,
           name: product.name,
+          kind: product.kind,
+          priceType: product.priceType,
           unitPriceCents: product.priceCents,
           quantity: quantities.get(slug)!,
         };
       });
       const totalCents = items.reduce(
-        (sum, item) => sum + item.unitPriceCents * item.quantity,
+        (sum, item) =>
+          isFirmPrice(item.priceType)
+            ? sum + item.unitPriceCents! * item.quantity
+            : sum,
         0,
       );
+      const priceToConfirm = items.some((item) => !isFirmPrice(item.priceType));
+
+      const hasServices = items.some((item) => item.kind === 'service');
+      if (
+        input.fulfillment === 'online' &&
+        items.some((item) => item.kind !== 'service')
+      ) {
+        throw new BadRequestException(
+          'Atendimento online é só para serviços. Escolha outra forma de receber os produtos.',
+        );
+      }
+      // The day and period only matter for services.
+      const preferredDate =
+        hasServices && input.preferredDate
+          ? checkPreferredDate(input.preferredDate)
+          : null;
+      const preferredPeriod = hasServices
+        ? (input.preferredPeriod ?? null)
+        : null;
 
       const [last] = await tx
         .select({ number: max(orders.number) })
@@ -127,6 +184,9 @@ export class StorefrontOrdersService {
           address,
           note,
           totalCents,
+          priceToConfirm,
+          preferredDate,
+          preferredPeriod,
         })
         .returning({ id: orders.id });
       await tx
@@ -140,13 +200,17 @@ export class StorefrontOrdersService {
         fulfillment,
         address,
         note,
+        preferredDate,
+        preferredPeriod,
         items,
         totalCents,
+        priceToConfirm,
       });
 
       return {
         number,
         totalCents,
+        priceToConfirm,
         whatsappUrl: whatsappUrl(store.whatsapp, message),
       };
     });

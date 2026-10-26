@@ -18,8 +18,10 @@ interface Draft {
   whatsapp: string;
   instagram: string;
   locationUrl: string;
+  serviceArea: string;
   pickupEnabled: boolean;
   deliveryEnabled: boolean;
+  onlineEnabled: boolean;
 }
 
 const draftFrom = (store: StoreDashboardDto): Draft => ({
@@ -29,8 +31,10 @@ const draftFrom = (store: StoreDashboardDto): Draft => ({
   whatsapp: formatWhatsappInput(store.whatsapp.slice(2)),
   instagram: store.instagram ?? '',
   locationUrl: store.locationUrl ?? '',
+  serviceArea: store.serviceArea ?? '',
   pickupEnabled: store.pickupEnabled,
   deliveryEnabled: store.deliveryEnabled,
+  onlineEnabled: store.onlineEnabled,
 });
 
 /** Store details customers see and how they receive orders. Saved all at once. */
@@ -122,7 +126,10 @@ function SettingsForm({ store }: { store: StoreDashboardDto }) {
   }
 
   const onlyOne =
-    Number(draft.pickupEnabled) + Number(draft.deliveryEnabled) === 1;
+    Number(draft.pickupEnabled) +
+      Number(draft.deliveryEnabled) +
+      Number(draft.onlineEnabled) ===
+    1;
 
   return (
     <div className="flex flex-col gap-6">
@@ -131,7 +138,8 @@ function SettingsForm({ store }: { store: StoreDashboardDto }) {
           Configurações
         </h1>
         <p className="mt-1 text-muted-foreground">
-          O que aparece na sua loja e como os clientes recebem os pedidos.
+          O que aparece na sua loja e como os clientes recebem os pedidos e
+          serviços.
         </p>
       </header>
 
@@ -215,6 +223,14 @@ function SettingsForm({ store }: { store: StoreDashboardDto }) {
               placeholder="Ex.: Curitiba"
               onChange={(event) => edit({ city: event.target.value })}
             />
+            <Field
+              label="Região de atendimento (opcional)"
+              value={draft.serviceArea}
+              maxLength={120}
+              hint="Onde você entrega ou atende. Aparece no topo da loja."
+              placeholder="Ex.: Curitiba e região metropolitana"
+              onChange={(event) => edit({ serviceArea: event.target.value })}
+            />
           </Section>
 
           <Section
@@ -222,18 +238,25 @@ function SettingsForm({ store }: { store: StoreDashboardDto }) {
             text="A sacola da sua loja só mostra o que estiver ligado."
           >
             <SwitchRow
-              label="Retirada"
-              description="O cliente busca o pedido com você."
+              label="Retirada ou atendimento no seu endereço"
+              description="O cliente busca o pedido com você, ou vem até você para o serviço."
               checked={draft.pickupEnabled}
               disabled={onlyOne && draft.pickupEnabled}
               onChange={(pickupEnabled) => edit({ pickupEnabled })}
             />
             <SwitchRow
-              label="Entrega"
-              description="O cliente informa o endereço na sacola."
+              label="Entrega ou atendimento no cliente"
+              description="Você leva o pedido ou vai até o cliente; ele informa o endereço na sacola."
               checked={draft.deliveryEnabled}
               disabled={onlyOne && draft.deliveryEnabled}
               onChange={(deliveryEnabled) => edit({ deliveryEnabled })}
+            />
+            <SwitchRow
+              label="Atendimento online"
+              description="Para serviços feitos a distância, como aulas e suporte remoto. Só aparece quando a sacola tem apenas serviços."
+              checked={draft.onlineEnabled}
+              disabled={onlyOne && draft.onlineEnabled}
+              onChange={(onlineEnabled) => edit({ onlineEnabled })}
             />
             {onlyOne && (
               <p className="text-sm text-muted-foreground">

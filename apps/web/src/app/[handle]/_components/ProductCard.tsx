@@ -1,8 +1,8 @@
 import type { StorefrontProductSummaryDto } from '@banquinha/api-client';
 import Image from 'next/image';
 import Link from 'next/link';
+import { formatItemPrice } from '@/lib/item-price';
 import { productPath } from '@/lib/storefront-links';
-import { formatBRL } from '@/lib/utils';
 
 export function ProductCard({
   handle,
@@ -29,7 +29,7 @@ export function ProductCard({
       </div>
       <p className="mt-3 truncate font-medium">{product.name}</p>
       <p className="text-sm text-muted-foreground">
-        {formatBRL(product.priceCents / 100)}
+        {formatItemPrice(product)}
       </p>
     </Link>
   );

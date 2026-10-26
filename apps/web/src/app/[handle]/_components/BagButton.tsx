@@ -8,7 +8,8 @@ import { useCart } from './use-cart';
 
 /** Always-visible bag shortcut in the top corner of store pages. */
 export function BagButton() {
-  const { handle, count } = useCart();
+  const { handle, count, onlyServices } = useCart();
+  const name = onlyServices ? 'Solicitação' : 'Sacola';
   const pathname = usePathname();
 
   if (pathname === bagPath(handle)) return null;
@@ -18,7 +19,7 @@ export function BagButton() {
       href={bagPath(handle)}
       aria-label={
         count > 0
-          ? `Sacola com ${count} ${count === 1 ? 'item' : 'itens'}`
+          ? `${name} com ${count} ${count === 1 ? 'item' : 'itens'}`
           : 'Sacola vazia'
       }
       className="fixed top-4 right-4 z-40 flex size-11 items-center justify-center rounded-full border bg-surface/90 shadow-sm backdrop-blur transition-transform active:scale-95"

@@ -105,9 +105,18 @@ export type CheckHandleResponseDto = {
 export type CreateStoreProductDto = {
     name: string;
     /**
-     * Price in cents (R$ 25,90 = 2590).
+     * A product by default.
      */
-    priceCents: number;
+    kind?: 'product' | 'service';
+    /**
+     * How the price reads; fixed by default. Hourly and daily are for services only.
+     */
+    priceType?: 'fixed' | 'hourly' | 'daily' | 'from' | 'quote';
+    /**
+     * Price in cents (R$ 25,90 = 2590): per hour or per day for those price types, the
+     * starting price for "from". Required except for "quote", which has none.
+     */
+    priceCents?: number | null;
     description?: string | null;
 };
 
@@ -125,6 +134,12 @@ export type CreateStoreDto = {
      * A theme from GET /themes. The first platform theme when omitted.
      */
     themeId?: string;
+    /**
+     * Ways to receive orders; pickup and delivery on, online off when omitted.
+     */
+    pickupEnabled?: boolean;
+    deliveryEnabled?: boolean;
+    onlineEnabled?: boolean;
     /**
      * At least one; at most what the plan allows.
      */
@@ -193,6 +208,8 @@ export type StoreDashboardDto = {
     locationUrl: string | null;
     pickupEnabled: boolean;
     deliveryEnabled: boolean;
+    onlineEnabled: boolean;
+    serviceArea: string | null;
     orderCount: number;
     /**
      * Orders still marked as new.
@@ -243,9 +260,17 @@ export type UpdateStoreDto = {
      */
     pickupEnabled?: boolean;
     /**
-     * Customers may ask for delivery.
+     * Customers may ask for delivery, or for a service at their place.
      */
     deliveryEnabled?: boolean;
+    /**
+     * Services done remotely; only offered for orders made of services.
+     */
+    onlineEnabled?: boolean;
+    /**
+     * Where the store works, shown on the storefront. Empty removes it.
+     */
+    serviceArea?: string | null;
 };
 
 export type ThemeDto = {
@@ -279,7 +304,12 @@ export type ProductDto = {
     slug: string;
     name: string;
     description: string | null;
-    priceCents: number;
+    kind: 'product' | 'service';
+    priceType: 'from' | 'fixed' | 'hourly' | 'daily' | 'quote';
+    /**
+     * Null for "quote".
+     */
+    priceCents: number | null;
     active: boolean;
     /**
      * Cover first.
@@ -302,9 +332,18 @@ export type ProductListDto = {
 export type CreateProductDto = {
     name: string;
     /**
-     * Price in cents (R$ 25,90 = 2590).
+     * A product by default.
      */
-    priceCents: number;
+    kind?: 'product' | 'service';
+    /**
+     * How the price reads; fixed by default. Hourly and daily are for services only.
+     */
+    priceType?: 'fixed' | 'hourly' | 'daily' | 'from' | 'quote';
+    /**
+     * Price in cents (R$ 25,90 = 2590): per hour or per day for those price types, the
+     * starting price for "from". Required except for "quote", which has none.
+     */
+    priceCents?: number | null;
     description?: string | null;
     /**
      * Hidden from the storefront when false. Defaults to true.
@@ -322,9 +361,18 @@ export type ReorderProductsDto = {
 export type UpdateProductDto = {
     name?: string;
     /**
-     * Price in cents (R$ 25,90 = 2590).
+     * A product by default.
      */
-    priceCents?: number;
+    kind?: 'product' | 'service';
+    /**
+     * How the price reads; fixed by default. Hourly and daily are for services only.
+     */
+    priceType?: 'fixed' | 'hourly' | 'daily' | 'from' | 'quote';
+    /**
+     * Price in cents (R$ 25,90 = 2590): per hour or per day for those price types, the
+     * starting price for "from". Required except for "quote", which has none.
+     */
+    priceCents?: number | null;
     description?: string | null;
     /**
      * Hidden from the storefront when false. Defaults to true.
@@ -346,8 +394,19 @@ export type OrderSummaryDto = {
      */
     number: number;
     customerName: string;
-    fulfillment: 'pickup' | 'delivery';
+    fulfillment: 'pickup' | 'delivery' | 'online';
+    /**
+     * Items with a firm price only; see priceToConfirm.
+     */
     totalCents: number;
+    /**
+     * Some items are priced "from" or "quote", to be settled with the customer.
+     */
+    priceToConfirm: boolean;
+    /**
+     * At least one item is a service.
+     */
+    hasServices: boolean;
     status: 'new' | 'confirmed' | 'completed' | 'canceled';
     /**
      * Units across all items.
@@ -385,7 +444,8 @@ export type OrderCustomerLinksDto = {
     chat: string;
     confirmed: string;
     /**
-     * "Ready for pickup" or "out for delivery", by the order's fulfillment.
+     * The order is ready: for pickup or out for delivery, or for services ready to start
+     * or on the way, by the order's fulfillment.
      */
     ready: string;
     completed: string;
@@ -394,10 +454,15 @@ export type OrderCustomerLinksDto = {
 
 export type OrderItemDto = {
     /**
-     * Name and price as they were when the order was placed.
+     * Name and pricing as they were when the order was placed.
      */
     name: string;
-    unitPriceCents: number;
+    kind: 'product' | 'service';
+    priceType: 'from' | 'fixed' | 'hourly' | 'daily' | 'quote';
+    /**
+     * Null for "quote".
+     */
+    unitPriceCents: number | null;
     quantity: number;
     /**
      * Null when the product was deleted since.
@@ -412,8 +477,19 @@ export type OrderDto = {
      */
     number: number;
     customerName: string;
-    fulfillment: 'pickup' | 'delivery';
+    fulfillment: 'pickup' | 'delivery' | 'online';
+    /**
+     * Items with a firm price only; see priceToConfirm.
+     */
     totalCents: number;
+    /**
+     * Some items are priced "from" or "quote", to be settled with the customer.
+     */
+    priceToConfirm: boolean;
+    /**
+     * At least one item is a service.
+     */
+    hasServices: boolean;
     status: 'new' | 'confirmed' | 'completed' | 'canceled';
     /**
      * Units across all items.
@@ -429,10 +505,15 @@ export type OrderDto = {
      */
     customerLinks: OrderCustomerLinksDto | null;
     /**
-     * Delivery address; null for pickup.
+     * Delivery address (or where to do the service); null for pickup and online.
      */
     address: string | null;
     note: string | null;
+    /**
+     * For services: the day the customer would like, as YYYY-MM-DD.
+     */
+    preferredDate: string | null;
+    preferredPeriod: 'morning' | 'afternoon' | 'evening';
     items: Array<OrderItemDto>;
 };
 
@@ -455,7 +536,12 @@ export type StorefrontContactDto = {
 export type StorefrontProductSummaryDto = {
     slug: string;
     name: string;
-    priceCents: number;
+    kind: 'product' | 'service';
+    priceType: 'from' | 'fixed' | 'hourly' | 'daily' | 'quote';
+    /**
+     * Null for "quote".
+     */
+    priceCents: number | null;
     /**
      * Cover image. Absolute URL or a path served by the web app.
      */
@@ -465,11 +551,15 @@ export type StorefrontProductSummaryDto = {
 export type StorefrontStoreDto = {
     bio: string | null;
     city: string | null;
+    /**
+     * Where the store works ("Curitiba e região metropolitana").
+     */
+    serviceArea: string | null;
     contact: StorefrontContactDto;
     /**
-     * Ways to receive an order the store offers. Never empty.
+     * Ways to receive an order the store offers. Never empty. Online is only for services.
      */
-    fulfillment: Array<'pickup' | 'delivery'>;
+    fulfillment: Array<'pickup' | 'delivery' | 'online'>;
     /**
      * Active products, in display order.
      */
@@ -503,7 +593,12 @@ export type StorefrontProductDto = {
     slug: string;
     name: string;
     description: string | null;
-    priceCents: number;
+    kind: 'product' | 'service';
+    priceType: 'from' | 'fixed' | 'hourly' | 'daily' | 'quote';
+    /**
+     * Null for "quote".
+     */
+    priceCents: number | null;
     /**
      * Cover first.
      */
@@ -522,12 +617,20 @@ export type CreateOrderDto = {
      * So the store can reply about the order. Any common format; stored as digits with the country code.
      */
     customerWhatsapp: string;
-    fulfillment: 'pickup' | 'delivery';
+    fulfillment: 'pickup' | 'delivery' | 'online';
     /**
      * Required for delivery.
      */
     address?: string;
     note?: string;
+    /**
+     * For services: the day the customer would like, as YYYY-MM-DD. Ignored without services.
+     */
+    preferredDate?: string;
+    /**
+     * For services: the part of the day the customer would like. Ignored without services.
+     */
+    preferredPeriod?: 'morning' | 'afternoon' | 'evening';
     items: Array<CreateOrderItemDto>;
 };
 
@@ -536,7 +639,14 @@ export type CreateOrderResponseDto = {
      * Sequential within the store.
      */
     number: number;
+    /**
+     * Items with a firm price only; see priceToConfirm.
+     */
     totalCents: number;
+    /**
+     * Some items are priced "from" or "quote", to be settled with the store.
+     */
+    priceToConfirm: boolean;
     /**
      * wa.me link with the order message, ready to open.
      */

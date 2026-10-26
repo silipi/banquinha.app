@@ -1,4 +1,6 @@
+import type { ItemKind, PriceType } from '../../products/pricing.js';
 import { ThemeTokensDto } from '../../themes/dto/theme.dto.js';
+import type { FulfillmentMethod } from './create-order.dto.js';
 
 /** Public store identity, shown on every storefront page. */
 export class StorefrontStoreSummaryDto {
@@ -21,7 +23,10 @@ export class StorefrontContactDto {
 export class StorefrontProductSummaryDto {
   slug: string;
   name: string;
-  priceCents: number;
+  kind: ItemKind;
+  priceType: PriceType;
+  /** Null for "quote". */
+  priceCents: number | null;
   /** Cover image. Absolute URL or a path served by the web app. */
   imageUrl: string | null;
 }
@@ -29,9 +34,11 @@ export class StorefrontProductSummaryDto {
 export class StorefrontStoreDto extends StorefrontStoreSummaryDto {
   bio: string | null;
   city: string | null;
+  /** Where the store works ("Curitiba e região metropolitana"). */
+  serviceArea: string | null;
   contact: StorefrontContactDto;
-  /** Ways to receive an order the store offers. Never empty. */
-  fulfillment: ('pickup' | 'delivery')[];
+  /** Ways to receive an order the store offers. Never empty. Online is only for services. */
+  fulfillment: FulfillmentMethod[];
   /** Active products, in display order. */
   products: StorefrontProductSummaryDto[];
 }
@@ -44,7 +51,10 @@ export class StorefrontProductDto {
   slug: string;
   name: string;
   description: string | null;
-  priceCents: number;
+  kind: ItemKind;
+  priceType: PriceType;
+  /** Null for "quote". */
+  priceCents: number | null;
   /** Cover first. */
   images: StorefrontProductImageDto[];
   store: StorefrontStoreSummaryDto;

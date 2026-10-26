@@ -327,36 +327,42 @@ Antes da integração com o Mercado Pago (P4), o lojista cadastra a própria cha
 - [ ] Pix copia e cola com o valor já preenchido (BR Code estático, sem intermediário)
 - [ ] Sem chave cadastrada, nada muda
 
-### P2-13 · Itens de serviço e formas de preço ⬜
+### P2-13 · Itens de serviço e formas de preço ✅
 
 A plataforma também é para quem vende serviço: técnico (formatar computador), faxineira (por dia), professor particular (por hora). Cada item da loja ganha um tipo (produto ou serviço) na própria tabela `products`, porque a mesma loja pode ter os dois (o técnico vende o serviço e a peça). O preço deixa de ser sempre fixo.
 
 Formas de preço: **fixo** (R$ 120), **por hora** (R$ 35/hora), **por dia** (R$ 180/diária), **a partir de** (a partir de R$ 80) e **sob orçamento** (sem preço).
 
-- [ ] Tipo do item (`product` | `service`) e forma de preço no banco (migration); tudo que já existe vira produto com preço fixo
-- [ ] O editor de produto no painel escolhe o tipo e a forma de preço
-- [ ] A vitrine mostra o preço conforme a forma ("R$ 35/hora", "a partir de R$ 80", "Sob orçamento")
-- [ ] Por hora e por dia usam a quantidade da sacola como horas ou diárias ("4 horas")
-- [ ] "A partir de" e "sob orçamento" entram no pedido como "a combinar", sem somar no total ("R$ 150 + itens a combinar")
-- [ ] Item sob orçamento troca "Adicionar" por "Pedir orçamento"
-- [ ] A mensagem do WhatsApp e o detalhe do pedido mostram a unidade e a forma de preço (copiadas para `order_items`)
+**Como ficou (feito em 2026-10-26):** `products` ganhou `kind` e `price_type`, e `price_cents` só fica vazio no "sob orçamento" (com um `CHECK` no banco). As regras ficam em `src/products/pricing.ts`: por hora e por dia são só para serviços, e o preço é obrigatório nas outras formas. No painel, o editor tem "É um: Produto | Serviço" e "Como cobrar", com o campo de preço mudando de nome ("Preço por hora", "/diária"); a lista mostra o selo "Serviço". Na vitrine, o botão vira "Quero esse serviço" ou "Pedir orçamento", e a sacola mostra "2 h" e "R$ 120,00 + a combinar". O pedido grava `price_to_confirm` e uma cópia do tipo e da forma de preço em cada item.
 
-### P2-14 · Pedido de serviço: onde, quando e textos ⬜
+- [x] Tipo do item (`product` | `service`) e forma de preço no banco (migration); tudo que já existe vira produto com preço fixo
+- [x] O editor de produto no painel escolhe o tipo e a forma de preço
+- [x] A vitrine mostra o preço conforme a forma ("R$ 35/hora", "a partir de R$ 80", "Sob orçamento")
+- [x] Por hora e por dia usam a quantidade da sacola como horas ou diárias ("4 horas")
+- [x] "A partir de" e "sob orçamento" entram no pedido como "a combinar", sem somar no total ("R$ 150 + itens a combinar")
+- [x] Item sob orçamento troca "Adicionar" por "Pedir orçamento"
+- [x] A mensagem do WhatsApp e o detalhe do pedido mostram a unidade e a forma de preço (copiadas para `order_items`)
+
+### P2-14 · Pedido de serviço: onde, quando e textos ✅
 
 Para serviço, a pergunta não é "retirada ou entrega", é "onde e quando". Sem agenda por enquanto ([P5-21](#p5-21--agenda-com-horários-disponíveis-)): o cliente indica uma data e um período preferidos, e o lojista confirma pelo WhatsApp.
 
-- [ ] Formas de atendimento para serviços: no endereço do lojista, no endereço do cliente (pede o endereço) e online. A loja escolhe quais oferece, como já faz com retirada e entrega, e a API recusa uma forma desligada
-- [ ] Sacola com serviço pede data preferida e período (manhã, tarde, noite), opcionais; os dois vão para o pedido e para a mensagem
-- [ ] Textos acompanham o conteúdo: sacola só com serviços vira "Solicitação", e "Fazer pedido" vira "Solicitar"
-- [ ] Região de atendimento na loja (texto livre: "Curitiba e região metropolitana"), mostrada na vitrine
+**Como ficou (feito em 2026-10-26):** as formas de receber continuam sendo retirada e entrega, com textos de serviço quando a sacola tem serviços ("Vou até a loja", "No meu endereço"), mais **online** (`stores.online_enabled`), que só aparece e só é aceita quando a sacola tem apenas serviços. Nas Configurações: "Retirada ou atendimento no seu endereço", "Entrega ou atendimento no cliente", "Atendimento online" e "Região de atendimento". A sacola com serviço pede "Quando você prefere?" (data a partir de hoje e manhã/tarde/noite); a API confere a data no fuso de Brasília e ignora esses campos em pedidos só de produtos. A mensagem vira "Quero solicitar um serviço…" com "Atendimento no meu endereço: …" e "Data preferida: sexta-feira, 30/10 (tarde)", e as mensagens prontas do P2-11 ganham versões de serviço ("Estou a caminho", "Tudo pronto para o seu atendimento").
 
-### P2-15 · Onboarding e landing para serviços ⬜
+- [x] Formas de atendimento para serviços: no endereço do lojista, no endereço do cliente (pede o endereço) e online. A loja escolhe quais oferece, como já faz com retirada e entrega, e a API recusa uma forma desligada
+- [x] Sacola com serviço pede data preferida e período (manhã, tarde, noite), opcionais; os dois vão para o pedido e para a mensagem
+- [x] Textos acompanham o conteúdo: sacola só com serviços vira "Solicitação", e "Fazer pedido" vira "Solicitar"
+- [x] Região de atendimento na loja (texto livre: "Curitiba e região metropolitana"), mostrada na vitrine
+
+### P2-15 · Onboarding e landing para serviços ✅
 
 O onboarding pergunta "O que você oferece? Produtos, serviços ou os dois" e ajusta os padrões: exemplos e textos de ajuda no passo de produtos, forma de preço e formas de atendimento. A resposta só muda os padrões, nada fica travado.
 
-- [ ] Pergunta no onboarding, com padrões diferentes para cada resposta
-- [ ] Loja de exemplo de serviço no seed (por exemplo, um técnico de informática) e na landing
-- [ ] A landing fala também com prestadores de serviço; um post no blog sobre vender serviço pelo link
+**Como ficou (feito em 2026-10-26):** a pergunta fica no topo do passo de produtos, que muda de título ("Quais serviços você oferece?"), de exemplos e de rótulos ("Serviço 1"). Em "Os dois", cada item tem a escolha produto/serviço. Quem responde "Serviços" começa com retirada desligada e entrega/atendimento no cliente ligada. Loja de exemplo **Tech do Rafa** (`/techdorafa`, Porto Alegre) com serviço fixo, por hora, "a partir de", sob orçamento e um produto, com imagens ilustradas geradas; ela entra na landing ao lado das outras três. A faixa de público, o FAQ ("Funciona para quem presta serviço?") e o post "Como divulgar seus serviços pela internet" falam com prestadores de serviço.
+
+- [x] Pergunta no onboarding, com padrões diferentes para cada resposta
+- [x] Loja de exemplo de serviço no seed (por exemplo, um técnico de informática) e na landing
+- [x] A landing fala também com prestadores de serviço; um post no blog sobre vender serviço pelo link
 
 ### P2-16 · Contador de visitas da loja ⬜
 

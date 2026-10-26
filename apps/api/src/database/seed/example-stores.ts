@@ -1,3 +1,4 @@
+import type { ItemKind, PriceType } from '../../products/pricing.js';
 import type { ThemeOverrides } from '../../themes/theme-tokens.js';
 
 // Fictional stores shown on the landing page. Images are served by the web app from /public/lojas.
@@ -8,7 +9,11 @@ const DEMO_INSTAGRAM = 'banquinhaapp';
 export type ExampleProduct = {
   slug: string;
   name: string;
-  priceCents: number;
+  /** A product with a fixed price when omitted. */
+  kind?: ItemKind;
+  priceType?: PriceType;
+  /** Null for "quote". */
+  priceCents: number | null;
   description: string;
 };
 
@@ -22,6 +27,10 @@ export type ExampleStore = {
   themeOverrides: ThemeOverrides | null;
   whatsapp: string;
   instagram: string;
+  serviceArea?: string;
+  pickupEnabled?: boolean;
+  deliveryEnabled?: boolean;
+  onlineEnabled?: boolean;
   products: ExampleProduct[];
 };
 
@@ -185,6 +194,74 @@ export const exampleStores: ExampleStore[] = [
         priceCents: 19900,
         description:
           'Anel duplo com duas pedras de cristal incolor em base de prata texturizada. Versátil e cheio de charme.',
+      },
+    ],
+  },
+  {
+    handle: 'techdorafa',
+    name: 'Tech do Rafa',
+    bio: 'Técnico de informática há 12 anos. Formato, limpo, monto e conserto computadores e notebooks, na sua casa, na minha oficina ou por acesso remoto.',
+    city: 'Porto Alegre, RS',
+    themeSlug: 'classico',
+    themeOverrides: { colors: { accent: '#2f5fd0' } },
+    whatsapp: DEMO_WHATSAPP,
+    instagram: DEMO_INSTAGRAM,
+    serviceArea: 'Porto Alegre e região metropolitana',
+    pickupEnabled: true,
+    deliveryEnabled: true,
+    onlineEnabled: true,
+    products: [
+      {
+        slug: 'formatacao-de-computador',
+        name: 'Formatação de computador',
+        kind: 'service',
+        priceType: 'fixed',
+        priceCents: 12000,
+        description:
+          'Backup dos seus arquivos, Windows atualizado, drivers e os programas do dia a dia instalados. Computador rápido de novo em até 24 horas.',
+      },
+      {
+        slug: 'suporte-remoto',
+        name: 'Suporte remoto',
+        kind: 'service',
+        priceType: 'hourly',
+        priceCents: 6000,
+        description:
+          'Resolvo problemas de programas, e-mail, impressora e lentidão pela internet, sem você sair de casa. Cobrado por hora de atendimento.',
+      },
+      {
+        slug: 'limpeza-de-notebook',
+        name: 'Limpeza interna de notebook',
+        kind: 'service',
+        priceType: 'from',
+        priceCents: 9000,
+        description:
+          'Limpeza do cooler e troca da pasta térmica para o notebook parar de esquentar e de fazer barulho. O valor final depende do modelo.',
+      },
+      {
+        slug: 'montagem-de-pc-gamer',
+        name: 'Montagem de PC gamer',
+        kind: 'service',
+        priceType: 'quote',
+        priceCents: null,
+        description:
+          'Ajudo a escolher as peças pelo seu orçamento, monto, organizo os cabos e entrego testado. Me conta o que você quer jogar.',
+      },
+      {
+        slug: 'instalacao-de-rede-wi-fi',
+        name: 'Instalação de rede Wi-Fi',
+        kind: 'service',
+        priceType: 'fixed',
+        priceCents: 15000,
+        description:
+          'Configuração do roteador, senha segura e sinal na casa toda, com repetidor se precisar (o equipamento é cobrado à parte).',
+      },
+      {
+        slug: 'pen-drive-64-gb',
+        name: 'Pen drive 64 GB',
+        priceCents: 4500,
+        description:
+          'Pen drive USB 3.0 de 64 GB, ótimo para backup. Posso levar junto no atendimento.',
       },
     ],
   },

@@ -7,6 +7,7 @@ import {
   IsUUID,
 } from 'class-validator';
 import { CreateStoreProductDto } from '../../stores/dto/store.dto.js';
+import type { ItemKind, PriceType } from '../pricing.js';
 
 export class CreateProductDto extends CreateStoreProductDto {
   /** Hidden from the storefront when false. Defaults to true. */
@@ -47,7 +48,10 @@ export class ProductDto {
   slug: string;
   name: string;
   description: string | null;
-  priceCents: number;
+  kind: ItemKind;
+  priceType: PriceType;
+  /** Null for "quote". */
+  priceCents: number | null;
   active: boolean;
   /** Cover first. */
   images: ProductImageDto[];

@@ -1,5 +1,10 @@
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, Min } from 'class-validator';
+import type { ItemKind, PriceType } from '../../products/pricing.js';
+import type {
+  DayPeriod,
+  FulfillmentMethod,
+} from '../../storefront/dto/create-order.dto.js';
 
 export const ORDER_STATUSES = [
   'new',
@@ -33,8 +38,13 @@ export class OrderSummaryDto {
   /** Sequential within the store: "Pedido #12". */
   number: number;
   customerName: string;
-  fulfillment: 'pickup' | 'delivery';
+  fulfillment: FulfillmentMethod;
+  /** Items with a firm price only; see priceToConfirm. */
   totalCents: number;
+  /** Some items are priced "from" or "quote", to be settled with the customer. */
+  priceToConfirm: boolean;
+  /** At least one item is a service. */
+  hasServices: boolean;
   status: OrderStatus;
   /** Units across all items. */
   itemCount: number;
@@ -58,9 +68,12 @@ export class OrderListDto {
 }
 
 export class OrderItemDto {
-  /** Name and price as they were when the order was placed. */
+  /** Name and pricing as they were when the order was placed. */
   name: string;
-  unitPriceCents: number;
+  kind: ItemKind;
+  priceType: PriceType;
+  /** Null for "quote". */
+  unitPriceCents: number | null;
   quantity: number;
   /** Null when the product was deleted since. */
   productId: string | null;
@@ -71,7 +84,10 @@ export class OrderCustomerLinksDto {
   /** Opens the chat with a short greeting about the order. */
   chat: string;
   confirmed: string;
-  /** "Ready for pickup" or "out for delivery", by the order's fulfillment. */
+  /**
+   * The order is ready: for pickup or out for delivery, or for services ready to start
+   * or on the way, by the order's fulfillment.
+   */
   ready: string;
   completed: string;
   canceled: string;
@@ -82,8 +98,11 @@ export class OrderDto extends OrderSummaryDto {
   customerWhatsapp: string | null;
   /** Null when there is no customerWhatsapp. */
   customerLinks: OrderCustomerLinksDto | null;
-  /** Delivery address; null for pickup. */
+  /** Delivery address (or where to do the service); null for pickup and online. */
   address: string | null;
   note: string | null;
+  /** For services: the day the customer would like, as YYYY-MM-DD. */
+  preferredDate: string | null;
+  preferredPeriod: DayPeriod | null;
   items: OrderItemDto[];
 }

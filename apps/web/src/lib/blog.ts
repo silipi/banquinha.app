@@ -115,6 +115,22 @@ const posts: BlogPost[] = [
     ],
     tone: 'lilac',
   },
+  {
+    slug: 'como-divulgar-servicos-pela-internet',
+    title:
+      'Como divulgar seus serviços pela internet e receber pedidos no WhatsApp',
+    description:
+      'Técnico, diarista, professor ou manicure: como mostrar seus serviços com preço claro, passar confiança e receber pedidos organizados.',
+    category: 'Serviços',
+    publishedAt: '2026-10-26',
+    keywords: [
+      'como divulgar serviços',
+      'divulgar serviços pela internet',
+      'prestador de serviço',
+      'receber pedidos pelo whatsapp',
+    ],
+    tone: 'sky',
+  },
 ];
 
 /** All posts, newest first. */

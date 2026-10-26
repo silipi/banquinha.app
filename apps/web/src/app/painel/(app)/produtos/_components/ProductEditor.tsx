@@ -15,20 +15,23 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { SwitchRow } from '@/components/ui/switch';
 import { apiErrorMessage, panelApi } from '@/lib/panel';
-import { formatPriceInput, parsePriceInput } from '@/lib/price-input';
 import { shrinkImage } from '@/lib/shrink-image';
-import { cn } from '@/lib/utils';
 import { Dialog } from '../../../_components/Dialog';
 import { Field, FormError } from '../../../_components/fields';
+import {
+  PricingFields,
+  priceForApi,
+  pricingError,
+  type PricingDraft,
+} from '../../../_components/PricingFields';
 
 /** A photo already saved, or one picked here and not uploaded yet. */
 type DraftImage =
   | { key: string; id: string; url: string }
   | { key: string; file: Blob; url: string };
 
-interface Draft {
+interface Draft extends PricingDraft {
   name: string;
-  priceCents: number;
   description: string;
   active: boolean;
   images: DraftImage[];
@@ -41,6 +44,8 @@ const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
 const draftFrom = (product: ProductDto | null): Draft => ({
   name: product?.name ?? '',
+  kind: product?.kind ?? 'product',
+  priceType: product?.priceType ?? 'fixed',
   priceCents: product?.priceCents ?? 0,
   description: product?.description ?? '',
   active: product?.active ?? true,
@@ -85,7 +90,6 @@ export function ProductEditor({
   const [busy, setBusy] = useState<'save' | 'delete' | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
-  const priceId = useId();
   const descriptionId = useId();
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
@@ -120,7 +124,10 @@ export function ProductEditor({
     // The error of a field goes away as soon as it's edited.
     setErrors((current) => ({
       name: 'name' in changes ? undefined : current.name,
-      price: 'priceCents' in changes ? undefined : current.price,
+      price:
+        'priceCents' in changes || 'priceType' in changes
+          ? undefined
+          : current.price,
     }));
   }
 
@@ -171,8 +178,9 @@ export function ProductEditor({
 
   function validate(): boolean {
     const found: typeof errors = {};
-    if (draft.name.trim().length < 2) found.name = 'Dê um nome ao produto';
-    if (!draft.priceCents) found.price = 'Informe o preço';
+    if (draft.name.trim().length < 2) found.name = 'Dê um nome';
+    const priceError = pricingError(draft);
+    if (priceError) found.price = priceError;
     setErrors(found);
     return Object.keys(found).length === 0;
   }
@@ -187,7 +195,9 @@ export function ProductEditor({
     try {
       const fields = {
         name: draft.name,
-        priceCents: draft.priceCents,
+        kind: draft.kind,
+        priceType: draft.priceType,
+        priceCents: priceForApi(draft),
         description: draft.description,
         active: draft.active,
       };
@@ -205,7 +215,9 @@ export function ProductEditor({
         JSON.stringify(fields) !==
         JSON.stringify({
           name: saved.name,
-          priceCents: saved.priceCents,
+          kind: saved.kind,
+          priceType: saved.priceType,
+          priceCents: priceForApi(saved),
           description: saved.description,
           active: saved.active,
         })
@@ -303,14 +315,24 @@ export function ProductEditor({
 
   return (
     <Dialog
-      title={initial ? 'Editar produto' : 'Novo produto'}
+      title={
+        initial
+          ? initial.kind === 'service'
+            ? 'Editar serviço'
+            : 'Editar produto'
+          : 'Novo item'
+      }
       onClose={close}
       footer={
         <>
           {initial &&
             (confirmDelete ? (
               <span className="flex flex-1 flex-wrap items-center gap-2">
-                <span className="text-sm">Apagar este produto?</span>
+                <span className="text-sm">
+                  {draft.kind === 'service'
+                    ? 'Apagar este serviço?'
+                    : 'Apagar este produto?'}
+                </span>
                 <Button
                   size="sm"
                   variant="ghost"
@@ -360,7 +382,7 @@ export function ProductEditor({
       {busy && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-background/70 text-sm font-medium backdrop-blur-[2px]">
           <LoaderCircle className="size-7 animate-spin" />
-          {busy === 'save' ? 'Salvando produto…' : 'Apagando produto…'}
+          {busy === 'save' ? 'Salvando…' : 'Apagando…'}
         </div>
       )}
       <div inert={busy !== null} className="flex flex-col gap-5 p-5">
@@ -443,39 +465,19 @@ export function ProductEditor({
           error={errors.name}
           maxLength={80}
           autoCapitalize="sentences"
-          placeholder="Ex.: Bolo de pote de chocolate"
+          placeholder={
+            draft.kind === 'service'
+              ? 'Ex.: Formatação de computador'
+              : 'Ex.: Bolo de pote de chocolate'
+          }
           onChange={(event) => edit({ name: event.target.value })}
         />
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor={priceId} className="text-sm font-medium">
-            Preço
-          </label>
-          <div
-            className={cn(
-              'flex h-13 items-center gap-2 rounded-2xl border bg-surface px-4 focus-within:border-foreground/40',
-              errors.price && 'border-red-400',
-            )}
-          >
-            <span className="text-muted-foreground">R$</span>
-            <input
-              id={priceId}
-              inputMode="numeric"
-              value={formatPriceInput(draft.priceCents)}
-              placeholder="0,00"
-              aria-invalid={Boolean(errors.price)}
-              onChange={(event) =>
-                edit({ priceCents: parsePriceInput(event.target.value) })
-              }
-              className="h-full min-w-0 flex-1 bg-transparent text-base font-medium tabular-nums outline-none placeholder:text-muted-foreground/60"
-            />
-          </div>
-          {errors.price && (
-            <p role="alert" className="text-sm text-red-600">
-              {errors.price}
-            </p>
-          )}
-        </div>
+        <PricingFields
+          value={draft}
+          error={errors.price}
+          onChange={(changes) => edit(changes)}
+        />
 
         <div className="flex flex-col gap-1.5">
           <label htmlFor={descriptionId} className="text-sm font-medium">
@@ -489,7 +491,11 @@ export function ProductEditor({
             value={draft.description}
             rows={3}
             maxLength={500}
-            placeholder="Tamanho, sabor, material…"
+            placeholder={
+              draft.kind === 'service'
+                ? 'O que está incluso, quanto tempo leva…'
+                : 'Tamanho, sabor, material…'
+            }
             onChange={(event) => edit({ description: event.target.value })}
             className="w-full resize-none rounded-2xl border bg-surface px-4 py-3 text-base outline-none placeholder:text-muted-foreground/60 focus:border-foreground/40"
           />

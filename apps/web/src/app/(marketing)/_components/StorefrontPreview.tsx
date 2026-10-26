@@ -1,7 +1,7 @@
 import { MessageCircle, ShoppingBag } from 'lucide-react';
 import Image from 'next/image';
-import type { ExampleStore } from '@/lib/example-stores';
-import { cn, formatBRL } from '@/lib/utils';
+import { examplePrice, type ExampleStore } from '@/lib/example-stores';
+import { cn } from '@/lib/utils';
 
 /** Phone mockup showing what a store page looks like. */
 export function StorefrontPreview({
@@ -73,7 +73,7 @@ export function StorefrontPreview({
                   {product.name}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  {formatBRL(product.price)}
+                  {examplePrice(product)}
                 </p>
               </div>
             ))}
