@@ -1,25 +1,19 @@
 'use client';
 
-import { storesUpdate } from '@banquinha/api-client';
 import {
   Check,
   Copy,
   ExternalLink,
-  ImageIcon,
   LoaderCircle,
   MessageCircle,
   Package,
-  Text,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { apiErrorMessage, panelApi } from '@/lib/panel';
 import { absoluteUrl } from '@/lib/site';
 import { storeDisplayUrl, storePath } from '@/lib/storefront-links';
-import { cn } from '@/lib/utils';
-import { refreshStorefront } from '../actions';
-import { SETUP_LABELS, usePanel } from './_components/panel-context';
-import { StoreImageEditor } from './_components/StoreImageEditor';
+import { usePanel } from './_components/panel-context';
+import { StoreBuilder } from './_components/StoreBuilder';
 
 export default function DashboardPage() {
   const { me, store } = usePanel();
@@ -65,7 +59,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <SetupCard />
+      <StoreBuilder />
     </div>
   );
 }
@@ -125,129 +119,5 @@ function StoreLinkCard({ handle }: { handle: string }) {
         </a>
       </div>
     </section>
-  );
-}
-
-const SETUP_ICONS = { logo: ImageIcon, banner: ImageIcon, description: Text };
-
-/** Full version of the sidebar's mini wizard, with the items that can be done here. */
-function SetupCard() {
-  const { store } = usePanel();
-  if (!store) return null;
-  const done = store.setup.filter((step) => step.done).length;
-
-  return (
-    <section
-      id="personalizar"
-      className="scroll-mt-8 rounded-3xl border bg-surface p-5"
-    >
-      <h2 className="font-display text-xl font-bold">
-        Deixe sua loja completa
-      </h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {done === store.setup.length
-          ? 'Tudo pronto. Sua loja está caprichada!'
-          : `${done} de ${store.setup.length} feitos. Lojas completas passam mais confiança.`}
-      </p>
-      <ul className="mt-4 flex flex-col divide-y">
-        {store.setup.map((step) => {
-          const Icon = SETUP_ICONS[step.id];
-          return (
-            <li key={step.id} className="flex flex-col gap-3 py-4">
-              <div className="flex items-start gap-3">
-                <span
-                  className={cn(
-                    'flex size-9 shrink-0 items-center justify-center rounded-full bg-muted',
-                    step.done && 'bg-sage',
-                  )}
-                >
-                  {step.done ? (
-                    <Check className="size-4" />
-                  ) : (
-                    <Icon className="size-4" />
-                  )}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block font-medium">
-                    {SETUP_LABELS[step.id].title}
-                  </span>
-                  <span className="block text-sm text-muted-foreground">
-                    {SETUP_LABELS[step.id].text}
-                  </span>
-                </span>
-              </div>
-              {step.id === 'description' ? (
-                <DescriptionEditor />
-              ) : (
-                <StoreImageEditor slot={step.id} />
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
-}
-
-function DescriptionEditor() {
-  const { store, setStore } = usePanel();
-  const [bio, setBio] = useState(store?.bio ?? '');
-  const [pending, setPending] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  if (!store) return null;
-
-  async function save() {
-    setPending(true);
-    setMessage(null);
-    try {
-      const { data, error } = await storesUpdate({
-        client: panelApi,
-        path: { id: store!.id },
-        body: { bio },
-      });
-      if (!data) {
-        setMessage(apiErrorMessage(error, 'Não deu certo. Tente de novo.'));
-        return;
-      }
-      setStore(data);
-      await refreshStorefront(data.handle);
-      setMessage('Salvo! Já aparece na sua loja.');
-    } catch {
-      setMessage('Sem conexão com a internet? Tente de novo.');
-    } finally {
-      setPending(false);
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-2 sm:pl-12">
-      <textarea
-        value={bio}
-        onChange={(event) => {
-          setBio(event.target.value);
-          setMessage(null);
-        }}
-        rows={3}
-        maxLength={300}
-        placeholder="Ex.: Bolos caseiros feitos sob encomenda em Curitiba. Entrega e retirada."
-        aria-label="Descrição da loja"
-        className="w-full resize-none rounded-2xl border bg-background px-4 py-3 text-base outline-none placeholder:text-muted-foreground/60 focus:border-foreground/40"
-      />
-      <div className="flex items-center gap-3">
-        <Button
-          size="sm"
-          disabled={pending || bio.trim() === (store.bio ?? '')}
-          onClick={() => void save()}
-        >
-          {pending ? <LoaderCircle className="animate-spin" /> : 'Salvar'}
-        </Button>
-        <span className="text-xs text-muted-foreground">{bio.length}/300</span>
-        {message && (
-          <span role="status" className="text-sm text-muted-foreground">
-            {message}
-          </span>
-        )}
-      </div>
-    </div>
   );
 }

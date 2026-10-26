@@ -215,6 +215,37 @@ describe('Store onboarding and dashboard', () => {
     });
   });
 
+  it('switches the theme and shows it on the storefront', async () => {
+    const session = await newMerchant();
+    const store = (await createStore(session)).json();
+    const docinho = themeBySlug('docinho');
+
+    const updated = await app.inject({
+      method: 'PATCH',
+      url: `/stores/${store.id}`,
+      cookies: as(session),
+      payload: { themeId: docinho.id },
+    });
+    expect(updated.json()).toMatchObject({
+      themeId: docinho.id,
+      theme: { colors: docinho.tokens.colors },
+    });
+
+    const storefront = await app.inject({
+      method: 'GET',
+      url: `/storefront/${store.handle}`,
+    });
+    expect(storefront.json().theme.colors).toEqual(docinho.tokens.colors);
+
+    const unknown = await app.inject({
+      method: 'PATCH',
+      url: `/stores/${store.id}`,
+      cookies: as(session),
+      payload: { themeId: randomUUID() },
+    });
+    expect(unknown.statusCode).toBe(400);
+  });
+
   it("hides other merchants' stores", async () => {
     const { id } = (await createStore(await newMerchant())).json();
     const res = await app.inject({

@@ -88,6 +88,11 @@ export class UpdateStoreDto {
   @IsString()
   @MaxLength(300, { message: 'Descrição muito longa (até 300 caracteres)' })
   bio?: string | null;
+
+  /** A theme from GET /themes. */
+  @IsOptional()
+  @IsUUID('all', { message: 'Escolha um dos temas' })
+  themeId?: string;
 }
 
 export const STORE_IMAGE_SLOTS = ['logo', 'banner'] as const;

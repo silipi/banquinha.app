@@ -1126,6 +1126,11 @@
             "nullable": true,
             "description": "Short description shown under the store name. Empty removes it.",
             "maxLength": 300
+          },
+          "themeId": {
+            "type": "string",
+            "description": "A theme from GET /themes.",
+            "format": "uuid"
           }
         }
       },

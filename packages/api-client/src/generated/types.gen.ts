@@ -191,6 +191,10 @@ export type UpdateStoreDto = {
      * Short description shown under the store name. Empty removes it.
      */
     bio?: string | null;
+    /**
+     * A theme from GET /themes.
+     */
+    themeId?: string;
 };
 
 export type ThemeDto = {

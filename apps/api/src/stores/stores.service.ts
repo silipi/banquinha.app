@@ -212,11 +212,13 @@ export class StoresService {
     input: UpdateStoreDto,
   ): Promise<StoreDashboardDto> {
     await this.findOwned(user, id);
-    if (input.bio !== undefined) {
-      await this.db
-        .update(stores)
-        .set({ bio: input.bio })
-        .where(eq(stores.id, id));
+    const changes: Partial<StoreRow> = {};
+    if (input.bio !== undefined) changes.bio = input.bio;
+    if (input.themeId !== undefined) {
+      changes.themeId = (await this.themes.findUsable(user, input.themeId)).id;
+    }
+    if (Object.keys(changes).length > 0) {
+      await this.db.update(stores).set(changes).where(eq(stores.id, id));
     }
     return this.getDashboard(user, id);
   }

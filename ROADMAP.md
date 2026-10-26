@@ -283,11 +283,12 @@ Fazer a loja recém-criada virar uma loja que vende. A pessoa já saiu do onboar
 **Layout do painel (feito em 2026-10-23):** sidebar + conteúdo. A sidebar tem o seletor de loja (uma loja por conta hoje; mais lojas podem vir com os planos pagos), o menu, o **mini wizard "Deixe sua loja completa"** e o usuário logado com o botão de sair. No celular, a sidebar vira um menu lateral.
 
 - **Checklist "Deixe sua loja completa"** (calculado na API, em `setup`): por enquanto logo, banner e descrição. Aparece na sidebar e em detalhe na página inicial; some quando tudo estiver feito. Tarefas incompletas ficam na cabeça (efeito Zeigarnik).
+- **Vitrine editável "Sua vitrine"** (feito em 2026-10-26): na página inicial, no lugar de um checklist, uma cópia da loja (banner, logo, nome, descrição, botão de WhatsApp e 3 produtos de exemplo) onde a pessoa toca no que quer mudar, mais a escolha de tema. As mudanças ficam num rascunho, com prévia na hora, até tocar em **Publicar** (ou Descartar); sair da página com rascunho pede confirmação. O que ainda falta aparece com um "!" laranja. Fica sempre disponível, para a primeira vez e para ajustes depois, e pode ser recolhida (lembrado no aparelho).
 - **Momentos de comemoração:** primeira visita na loja, primeiro pedido. Mensagem curta no painel, com algo para fazer em seguida.
 - **E-mails de retorno** (depende do P3-03): "sua loja está quase pronta" para quem criou a conta e não publicou, e um resumo da primeira semana (visitas e pedidos).
 
 - [x] Checklist com progresso na sidebar e no painel, que reflete o que já foi feito
-- [x] Descrição editável direto no checklist (aparece na vitrine na hora)
+- [x] Logo, banner, descrição e tema editáveis numa prévia da loja, publicados juntos
 - [x] Logo e banner editáveis
 - [ ] Comemoração do primeiro pedido
 - [ ] E-mail de lembrete para quem criou a conta e não publicou
