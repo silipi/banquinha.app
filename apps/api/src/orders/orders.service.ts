@@ -5,6 +5,7 @@ import type { Db } from '../database/database.js';
 import { DB } from '../database/database.module.js';
 import { orderItems, orders } from '../database/schema/index.js';
 import { StoresService } from '../stores/stores.service.js';
+import { customerLinks } from './customer-messages.js';
 import type {
   ListOrdersQueryDto,
   OrderDto,
@@ -77,7 +78,7 @@ export class OrdersService {
     storeId: string,
     orderId: string,
   ): Promise<OrderDto> {
-    await this.stores.findOwned(user, storeId);
+    const store = await this.stores.findOwned(user, storeId);
     const order = await this.db.query.orders.findFirst({
       where: and(eq(orders.id, orderId), eq(orders.storeId, storeId)),
       with: { items: true },
@@ -89,6 +90,18 @@ export class OrdersService {
         order,
         order.items.reduce((total, item) => total + item.quantity, 0),
       ),
+      customerWhatsapp: order.customerWhatsapp,
+      customerLinks: order.customerWhatsapp
+        ? customerLinks(order.customerWhatsapp, {
+            storeName: store.name,
+            locationUrl: store.locationUrl,
+            number: order.number,
+            customerName: order.customerName,
+            fulfillment: order.fulfillment,
+            address: order.address,
+            totalCents: order.totalCents,
+          })
+        : null,
       address: order.address,
       note: order.note,
       items: order.items.map((item) => ({

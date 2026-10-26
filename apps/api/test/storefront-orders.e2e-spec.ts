@@ -21,6 +21,7 @@ describe('POST /storefront/:handle/orders', () => {
 
   const validOrder = {
     customerName: '  Marina  ',
+    customerWhatsapp: '(41) 99999-0000',
     fulfillment: 'pickup',
     items: [
       { slug: 'samambaia', quantity: 2 },
@@ -47,6 +48,7 @@ describe('POST /storefront/:handle/orders', () => {
   it('numbers orders sequentially within the store', async () => {
     const lulucaOrder = {
       customerName: 'Ana',
+      customerWhatsapp: '41999990000',
       fulfillment: 'delivery',
       address: 'Rua das Flores, 10',
       items: [{ slug: 'coelhinho-de-pano', quantity: 1 }],
@@ -86,6 +88,20 @@ describe('POST /storefront/:handle/orders', () => {
     });
     expect(res.statusCode).toBe(400);
     expect(res.json().message).toContain('Informe o endereço de entrega');
+  });
+
+  it("requires the customer's WhatsApp", async () => {
+    const { customerWhatsapp: _, ...withoutWhatsapp } = validOrder;
+    for (const payload of [
+      withoutWhatsapp,
+      { ...validOrder, customerWhatsapp: '4133334444' },
+    ]) {
+      const res = await placeOrder('pauloplantas', payload);
+      expect(res.statusCode).toBe(400);
+      expect(res.json().message).toContain(
+        'Confira seu WhatsApp: use o DDD e o número do celular',
+      );
+    }
   });
 
   it('rejects an empty cart', async () => {

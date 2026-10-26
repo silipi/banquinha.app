@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -14,6 +14,7 @@ import {
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
+import { toWhatsappNumber } from '../../common/whatsapp-number.js';
 
 export const FULFILLMENT_METHODS = ['pickup', 'delivery'] as const;
 export type FulfillmentMethod = (typeof FULFILLMENT_METHODS)[number];
@@ -39,6 +40,16 @@ export class CreateOrderDto {
   @MinLength(2, { message: 'Informe seu nome' })
   @MaxLength(80, { message: 'Nome muito longo' })
   customerName: string;
+
+  /** So the store can reply about the order. Any common format; stored as digits with the country code. */
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? (toWhatsappNumber(value) ?? value) : value,
+  )
+  @IsString()
+  @Matches(/^55\d{11}$/, {
+    message: 'Confira seu WhatsApp: use o DDD e o número do celular',
+  })
+  customerWhatsapp: string;
 
   @IsIn(FULFILLMENT_METHODS)
   fulfillment: FulfillmentMethod;

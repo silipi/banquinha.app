@@ -122,6 +122,7 @@ export class StorefrontOrdersService {
           storeId: store.id,
           number,
           customerName,
+          customerWhatsapp: input.customerWhatsapp,
           fulfillment,
           address,
           note,

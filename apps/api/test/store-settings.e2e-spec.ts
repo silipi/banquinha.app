@@ -95,6 +95,7 @@ describe('Store settings', () => {
       url: `/storefront/${store.handle}/orders`,
       payload: {
         customerName: 'Ana',
+        customerWhatsapp: '41999990000',
         fulfillment: 'delivery',
         address: 'Rua das Flores, 10',
         items: [{ slug: 'bolo', quantity: 1 }],

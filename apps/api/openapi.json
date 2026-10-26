@@ -2005,6 +2005,35 @@
           "counts"
         ]
       },
+      "OrderCustomerLinksDto": {
+        "type": "object",
+        "properties": {
+          "chat": {
+            "type": "string",
+            "description": "Opens the chat with a short greeting about the order."
+          },
+          "confirmed": {
+            "type": "string"
+          },
+          "ready": {
+            "type": "string",
+            "description": "\"Ready for pickup\" or \"out for delivery\", by the order's fulfillment."
+          },
+          "completed": {
+            "type": "string"
+          },
+          "canceled": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "chat",
+          "confirmed",
+          "ready",
+          "completed",
+          "canceled"
+        ]
+      },
       "OrderItemDto": {
         "type": "object",
         "properties": {
@@ -2070,6 +2099,21 @@
           "createdAt": {
             "type": "string"
           },
+          "customerWhatsapp": {
+            "type": "string",
+            "nullable": true,
+            "description": "Digits only, with country code. Null for orders placed before the bag asked for it."
+          },
+          "customerLinks": {
+            "nullable": true,
+            "description": "Null when there is no customerWhatsapp.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderCustomerLinksDto"
+              }
+            ]
+          },
           "address": {
             "type": "string",
             "nullable": true,
@@ -2095,6 +2139,8 @@
           "status",
           "itemCount",
           "createdAt",
+          "customerWhatsapp",
+          "customerLinks",
           "address",
           "note",
           "items"
@@ -2341,6 +2387,11 @@
             "minLength": 2,
             "maxLength": 80
           },
+          "customerWhatsapp": {
+            "type": "string",
+            "description": "So the store can reply about the order. Any common format; stored as digits with the country code.",
+            "pattern": "^55\\d{11}$"
+          },
           "fulfillment": {
             "type": "string",
             "enum": [
@@ -2369,6 +2420,7 @@
         },
         "required": [
           "customerName",
+          "customerWhatsapp",
           "fulfillment",
           "items"
         ]

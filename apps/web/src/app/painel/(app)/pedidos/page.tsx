@@ -14,15 +14,18 @@ import {
   Copy,
   LoaderCircle,
   MapPin,
+  MessageCircle,
   Receipt,
   Store,
+  X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { apiErrorMessage, panelApi } from '@/lib/panel';
 import { absoluteUrl } from '@/lib/site';
 import { storePath } from '@/lib/storefront-links';
 import { cn, formatBRL } from '@/lib/utils';
+import { formatWhatsappInput } from '@/lib/whatsapp-input';
 import { Dialog } from '../../_components/Dialog';
 import { FormError } from '../../_components/fields';
 import { usePanel } from '../_components/panel-context';
@@ -56,6 +59,32 @@ const NEXT: Record<Status, { status: Status; label: string }[]> = {
   ],
   completed: [{ status: 'confirmed', label: 'Reabrir' }],
   canceled: [{ status: 'new', label: 'Reabrir' }],
+};
+
+type CustomerLinks = NonNullable<OrderDto['customerLinks']>;
+type MessageKey = Exclude<keyof CustomerLinks, 'chat'>;
+
+/** The ready messages, in the order they usually go out. */
+function messageLabels(order: OrderDto): { key: MessageKey; label: string }[] {
+  return [
+    { key: 'confirmed', label: 'Pedido confirmado' },
+    {
+      key: 'ready',
+      label:
+        order.fulfillment === 'delivery'
+          ? 'Saiu para entrega'
+          : 'Pronto para retirada',
+    },
+    { key: 'completed', label: 'Obrigado pela compra' },
+    { key: 'canceled', label: 'Pedido cancelado' },
+  ];
+}
+
+/** The message offered right after the merchant moves an order to a status. */
+const STATUS_MESSAGE: Partial<Record<Status, MessageKey>> = {
+  confirmed: 'confirmed',
+  completed: 'completed',
+  canceled: 'canceled',
 };
 
 const time = new Intl.DateTimeFormat('pt-BR', {
@@ -179,7 +208,8 @@ export default function OrdersPage() {
         </h1>
         <p className="mt-1 text-muted-foreground">
           Os pedidos feitos na sua loja. O cliente também te chama no WhatsApp
-          para combinar o pagamento e a entrega.
+          para combinar o pagamento e a entrega, e você pode avisar cada passo
+          com uma mensagem pronta.
         </p>
       </header>
 
@@ -284,6 +314,104 @@ export default function OrdersPage() {
   );
 }
 
+function CustomerContact({ order }: { order: OrderDto }) {
+  if (!order.customerWhatsapp || !order.customerLinks) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Pedido feito antes da loja pedir o WhatsApp do cliente. Procure a
+        conversa no seu WhatsApp pelo nome.
+      </p>
+    );
+  }
+  const links = order.customerLinks;
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span className="text-sm">
+          <span className="block text-xs text-muted-foreground">WhatsApp</span>
+          <span className="font-medium tabular-nums">
+            {formatWhatsappInput(order.customerWhatsapp)}
+          </span>
+        </span>
+        <a
+          href={links.chat}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            buttonVariants({ size: 'sm' }),
+            'bg-whatsapp text-white hover:bg-whatsapp/90',
+          )}
+        >
+          <MessageCircle /> Falar com o cliente
+        </a>
+      </div>
+      <div>
+        <p className="mb-2 text-xs text-muted-foreground">
+          Mensagens prontas (abrem no WhatsApp para você revisar e enviar)
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {messageLabels(order).map(({ key, label }) => (
+            <a
+              key={key}
+              href={links[key]}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
+            >
+              {label}
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SuggestedMessage({
+  label,
+  customerName,
+  href,
+  onDone,
+}: {
+  label: string;
+  customerName: string;
+  href: string;
+  onDone: () => void;
+}) {
+  const firstName = customerName.trim().split(/\s+/)[0];
+  return (
+    <div
+      role="status"
+      className="flex items-center gap-3 rounded-2xl bg-sage px-4 py-3 text-ink"
+    >
+      <p className="min-w-0 flex-1 text-sm">
+        Avisar {firstName} no WhatsApp?
+        <span className="block text-xs opacity-70">“{label}”</span>
+      </p>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={onDone}
+        className={cn(
+          buttonVariants({ size: 'sm' }),
+          'bg-whatsapp text-white hover:bg-whatsapp/90',
+        )}
+      >
+        <MessageCircle /> Avisar
+      </a>
+      <button
+        type="button"
+        onClick={onDone}
+        aria-label="Agora não"
+        className="-mr-1 flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-ink/10"
+      >
+        <X className="size-4" />
+      </button>
+    </div>
+  );
+}
+
 function StatusBadge({ status }: { status: Status }) {
   return (
     <span
@@ -341,6 +469,8 @@ function OrderDetail({
   const [order, setOrder] = useState<OrderDto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<Status | null>(null);
+  /** Set after a status change that has a message to send the customer. */
+  const [suggested, setSuggested] = useState<MessageKey | null>(null);
 
   useEffect(() => {
     ordersGet({ client: panelApi, path: { storeId, orderId } })
@@ -367,6 +497,7 @@ function OrderDetail({
       }
       setOrder(data);
       onUpdated(data);
+      setSuggested(STATUS_MESSAGE[status] ?? null);
     } catch {
       setError('Sem conexão com a internet? Tente de novo.');
     } finally {
@@ -417,6 +548,19 @@ function OrderDetail({
             </div>
             <StatusBadge status={order.status} />
           </div>
+
+          {order.customerLinks && suggested && (
+            <SuggestedMessage
+              label={
+                messageLabels(order).find(({ key }) => key === suggested)!.label
+              }
+              customerName={order.customerName}
+              href={order.customerLinks[suggested]}
+              onDone={() => setSuggested(null)}
+            />
+          )}
+
+          <CustomerContact order={order} />
 
           <section className="rounded-2xl border bg-surface">
             <ul className="divide-y">

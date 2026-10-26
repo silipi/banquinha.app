@@ -194,6 +194,8 @@ export const orders = pgTable(
     /** Sequential within the store, shown to people as "Pedido #12". */
     number: integer('number').notNull(),
     customerName: text('customer_name').notNull(),
+    /** Digits only, with country code. Null for orders placed before the bag asked for it. */
+    customerWhatsapp: text('customer_whatsapp'),
     fulfillment: fulfillmentMethod('fulfillment').notNull(),
     address: text('address'),
     note: text('note'),

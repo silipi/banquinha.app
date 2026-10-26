@@ -64,6 +64,13 @@
       "when": 1793033732312,
       "tag": "0008_fulfillment_and_order_status",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793041984241,
+      "tag": "0009_order_customer_whatsapp",
+      "breakpoints": true
     }
   ]
 }

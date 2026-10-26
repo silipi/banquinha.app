@@ -66,7 +66,22 @@ export class OrderItemDto {
   productId: string | null;
 }
 
+/** wa.me links to the customer, each with a ready message in pt-BR. */
+export class OrderCustomerLinksDto {
+  /** Opens the chat with a short greeting about the order. */
+  chat: string;
+  confirmed: string;
+  /** "Ready for pickup" or "out for delivery", by the order's fulfillment. */
+  ready: string;
+  completed: string;
+  canceled: string;
+}
+
 export class OrderDto extends OrderSummaryDto {
+  /** Digits only, with country code. Null for orders placed before the bag asked for it. */
+  customerWhatsapp: string | null;
+  /** Null when there is no customerWhatsapp. */
+  customerLinks: OrderCustomerLinksDto | null;
   /** Delivery address; null for pickup. */
   address: string | null;
   note: string | null;

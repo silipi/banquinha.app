@@ -378,6 +378,20 @@ export type OrderListDto = {
     counts: OrderStatusCountsDto;
 };
 
+export type OrderCustomerLinksDto = {
+    /**
+     * Opens the chat with a short greeting about the order.
+     */
+    chat: string;
+    confirmed: string;
+    /**
+     * "Ready for pickup" or "out for delivery", by the order's fulfillment.
+     */
+    ready: string;
+    completed: string;
+    canceled: string;
+};
+
 export type OrderItemDto = {
     /**
      * Name and price as they were when the order was placed.
@@ -406,6 +420,14 @@ export type OrderDto = {
      */
     itemCount: number;
     createdAt: string;
+    /**
+     * Digits only, with country code. Null for orders placed before the bag asked for it.
+     */
+    customerWhatsapp: string | null;
+    /**
+     * Null when there is no customerWhatsapp.
+     */
+    customerLinks: OrderCustomerLinksDto | null;
     /**
      * Delivery address; null for pickup.
      */
@@ -496,6 +518,10 @@ export type CreateOrderItemDto = {
 
 export type CreateOrderDto = {
     customerName: string;
+    /**
+     * So the store can reply about the order. Any common format; stored as digits with the country code.
+     */
+    customerWhatsapp: string;
     fulfillment: 'pickup' | 'delivery';
     /**
      * Required for delivery.

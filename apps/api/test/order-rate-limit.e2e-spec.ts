@@ -19,6 +19,7 @@ describe('Order rate limit', () => {
 
   const order = {
     customerName: 'Ana',
+    customerWhatsapp: '41999990000',
     fulfillment: 'pickup',
     items: [{ slug: 'jiboia', quantity: 1 }],
   };

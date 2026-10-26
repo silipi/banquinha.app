@@ -38,13 +38,16 @@ export default function PrivacyPage() {
           body: (
             <>
               <p>
-                Quando você faz um pedido em uma loja, registramos o seu nome,
-                os produtos, a forma de receber (retirada ou entrega), o
-                endereço de entrega, se informado, e a observação que você
-                escrever. Esses dados:
+                Quando você faz um pedido em uma loja, registramos o seu nome, o
+                seu número de WhatsApp, os produtos, a forma de receber
+                (retirada ou entrega), o endereço de entrega, se informado, e a
+                observação que você escrever. Esses dados:
               </p>
               <ul>
-                <li>são enviados ao lojista para que ele atenda o pedido;</li>
+                <li>
+                  são enviados ao lojista para que ele atenda o pedido e fale
+                  com você sobre ele pelo WhatsApp;
+                </li>
                 <li>
                   aparecem na mensagem que você mesmo envia pelo WhatsApp. A
                   conversa no WhatsApp segue as regras do próprio WhatsApp.

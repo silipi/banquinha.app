@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useState, useTransition, type FormEvent } from 'react';
 import { productPath, storePath } from '@/lib/storefront-links';
 import { cn, formatBRL } from '@/lib/utils';
+import { formatWhatsappInput, isCompleteWhatsapp } from '@/lib/whatsapp-input';
 import {
   MAX_ITEM_QUANTITY,
   useCart,
@@ -178,11 +179,26 @@ function CheckoutForm({
   const [fulfillment, setFulfillment] = useState<Fulfillment>(
     fulfillmentOptions[0] ?? 'pickup',
   );
+  const [whatsapp, setWhatsapp] = useState('');
+  const [whatsappError, setWhatsappError] = useState<string>();
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
 
+  // Mirrors the API's rule for instant feedback; the API still has the final word.
+  const checkWhatsapp = () => {
+    const message = isCompleteWhatsapp(whatsapp)
+      ? undefined
+      : 'Confira seu WhatsApp: use o DDD e o número do celular';
+    setWhatsappError(message);
+    return !message;
+  };
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!checkWhatsapp()) {
+      document.getElementById('customer-whatsapp')?.focus();
+      return;
+    }
     const form = new FormData(event.currentTarget);
     const text = (name: string) => String(form.get(name) ?? '').trim();
 
@@ -190,6 +206,7 @@ function CheckoutForm({
     startTransition(async () => {
       const result = await placeOrder(cart.handle, {
         customerName: text('customerName'),
+        customerWhatsapp: whatsapp,
         fulfillment,
         address: fulfillment === 'delivery' ? text('address') : undefined,
         note: text('note') || undefined,
@@ -224,6 +241,41 @@ function CheckoutForm({
           className={field}
         />
       </label>
+
+      <div>
+        <label
+          htmlFor="customer-whatsapp"
+          className="mb-2 block text-sm font-medium"
+        >
+          Seu WhatsApp
+        </label>
+        <input
+          id="customer-whatsapp"
+          type="tel"
+          inputMode="tel"
+          required
+          autoComplete="tel-national"
+          placeholder="(11) 99999-9999"
+          value={whatsapp}
+          onChange={(event) => {
+            setWhatsapp(formatWhatsappInput(event.target.value));
+            setWhatsappError(undefined);
+          }}
+          onBlur={() => whatsapp && checkWhatsapp()}
+          aria-invalid={whatsappError ? true : undefined}
+          aria-describedby="customer-whatsapp-hint"
+          className={field}
+        />
+        <p
+          id="customer-whatsapp-hint"
+          className={cn(
+            'mt-2 text-sm',
+            whatsappError ? 'font-medium' : 'text-muted-foreground',
+          )}
+        >
+          {whatsappError ?? 'Para a loja falar com você sobre o pedido.'}
+        </p>
+      </div>
 
       {fulfillmentOptions.length === 1 ? (
         <p className="rounded-store-sm bg-store-soft px-4 py-3 text-sm">

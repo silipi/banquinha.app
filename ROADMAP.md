@@ -302,8 +302,70 @@ Fazer a loja recém-criada virar uma loja que vende. A pessoa já saiu do onboar
 - [x] Logo, banner, descrição e tema editáveis numa prévia da loja, publicados juntos
 - [x] Logo e banner editáveis
 - [x] Comemoração do primeiro pedido
-- [ ] Comemoração da primeira visita (depende de contar visitas)
+- [ ] Comemoração da primeira visita (depende de contar visitas, [P2-16](#p2-16--contador-de-visitas-da-loja-))
 - [ ] E-mail de lembrete para quem criou a conta e não publicou
+
+### P2-11 · WhatsApp do cliente e mensagens prontas no pedido ✅
+
+Hoje o pedido guarda só o nome do cliente. Se ele fecha o WhatsApp sem enviar a mensagem, o pedido fica no painel e o lojista não tem como falar com ele. A sacola passa a pedir o WhatsApp do cliente, e o detalhe do pedido ganha botões que abrem a conversa com uma mensagem pronta para cada passo.
+
+**Como ficou (feito em 2026-10-26):** a sacola pede "Seu WhatsApp" logo depois do nome, com máscara e validação ao sair do campo; a API normaliza e grava em `orders.customer_whatsapp`. No detalhe do pedido aparecem o número, o botão "Falar com o cliente" e as mensagens prontas (pedido confirmado, pronto para retirada ou saiu para entrega, obrigado pela compra, pedido cancelado). Os textos ficam na API (`src/orders/customer-messages.ts`), que devolve os links `wa.me` já montados; o lojista revisa no WhatsApp antes de enviar. Ao confirmar, concluir ou cancelar, o painel sugere "Avisar Fulano no WhatsApp?". Pedidos antigos, sem o número, mostram um aviso no lugar.
+
+- [x] WhatsApp do cliente obrigatório na sacola, normalizado com `toWhatsappNumber()` e gravado no pedido (migration)
+- [x] Detalhe do pedido com o botão "Falar com o cliente" (`wa.me`)
+- [x] Mensagens prontas por status, com o número do pedido e o nome da loja: confirmado, pronto para retirada, saiu para entrega, cancelado
+- [x] Mudar o status no painel oferece enviar a mensagem daquele status
+- [x] A política de privacidade menciona o telefone do cliente
+
+### P2-12 · Chave Pix manual ⬜
+
+Antes da integração com o Mercado Pago (P4), o lojista cadastra a própria chave Pix nas Configurações. Depois do pedido, a chave aparece para o cliente com o botão de copiar e vai junto na mensagem do WhatsApp. Conferir se o pagamento entrou continua com o lojista.
+
+- [ ] Chave Pix opcional na loja (CPF, CNPJ, e-mail, telefone ou aleatória) e nome de quem recebe, validados na API
+- [ ] A tela de pedido enviado mostra a chave, o valor e o botão de copiar
+- [ ] A mensagem do WhatsApp inclui a chave e o valor
+- [ ] Pix copia e cola com o valor já preenchido (BR Code estático, sem intermediário)
+- [ ] Sem chave cadastrada, nada muda
+
+### P2-13 · Itens de serviço e formas de preço ⬜
+
+A plataforma também é para quem vende serviço: técnico (formatar computador), faxineira (por dia), professor particular (por hora). Cada item da loja ganha um tipo (produto ou serviço) na própria tabela `products`, porque a mesma loja pode ter os dois (o técnico vende o serviço e a peça). O preço deixa de ser sempre fixo.
+
+Formas de preço: **fixo** (R$ 120), **por hora** (R$ 35/hora), **por dia** (R$ 180/diária), **a partir de** (a partir de R$ 80) e **sob orçamento** (sem preço).
+
+- [ ] Tipo do item (`product` | `service`) e forma de preço no banco (migration); tudo que já existe vira produto com preço fixo
+- [ ] O editor de produto no painel escolhe o tipo e a forma de preço
+- [ ] A vitrine mostra o preço conforme a forma ("R$ 35/hora", "a partir de R$ 80", "Sob orçamento")
+- [ ] Por hora e por dia usam a quantidade da sacola como horas ou diárias ("4 horas")
+- [ ] "A partir de" e "sob orçamento" entram no pedido como "a combinar", sem somar no total ("R$ 150 + itens a combinar")
+- [ ] Item sob orçamento troca "Adicionar" por "Pedir orçamento"
+- [ ] A mensagem do WhatsApp e o detalhe do pedido mostram a unidade e a forma de preço (copiadas para `order_items`)
+
+### P2-14 · Pedido de serviço: onde, quando e textos ⬜
+
+Para serviço, a pergunta não é "retirada ou entrega", é "onde e quando". Sem agenda por enquanto ([P5-21](#p5-21--agenda-com-horários-disponíveis-)): o cliente indica uma data e um período preferidos, e o lojista confirma pelo WhatsApp.
+
+- [ ] Formas de atendimento para serviços: no endereço do lojista, no endereço do cliente (pede o endereço) e online. A loja escolhe quais oferece, como já faz com retirada e entrega, e a API recusa uma forma desligada
+- [ ] Sacola com serviço pede data preferida e período (manhã, tarde, noite), opcionais; os dois vão para o pedido e para a mensagem
+- [ ] Textos acompanham o conteúdo: sacola só com serviços vira "Solicitação", e "Fazer pedido" vira "Solicitar"
+- [ ] Região de atendimento na loja (texto livre: "Curitiba e região metropolitana"), mostrada na vitrine
+
+### P2-15 · Onboarding e landing para serviços ⬜
+
+O onboarding pergunta "O que você oferece? Produtos, serviços ou os dois" e ajusta os padrões: exemplos e textos de ajuda no passo de produtos, forma de preço e formas de atendimento. A resposta só muda os padrões, nada fica travado.
+
+- [ ] Pergunta no onboarding, com padrões diferentes para cada resposta
+- [ ] Loja de exemplo de serviço no seed (por exemplo, um técnico de informática) e na landing
+- [ ] A landing fala também com prestadores de serviço; um post no blog sobre vender serviço pelo link
+
+### P2-16 · Contador de visitas da loja ⬜
+
+Base para a comemoração da primeira visita (P2-10), o resumo da semana por e-mail e o analytics do lojista (P5-04). Contagem simples por loja e por dia, sem cookie e sem identificar pessoas. Como a vitrine fica em cache, a visita é contada por uma chamada do navegador, não na renderização.
+
+- [ ] Visitas por loja e por dia gravadas pela API; robôs e prefetch não contam
+- [ ] O painel mostra as visitas de hoje e dos últimos 7 dias
+- [ ] Comemoração da primeira visita no Início
+- [ ] A política de privacidade continua correta
 
 ---
 
@@ -353,6 +415,14 @@ E-mails de boas-vindas, link de acesso e aviso de pedido novo.
 - [ ] Termos e privacidade revisados por advogado
 - [ ] Identificação do responsável (CNPJ) e contato de privacidade publicados
 
+### P3-08 · SEO local das lojas ⬜
+
+Quem procura "formatar computador curitiba" ou "doces para festa londrina" no Google deveria poder cair numa vitrine. Hoje as vitrines têm Open Graph, mas não dados estruturados (o componente `JsonLd` só é usado no blog).
+
+- [ ] Título e descrição da vitrine com o que a loja oferece e a cidade
+- [ ] JSON-LD na vitrine (`LocalBusiness`, com cidade, região de atendimento e contato) e nos itens (`Product` com `Offer`; `Service` para serviços)
+- [ ] Validado no Teste de pesquisa aprimorada do Google (Rich Results Test)
+
 ---
 
 ## P4 · Pagamentos
@@ -378,6 +448,14 @@ O cliente paga com Pix no checkout; o dinheiro cai na conta Mercado Pago do loji
 
 - [ ] Estoque opcional por produto, descontado nos pedidos pagos
 - [ ] Produtos sem estoque aparecem como indisponíveis
+
+### P4-05 · Sinal para confirmar horário ⬜
+
+Para serviços: o cliente paga um sinal pelo Pix para garantir o horário, o que diminui quem marca e não aparece.
+
+- [ ] O lojista define o sinal por serviço (valor fixo ou porcentagem)
+- [ ] O pedido só fica confirmado quando o sinal é pago (webhook)
+- [ ] A regra de cancelamento e devolução do sinal aparece antes de pagar
 
 ---
 
@@ -432,3 +510,77 @@ Temas são dados desde o P2-03 (tabela `themes`, tokens de cor e cantos, ajustes
 - [ ] Prévia ao vivo usando a mesma vitrine
 - [ ] Contraste mínimo garantido entre texto e fundo, e entre botão e texto do botão
 - [ ] Mais tokens conforme a demanda (fontes, estilo dos botões, banner)
+
+### P5-11 · QR code da loja para imprimir ⬜
+
+Pequeno vendedor vende muito no presencial (balcão, feira, cartão de visita, adesivo). O painel gera um cartão com logo, nome, endereço da loja e QR code.
+
+- [ ] Download em PNG e em PDF pronto para imprimir
+- [ ] O link do QR leva uma origem (`?origem=qr`) para contar à parte quando houver o contador de visitas (P2-16)
+
+### P5-12 · Item esgotado ⬜
+
+Mais simples que o estoque do P4-04: o item continua na vitrine com o selo "Esgotado", mas não dá para pedir.
+
+- [ ] "Esgotado" no editor de produto e na lista do painel
+- [ ] A vitrine mostra o selo e desliga o botão; a API recusa o pedido
+
+### P5-13 · Taxa de entrega fixa e pedido mínimo ⬜
+
+Antes da cotação de frete (P5-02): uma taxa fixa de entrega e, se a loja quiser, um valor mínimo de pedido.
+
+- [ ] Taxa de entrega e pedido mínimo nas Configurações, opcionais
+- [ ] A sacola mostra a taxa no total quando o cliente escolhe entrega e avisa quanto falta para o mínimo
+- [ ] A API calcula o total com a taxa e recusa pedido abaixo do mínimo
+
+### P5-14 · Preço promocional "de/por" ⬜
+
+Promoção sem precisar de cupom (P5-06): o item ganha um preço antigo opcional, mostrado riscado.
+
+- [ ] Preço "de" opcional no editor, maior que o preço atual (validado na API)
+- [ ] A vitrine mostra o preço riscado e a porcentagem de desconto
+
+### P5-15 · Aviso, horário de funcionamento e modo férias ⬜
+
+- [ ] Aviso no topo da vitrine definido pelo lojista ("Entregas só às sextas")
+- [ ] Horário de funcionamento por dia da semana, com "Aberto agora" ou "Fechado" na vitrine
+- [ ] Modo férias: a vitrine continua no ar, mostra "Voltamos dia X" e não aceita pedidos até a data
+
+### P5-16 · Compartilhar item ⬜
+
+- [ ] Botão de compartilhar na página do item da vitrine (Web Share API; no desktop, copiar link e WhatsApp)
+- [ ] O mesmo botão em cada item da lista do painel
+
+### P5-17 · Duplicar item ⬜
+
+- [ ] "Duplicar" no editor de produto cria uma cópia (com fotos) escondida da loja, respeitando o limite do plano
+
+### P5-18 · Depoimentos e portfólio ⬜
+
+Confiança pesa ainda mais para serviço (um desconhecido entrando na casa do cliente).
+
+- [ ] Depoimentos cadastrados pelo lojista (nome, texto, foto opcional), mostrados na vitrine
+- [ ] "Desde quando atende" na loja ("Atendendo desde 2018")
+- [ ] Galeria de trabalhos feitos (antes e depois) na loja
+- [ ] Depois: avaliação de verdade pedida ao cliente quando o pedido é concluído (depende do P2-11)
+
+### P5-19 · Variações de produto ⬜
+
+Tamanho, cor e sabor, essenciais para roupa e comida.
+
+- [ ] Opções por produto (até 2 tipos, por exemplo tamanho e cor), com preço próprio opcional por variação
+- [ ] A vitrine pede a escolha antes de pôr na sacola; o pedido guarda a variação escolhida
+
+### P5-20 · Categorias na vitrine ⬜
+
+Faz sentido quando a loja passa de uns 15 itens, ou seja, junto com o plano pago.
+
+- [ ] Categorias criadas e ordenadas no painel; cada item numa categoria
+- [ ] A vitrine agrupa os itens por categoria, com atalhos no topo
+
+### P5-21 · Agenda com horários disponíveis ⬜
+
+Para serviços: o lojista define os horários livres e o cliente escolhe um na hora do pedido, no lugar da data preferida do P2-14. É grande e concorre com ferramentas de agendamento que já existem, então só se os lojistas de serviço pedirem.
+
+- [ ] Avaliar demanda antes de construir
+- [ ] Disponibilidade por dia da semana, duração por serviço e bloqueio de horários já ocupados

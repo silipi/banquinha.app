@@ -19,6 +19,7 @@ describe('Merchant orders', () => {
       url: `/storefront/${handle}/orders`,
       payload: {
         customerName,
+        customerWhatsapp: '+55 41 99999-0000',
         fulfillment: 'delivery',
         address: 'Rua das Flores, 10',
         note: 'Sem cobertura',
@@ -59,7 +60,17 @@ describe('Merchant orders', () => {
       address: 'Rua das Flores, 10',
       note: 'Sem cobertura',
       items: [{ name: 'Bolo', unitPriceCents: 3000, quantity: 2 }],
+      customerWhatsapp: '5541999990000',
     });
+    const links = detail.json().customerLinks;
+    const ready = new URL(links.ready);
+    expect(ready.origin + ready.pathname).toBe('https://wa.me/5541999990000');
+    expect(ready.searchParams.get('text')).toContain(
+      'Seu pedido #1 saiu para entrega',
+    );
+    expect(new URL(links.confirmed).searchParams.get('text')).toContain(
+      'na loja Loja da Maria está confirmado',
+    );
 
     const dashboard = await get(session, `/stores/${store.id}`);
     expect(dashboard.json()).toMatchObject({ orderCount: 2, newOrderCount: 2 });
