@@ -245,7 +245,7 @@ Envio de fotos de produto e logos para o Cloudflare R2, redimensionadas e conver
 
 Criar, editar, reordenar, ativar/desativar e apagar produtos com várias fotos.
 
-**Como ficou (feito em 2026-10-26):** página **Produtos** no painel, com a lista na ordem da vitrine (setas para subir e descer), foto de capa, preço e o selo "Escondido". Tocar num produto abre o editor (tela cheia no celular): fotos (até o limite do plano, a primeira é a capa e dá para escolher outra), nome, preço, descrição e "Mostrar na loja". Nada vai para a loja até tocar em **Salvar**; apagar pede confirmação e leva as fotos junto. Os pedidos antigos continuam com o nome e o preço da época.
+**Como ficou (feito em 2026-10-26):** página **Produtos** no painel, com a lista na ordem da vitrine (arrastar pela alça para reordenar, no dedo, no mouse ou pelo teclado), foto de capa, preço e o selo "Escondido". Tocar num produto abre o editor (tela cheia no celular): fotos (até o limite do plano, a primeira é a capa e dá para escolher outra), nome, preço, descrição e "Mostrar na loja". Nada vai para a loja até tocar em **Salvar**; apagar pede confirmação e leva as fotos junto. Os pedidos antigos continuam com o nome e o preço da época.
 
 - O endereço do produto (slug) nasce do nome e **não muda** quando o nome muda, para os links já compartilhados continuarem funcionando.
 - Endpoints em `/stores/:storeId/products` (lista, criar, editar, apagar, `PUT order`, fotos em `/:productId/images`).

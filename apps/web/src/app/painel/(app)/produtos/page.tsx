@@ -7,9 +7,30 @@ import {
   type ProductListDto,
 } from '@banquinha/api-client';
 import {
-  ArrowDown,
-  ArrowUp,
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type Announcements,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from '@dnd-kit/modifiers';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
   ExternalLink,
+  GripVertical,
   ImageIcon,
   LoaderCircle,
   Plus,
@@ -38,6 +59,32 @@ async function fetchProducts(
     : { error: apiErrorMessage(error, 'Não deu para carregar.') };
 }
 
+/** What screen readers say while an item is dragged with the keyboard. */
+function announcements(products: ProductDto[]): Announcements {
+  const name = (id: string | number) =>
+    products.find((p) => p.id === id)?.name ?? 'item';
+  const position = (id: string | number | undefined) =>
+    products.findIndex((p) => p.id === id) + 1;
+  return {
+    onDragStart: ({ active }) =>
+      `${name(active.id)} selecionado, na posição ${position(active.id)} de ${products.length}.`,
+    onDragOver: ({ active, over }) =>
+      over
+        ? `${name(active.id)} vai para a posição ${position(over.id)} de ${products.length}.`
+        : `${name(active.id)} fora da lista.`,
+    onDragEnd: ({ active, over }) =>
+      over
+        ? `${name(active.id)} ficou na posição ${position(over.id)} de ${products.length}.`
+        : `${name(active.id)} voltou para o lugar.`,
+    onDragCancel: ({ active }) => `${name(active.id)} voltou para o lugar.`,
+  };
+}
+
+const screenReaderInstructions = {
+  draggable:
+    'Para mudar a ordem, aperte espaço ou Enter, use as setas para cima e para baixo e aperte espaço ou Enter de novo. Esc cancela.',
+};
+
 export default function ProductsPage() {
   const { me, store } = usePanel();
   const [list, setList] = useState<ProductListDto | null>(null);
@@ -45,6 +92,13 @@ export default function ProductsPage() {
   // null: closed. 'new': creating. Otherwise the product being edited.
   const [editing, setEditing] = useState<ProductDto | 'new' | null>(null);
   const [moving, setMoving] = useState(false);
+  const sensors = useSensors(
+    // A small move before dragging starts, so a tap on the handle isn't a drag.
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   const storeId = store?.id;
 
@@ -90,10 +144,14 @@ export default function ProductsPage() {
     await refreshStorefront(store!.handle).catch(() => {});
   }
 
-  async function move(index: number, by: -1 | 1) {
-    const order = products.map((p) => p.id);
-    const [id] = order.splice(index, 1);
-    order.splice(index + by, 0, id!);
+  async function drop({ active, over }: DragEndEvent) {
+    if (!over || active.id === over.id) return;
+    const ids = products.map((p) => p.id);
+    const order = arrayMove(
+      ids,
+      ids.indexOf(String(active.id)),
+      ids.indexOf(String(over.id)),
+    );
     // Moves right away; the server's answer replaces it.
     setList({
       ...list!,
@@ -158,86 +216,33 @@ export default function ProductsPage() {
           </Button>
         </div>
       ) : (
-        <ul className="flex flex-col gap-2" aria-busy={moving}>
-          {products.map((product, index) => (
-            <li
-              key={product.id}
-              className="flex items-center gap-3 rounded-2xl border bg-surface p-2 pr-3"
-            >
-              <button
-                type="button"
-                onClick={() => setEditing(product)}
-                className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left"
-              >
-                <span className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted text-muted-foreground">
-                  {product.images[0] ? (
-                    <Image
-                      src={product.images[0].url}
-                      alt=""
-                      fill
-                      sizes="64px"
-                      className={cn(
-                        'object-cover',
-                        !product.active && 'opacity-50',
-                      )}
-                    />
-                  ) : (
-                    <ImageIcon className="size-5" />
-                  )}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium">
-                    {product.name}
-                  </span>
-                  <span className="flex items-center gap-2 text-sm text-muted-foreground">
-                    {formatItemPrice(product)}
-                    {product.kind === 'service' && (
-                      <span className="rounded-full bg-sky px-2 py-0.5 text-xs text-ink">
-                        Serviço
-                      </span>
-                    )}
-                    {!product.active && (
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
-                        Escondido
-                      </span>
-                    )}
-                  </span>
-                </span>
-              </button>
-              <div className="flex shrink-0 items-center">
-                {product.active && (
-                  <a
-                    href={absoluteUrl(productPath(store.handle, product.slug))}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Ver ${product.name} na loja`}
-                    className="hidden size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground sm:flex"
-                  >
-                    <ExternalLink className="size-4" />
-                  </a>
-                )}
-                <button
-                  type="button"
-                  onClick={() => void move(index, -1)}
-                  disabled={index === 0 || moving}
-                  aria-label={`Subir ${product.name}`}
-                  className="flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
-                >
-                  <ArrowUp className="size-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void move(index, 1)}
-                  disabled={index === products.length - 1 || moving}
-                  aria-label={`Descer ${product.name}`}
-                  className="flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
-                >
-                  <ArrowDown className="size-4" />
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+          accessibility={{
+            announcements: announcements(products),
+            screenReaderInstructions,
+          }}
+          onDragEnd={(event) => void drop(event)}
+        >
+          <SortableContext
+            items={products.map((p) => p.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <ul className="flex flex-col gap-2" aria-busy={moving}>
+              {products.map((product) => (
+                <ProductRow
+                  key={product.id}
+                  product={product}
+                  handle={store.handle}
+                  disabled={moving || products.length < 2}
+                  onEdit={() => setEditing(product)}
+                />
+              ))}
+            </ul>
+          </SortableContext>
+        </DndContext>
       )}
 
       {editing && (
@@ -252,5 +257,99 @@ export default function ProductsPage() {
         />
       )}
     </div>
+  );
+}
+
+/** A product in the list: tap to edit, drag the handle to reorder. */
+function ProductRow({
+  product,
+  handle,
+  disabled,
+  onEdit,
+}: {
+  product: ProductDto;
+  handle: string;
+  disabled: boolean;
+  onEdit: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: product.id, disabled });
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
+      className={cn(
+        'relative flex items-center gap-1 rounded-2xl border bg-surface p-2 pr-3',
+        isDragging && 'z-10 shadow-lg ring-2 ring-ink/10',
+      )}
+    >
+      <button
+        type="button"
+        ref={setActivatorNodeRef}
+        {...attributes}
+        {...listeners}
+        aria-label={`Mudar a ordem de ${product.name}`}
+        className={cn(
+          'flex h-16 w-8 shrink-0 touch-none items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30',
+          isDragging ? 'cursor-grabbing' : 'cursor-grab',
+        )}
+      >
+        <GripVertical className="size-5" />
+      </button>
+      <button
+        type="button"
+        onClick={onEdit}
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left"
+      >
+        <span className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted text-muted-foreground">
+          {product.images[0] ? (
+            <Image
+              src={product.images[0].url}
+              alt=""
+              fill
+              sizes="64px"
+              className={cn('object-cover', !product.active && 'opacity-50')}
+            />
+          ) : (
+            <ImageIcon className="size-5" />
+          )}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-medium">{product.name}</span>
+          <span className="flex items-center gap-2 text-sm text-muted-foreground">
+            {formatItemPrice(product)}
+            {product.kind === 'service' && (
+              <span className="rounded-full bg-sky px-2 py-0.5 text-xs text-ink">
+                Serviço
+              </span>
+            )}
+            {!product.active && (
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+                Escondido
+              </span>
+            )}
+          </span>
+        </span>
+      </button>
+      {product.active && (
+        <a
+          href={absoluteUrl(productPath(handle, product.slug))}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Ver ${product.name} na loja`}
+          className="hidden size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground sm:flex"
+        >
+          <ExternalLink className="size-4" />
+        </a>
+      )}
+    </li>
   );
 }
