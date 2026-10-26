@@ -30,11 +30,11 @@ import {
 } from '../../products/pricing.js';
 import { ThemeTokensDto } from '../../themes/dto/theme.dto.js';
 
-const trim = ({ value }: { value: unknown }) =>
+export const trim = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
 
 /** Empty text means "remove it". */
-const trimOrNull = ({ value }: { value: unknown }) =>
+export const trimOrNull = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() || null : value;
 
 export const MAX_PRICE_CENTS = 10_000_000;

@@ -2,7 +2,20 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, asc, eq } from 'drizzle-orm';
 import type { Db } from '../database/database.js';
 import { DB } from '../database/database.module.js';
-import { productImages, products, stores } from '../database/schema/index.js';
+import {
+  productImages,
+  products,
+  storeFields,
+  stores,
+} from '../database/schema/index.js';
+import { PLANS } from '../plans/plans.js';
+import {
+  currentFieldValues,
+  formatCardValue,
+  formatFieldValue,
+  MAX_CARD_FIELDS,
+  type FieldDefinition,
+} from '../store-fields/field-values.js';
 import { resolveTheme, type ThemeTokens } from '../themes/theme-tokens.js';
 import { offeredFulfillment } from './fulfillment.js';
 import type {
@@ -24,8 +37,25 @@ type StoreWithTheme = typeof stores.$inferSelect & {
   theme: { tokens: ThemeTokens };
 };
 
-/** Loads the store's theme tokens with it. */
-const withTheme = { theme: { columns: { tokens: true as const } } };
+/**
+ * Loads the store's theme tokens with it, and what's needed for its custom fields: the
+ * fields in order and the owner's plan (example stores have no owner and count as free).
+ */
+const withTheme = {
+  theme: { columns: { tokens: true as const } },
+  owner: { columns: { plan: true as const } },
+  fields: {
+    orderBy: [asc(storeFields.position), asc(storeFields.createdAt)],
+  },
+};
+
+/** The store's fields that show on the storefront: those within the plan's limit. */
+function visibleFields<F extends FieldDefinition>(store: {
+  owner: { plan: keyof typeof PLANS } | null;
+  fields: F[];
+}): F[] {
+  return store.fields.slice(0, PLANS[store.owner?.plan ?? 'free'].maxFields);
+}
 
 function toStoreSummary(store: StoreWithTheme): StorefrontStoreSummaryDto {
   return {
@@ -55,6 +85,9 @@ export class StorefrontService {
       },
     });
     if (!store) throw new NotFoundException(STORE_NOT_FOUND);
+    const cardFields = visibleFields(store)
+      .filter((field) => field.showOnCard)
+      .slice(0, MAX_CARD_FIELDS);
 
     return {
       ...toStoreSummary(store),
@@ -74,6 +107,9 @@ export class StorefrontService {
         priceType: product.priceType,
         priceCents: product.priceCents,
         imageUrl: product.images[0]?.url ?? null,
+        highlights: currentFieldValues(cardFields, product.attributes).flatMap(
+          ({ field, value }) => formatCardValue(field, value) ?? [],
+        ),
       })),
     };
   }
@@ -106,6 +142,13 @@ export class StorefrontService {
       priceType: product.priceType,
       priceCents: product.priceCents,
       images: product.images,
+      attributes: currentFieldValues(
+        visibleFields(store),
+        product.attributes,
+      ).map(({ field, value }) => ({
+        label: field.label,
+        value: formatFieldValue(field, value),
+      })),
       store: toStoreSummary(store),
     };
   }

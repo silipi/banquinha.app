@@ -7,11 +7,22 @@ import {
 } from '@nestjs/common';
 import { and, asc, eq, max } from 'drizzle-orm';
 import type { AuthUser } from '../auth/current-user.decorator.js';
+import { sameIds } from '../common/same-ids.js';
 import type { Db } from '../database/database.js';
 import { DB } from '../database/database.module.js';
 import { productImages, products } from '../database/schema/index.js';
 import { ImagesService } from '../images/images.service.js';
 import { PLANS } from '../plans/plans.js';
+import {
+  checkFieldValues,
+  currentFieldValues,
+  type FieldDefinition,
+  type FieldValues,
+} from '../store-fields/field-values.js';
+import {
+  StoreFieldsService,
+  toStoreFieldDtos,
+} from '../store-fields/store-fields.service.js';
 import { StoresService } from '../stores/stores.service.js';
 import type {
   CreateProductDto,
@@ -24,18 +35,13 @@ import { uniqueProductSlug } from './product-slug.js';
 
 const PRODUCT_NOT_FOUND = 'Produto não encontrado';
 
-/** Same ids, in any order, with no repeats. */
-const sameIds = (given: string[], existing: string[]) =>
-  given.length === existing.length &&
-  new Set(given).size === given.length &&
-  existing.every((id) => given.includes(id));
-
 @Injectable()
 export class ProductsService {
   constructor(
     @Inject(DB) private readonly db: Db,
     private readonly stores: StoresService,
     private readonly images: ImagesService,
+    private readonly fields: StoreFieldsService,
   ) {}
 
   async list(user: AuthUser, storeId: string): Promise<ProductListDto> {
@@ -46,10 +52,13 @@ export class ProductsService {
       with: { images: { orderBy: [asc(productImages.position)] } },
     });
     const plan = PLANS[user.plan];
+    const fields = await this.fields.rows(storeId);
     return {
-      products: rows.map(toProductDto),
+      products: rows.map((row) => toProductDto(row, fields)),
       maxProducts: plan.maxProducts,
       maxImagesPerProduct: plan.maxImagesPerProduct,
+      maxFields: plan.maxFields,
+      fields: toStoreFieldDtos(fields, user.plan),
     };
   }
 
@@ -75,6 +84,9 @@ export class ProductsService {
         `O plano ${plan.name} permite até ${plan.maxProducts} produtos. Apague um para cadastrar outro.`,
       );
     }
+    const attributes = input.attributes
+      ? await this.checkAttributes(user, storeId, input.attributes, {})
+      : {};
 
     const [product] = await this.db
       .insert(products)
@@ -88,6 +100,7 @@ export class ProductsService {
         ...pricing,
         description: input.description ?? null,
         active: input.active ?? true,
+        attributes,
         position: Math.max(-1, ...existing.map((p) => p.position)) + 1,
       })
       .returning({ id: products.id });
@@ -124,6 +137,14 @@ export class ProductsService {
       changes.description = input.description;
     }
     if (input.active !== undefined) changes.active = input.active;
+    if (input.attributes !== undefined) {
+      changes.attributes = await this.checkAttributes(
+        user,
+        storeId,
+        input.attributes,
+        product.attributes,
+      );
+    }
     if (Object.keys(changes).length > 0) {
       await this.db
         .update(products)
@@ -248,6 +269,31 @@ export class ProductsService {
     return this.get(storeId, productId);
   }
 
+  /**
+   * The values to store for an item: the ones given, checked against the fields the plan
+   * allows, plus the current values of fields past the limit, kept for an upgrade.
+   */
+  private async checkAttributes(
+    user: AuthUser,
+    storeId: string,
+    input: Record<string, unknown>,
+    current: FieldValues,
+  ): Promise<FieldValues> {
+    const fields = toStoreFieldDtos(await this.fields.rows(storeId), user.plan);
+    const kept = Object.fromEntries(
+      fields
+        .filter((f) => f.hidden && current[f.id] !== undefined)
+        .map((f) => [f.id, current[f.id]!]),
+    );
+    return {
+      ...kept,
+      ...checkFieldValues(
+        fields.filter((f) => !f.hidden),
+        input,
+      ),
+    };
+  }
+
   private async findOwned(user: AuthUser, storeId: string, productId: string) {
     await this.stores.findOwned(user, storeId);
     const product = await this.db.query.products.findFirst({
@@ -264,7 +310,7 @@ export class ProductsService {
       with: { images: { orderBy: [asc(productImages.position)] } },
     });
     if (!product) throw new NotFoundException(PRODUCT_NOT_FOUND);
-    return toProductDto(product);
+    return toProductDto(product, await this.fields.rows(storeId));
   }
 }
 
@@ -272,6 +318,7 @@ function toProductDto(
   product: typeof products.$inferSelect & {
     images: (typeof productImages.$inferSelect)[];
   },
+  fields: FieldDefinition[],
 ): ProductDto {
   return {
     id: product.id,
@@ -283,5 +330,11 @@ function toProductDto(
     priceCents: product.priceCents,
     active: product.active,
     images: product.images.map(({ id, url }) => ({ id, url })),
+    attributes: Object.fromEntries(
+      currentFieldValues(fields, product.attributes).map(({ field, value }) => [
+        field.id,
+        value,
+      ]),
+    ),
   };
 }

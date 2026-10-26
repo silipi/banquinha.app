@@ -92,6 +92,19 @@ async function ProductDetails({ params }: Pick<Props, 'params'>) {
               {product.description}
             </p>
           )}
+          {product.attributes.length > 0 && (
+            <dl className="mt-6 divide-y rounded-store-sm border bg-surface">
+              {product.attributes.map((attribute) => (
+                <div
+                  key={attribute.label}
+                  className="flex justify-between gap-4 px-4 py-3 text-sm"
+                >
+                  <dt className="text-muted-foreground">{attribute.label}</dt>
+                  <dd className="text-right font-medium">{attribute.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
           <AddToCartButton
             className="mt-8 w-full md:w-auto"
             product={{

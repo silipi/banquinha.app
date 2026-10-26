@@ -48,6 +48,7 @@ describe('Storefront', () => {
         priceType: 'fixed',
         priceCents: 4500,
         imageUrl: '/lojas/pauloplantas/costela-de-adao.webp',
+        highlights: [],
       });
     });
 

@@ -8,12 +8,18 @@ import {
   productsReorderImages,
   productsUpdate,
   type ProductDto,
+  type StoreFieldDto,
 } from '@banquinha/api-client';
 import { ImagePlus, LoaderCircle, Star, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { SwitchRow } from '@/components/ui/switch';
+import {
+  fieldDraftFrom,
+  fieldValuesForApi,
+  type FieldDraft,
+} from '@/lib/field-input';
 import { apiErrorMessage, panelApi } from '@/lib/panel';
 import { shrinkImage } from '@/lib/shrink-image';
 import { Dialog } from '../../../_components/Dialog';
@@ -24,6 +30,7 @@ import {
   pricingError,
   type PricingDraft,
 } from '../../../_components/PricingFields';
+import { FieldInputs } from './FieldInputs';
 
 /** A photo already saved, or one picked here and not uploaded yet. */
 type DraftImage =
@@ -35,6 +42,7 @@ interface Draft extends PricingDraft {
   description: string;
   active: boolean;
   images: DraftImage[];
+  attributes: FieldDraft;
 }
 
 // The API stores product photos at up to 1600px; a bit more leaves it room.
@@ -42,7 +50,10 @@ const PHOTO_MAX_SIDE = 2000;
 // Same limit as the API; only reached when the browser can't shrink the file.
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
-const draftFrom = (product: ProductDto | null): Draft => ({
+const draftFrom = (
+  product: ProductDto | null,
+  fields: StoreFieldDto[],
+): Draft => ({
   name: product?.name ?? '',
   kind: product?.kind ?? 'product',
   priceType: product?.priceType ?? 'fixed',
@@ -54,6 +65,7 @@ const draftFrom = (product: ProductDto | null): Draft => ({
     id: image.id,
     url: image.url,
   })),
+  attributes: fieldDraftFrom(fields, product?.attributes ?? {}),
 });
 
 const isSaved = (
@@ -68,6 +80,7 @@ export function ProductEditor({
   storeId,
   product: initial,
   maxImages,
+  fields,
   onSaved,
   onDeleted,
   onClose,
@@ -76,6 +89,8 @@ export function ProductEditor({
   /** Null to create a new product. */
   product: ProductDto | null;
   maxImages: number;
+  /** The store's custom fields the plan allows. */
+  fields: StoreFieldDto[];
   onSaved: () => Promise<void>;
   onDeleted: () => Promise<void>;
   onClose: () => void;
@@ -83,9 +98,13 @@ export function ProductEditor({
   // Set once the product exists, so a retry after a failed photo upload edits it
   // instead of creating it again.
   const [product, setProduct] = useState(initial);
-  const [draft, setDraft] = useState(() => draftFrom(initial));
-  const [saved] = useState(() => draftFrom(initial));
-  const [errors, setErrors] = useState<{ name?: string; price?: string }>({});
+  const [draft, setDraft] = useState(() => draftFrom(initial, fields));
+  const [saved] = useState(() => draftFrom(initial, fields));
+  const [errors, setErrors] = useState<{
+    name?: string;
+    price?: string;
+    attribute?: { fieldId: string; message: string };
+  }>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState<'save' | 'delete' | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -128,6 +147,7 @@ export function ProductEditor({
         'priceCents' in changes || 'priceType' in changes
           ? undefined
           : current.price,
+      attribute: 'attributes' in changes ? undefined : current.attribute,
     }));
   }
 
@@ -181,6 +201,13 @@ export function ProductEditor({
     if (draft.name.trim().length < 2) found.name = 'Dê um nome';
     const priceError = pricingError(draft);
     if (priceError) found.price = priceError;
+    const attributes = fieldValuesForApi(fields, draft.attributes);
+    if ('invalid' in attributes) {
+      found.attribute = {
+        fieldId: attributes.invalid.id,
+        message: 'Digite só números, como 45000 ou 1,5',
+      };
+    }
     setErrors(found);
     return Object.keys(found).length === 0;
   }
@@ -193,26 +220,31 @@ export function ProductEditor({
       setFormError(apiErrorMessage(error, 'Não deu certo. Tente de novo.'));
 
     try {
-      const fields = {
+      const toApi = (d: Draft) => {
+        const attributes = fieldValuesForApi(fields, d.attributes);
+        return 'values' in attributes ? attributes.values : {};
+      };
+      const changes = {
         name: draft.name,
         kind: draft.kind,
         priceType: draft.priceType,
         priceCents: priceForApi(draft),
         description: draft.description,
         active: draft.active,
+        attributes: toApi(draft),
       };
       let current = product;
       if (!current) {
         const { data, error } = await productsCreate({
           client: panelApi,
           path: { storeId },
-          body: fields,
+          body: changes,
         });
         if (!data) return fail(error);
         current = data;
         setProduct(data);
       } else if (
-        JSON.stringify(fields) !==
+        JSON.stringify(changes) !==
         JSON.stringify({
           name: saved.name,
           kind: saved.kind,
@@ -220,12 +252,13 @@ export function ProductEditor({
           priceCents: priceForApi(saved),
           description: saved.description,
           active: saved.active,
+          attributes: toApi(saved),
         })
       ) {
         const { data, error } = await productsUpdate({
           client: panelApi,
           path: { storeId, productId: current.id },
-          body: fields,
+          body: changes,
         });
         if (!data) return fail(error);
         current = data;
@@ -500,6 +533,13 @@ export function ProductEditor({
             className="w-full resize-none rounded-2xl border bg-surface px-4 py-3 text-base outline-none placeholder:text-muted-foreground/60 focus:border-foreground/40"
           />
         </div>
+
+        <FieldInputs
+          fields={fields}
+          value={draft.attributes}
+          error={errors.attribute ?? null}
+          onChange={(attributes) => edit({ attributes })}
+        />
 
         <SwitchRow
           label="Mostrar na loja"

@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthConfigData, AuthConfigResponses, AuthGoogleData, AuthGoogleResponses, AuthLoginData, AuthLoginResponses, AuthLogoutData, AuthLogoutResponses, AuthRequestPasswordResetData, AuthRequestPasswordResetResponses, AuthResetPasswordData, AuthResetPasswordResponses, AuthSignupData, AuthSignupResponses, HealthCheckData, HealthCheckResponses, MeGetData, MeGetResponses, OrdersGetData, OrdersGetResponses, OrdersListData, OrdersListResponses, OrdersUpdateData, OrdersUpdateResponses, ProductsAddImageData, ProductsAddImageResponses, ProductsCreateData, ProductsCreateResponses, ProductsListData, ProductsListResponses, ProductsRemoveData, ProductsRemoveImageData, ProductsRemoveImageResponses, ProductsRemoveResponses, ProductsReorderData, ProductsReorderImagesData, ProductsReorderImagesResponses, ProductsReorderResponses, ProductsUpdateData, ProductsUpdateResponses, SitemapListStorefrontsData, SitemapListStorefrontsResponses, StorefrontCreateOrderData, StorefrontCreateOrderResponses, StorefrontGetProductData, StorefrontGetProductResponses, StorefrontGetStoreData, StorefrontGetStoreResponses, StoresCheckHandleData, StoresCheckHandleResponses, StoresCreateData, StoresCreateResponses, StoresGetData, StoresGetResponses, StoresRemoveImageData, StoresRemoveImageResponses, StoresUpdateData, StoresUpdateResponses, StoresUploadImageData, StoresUploadImageResponses, ThemesListData, ThemesListResponses } from './types.gen';
+import type { AuthConfigData, AuthConfigResponses, AuthGoogleData, AuthGoogleResponses, AuthLoginData, AuthLoginResponses, AuthLogoutData, AuthLogoutResponses, AuthRequestPasswordResetData, AuthRequestPasswordResetResponses, AuthResetPasswordData, AuthResetPasswordResponses, AuthSignupData, AuthSignupResponses, HealthCheckData, HealthCheckResponses, MeGetData, MeGetResponses, OrdersGetData, OrdersGetResponses, OrdersListData, OrdersListResponses, OrdersUpdateData, OrdersUpdateResponses, ProductsAddImageData, ProductsAddImageResponses, ProductsCreateData, ProductsCreateResponses, ProductsListData, ProductsListResponses, ProductsRemoveData, ProductsRemoveImageData, ProductsRemoveImageResponses, ProductsRemoveResponses, ProductsReorderData, ProductsReorderImagesData, ProductsReorderImagesResponses, ProductsReorderResponses, ProductsUpdateData, ProductsUpdateResponses, SitemapListStorefrontsData, SitemapListStorefrontsResponses, StoreFieldsCreateData, StoreFieldsCreateResponses, StoreFieldsListData, StoreFieldsListResponses, StoreFieldsRemoveData, StoreFieldsRemoveResponses, StoreFieldsReorderData, StoreFieldsReorderResponses, StoreFieldsUpdateData, StoreFieldsUpdateResponses, StorefrontCreateOrderData, StorefrontCreateOrderResponses, StorefrontGetProductData, StorefrontGetProductResponses, StorefrontGetStoreData, StorefrontGetStoreResponses, StoresCheckHandleData, StoresCheckHandleResponses, StoresCreateData, StoresCreateResponses, StoresGetData, StoresGetResponses, StoresRemoveImageData, StoresRemoveImageResponses, StoresUpdateData, StoresUpdateResponses, StoresUploadImageData, StoresUploadImageResponses, ThemesListData, ThemesListResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -154,6 +154,46 @@ export const storesUploadImage = <ThrowOnError extends boolean = false>(options:
  * Platform themes with their design tokens, in display order.
  */
 export const themesList = <ThrowOnError extends boolean = false>(options?: Options<ThemesListData, ThrowOnError>): RequestResult<ThemesListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ThemesListResponses, unknown, ThrowOnError>({ url: '/themes', ...options });
+
+export const storeFieldsList = <ThrowOnError extends boolean = false>(options: Options<StoreFieldsListData, ThrowOnError>): RequestResult<StoreFieldsListResponses, unknown, ThrowOnError> => (options.client ?? client).get<StoreFieldsListResponses, unknown, ThrowOnError>({ url: '/stores/{storeId}/fields', ...options });
+
+/**
+ * 403: the plan's field limit was reached. 409: a field with that name exists.
+ */
+export const storeFieldsCreate = <ThrowOnError extends boolean = false>(options: Options<StoreFieldsCreateData, ThrowOnError>): RequestResult<StoreFieldsCreateResponses, unknown, ThrowOnError> => (options.client ?? client).post<StoreFieldsCreateResponses, unknown, ThrowOnError>({
+    url: '/stores/{storeId}/fields',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Sets the display order. Must list every field of the store.
+ */
+export const storeFieldsReorder = <ThrowOnError extends boolean = false>(options: Options<StoreFieldsReorderData, ThrowOnError>): RequestResult<StoreFieldsReorderResponses, unknown, ThrowOnError> => (options.client ?? client).put<StoreFieldsReorderResponses, unknown, ThrowOnError>({
+    url: '/stores/{storeId}/fields/order',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Also clears the field's value on every item.
+ */
+export const storeFieldsRemove = <ThrowOnError extends boolean = false>(options: Options<StoreFieldsRemoveData, ThrowOnError>): RequestResult<StoreFieldsRemoveResponses, unknown, ThrowOnError> => (options.client ?? client).delete<StoreFieldsRemoveResponses, unknown, ThrowOnError>({ url: '/stores/{storeId}/fields/{fieldId}', ...options });
+
+export const storeFieldsUpdate = <ThrowOnError extends boolean = false>(options: Options<StoreFieldsUpdateData, ThrowOnError>): RequestResult<StoreFieldsUpdateResponses, unknown, ThrowOnError> => (options.client ?? client).patch<StoreFieldsUpdateResponses, unknown, ThrowOnError>({
+    url: '/stores/{storeId}/fields/{fieldId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * All products, hidden ones included, with the plan limits.

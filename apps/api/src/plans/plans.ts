@@ -8,6 +8,8 @@ export const PLANS = {
     maxProducts: 10,
     /** Photos per product. */
     maxImagesPerProduct: 3,
+    /** Custom fields per store (Ano, Km…). */
+    maxFields: 3,
   },
 } as const;
 

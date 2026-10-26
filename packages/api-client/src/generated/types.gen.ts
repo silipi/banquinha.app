@@ -288,6 +288,79 @@ export type ThemeDto = {
     tokens: ThemeTokensDto;
 };
 
+export type StoreFieldDto = {
+    id: string;
+    label: string;
+    type: 'number' | 'boolean' | 'text' | 'choice';
+    unit: string | null;
+    options: Array<string> | null;
+    showOnCard: boolean;
+    /**
+     * Past the plan's limit (after a downgrade): kept, but not on items or the storefront.
+     */
+    hidden: boolean;
+};
+
+export type StoreFieldListDto = {
+    /**
+     * In display order.
+     */
+    fields: Array<StoreFieldDto>;
+    /**
+     * Limit of the owner's plan.
+     */
+    maxFields: number;
+};
+
+export type CreateStoreFieldDto = {
+    /**
+     * What the field is called on the storefront ("Ano", "Km"). Unique within the store.
+     */
+    label: string;
+    /**
+     * Can't be changed later.
+     */
+    type: 'text' | 'number' | 'choice' | 'boolean';
+    /**
+     * Number fields only ("km", "m²"); ignored for the others.
+     */
+    unit?: string | null;
+    /**
+     * Choice fields only, at least two; ignored for the others.
+     */
+    options?: Array<string> | null;
+    /**
+     * Show the value on the storefront card. False by default.
+     */
+    showOnCard?: boolean;
+};
+
+export type ReorderStoreFieldsDto = {
+    /**
+     * Every field of the store, in the new order.
+     */
+    fieldIds: Array<string>;
+};
+
+export type UpdateStoreFieldDto = {
+    /**
+     * What the field is called on the storefront ("Ano", "Km"). Unique within the store.
+     */
+    label?: string;
+    /**
+     * Number fields only ("km", "m²"); ignored for the others.
+     */
+    unit?: string | null;
+    /**
+     * Choice fields only, at least two; ignored for the others.
+     */
+    options?: Array<string> | null;
+    /**
+     * Show the value on the storefront card. False by default.
+     */
+    showOnCard?: boolean;
+};
+
 export type ProductImageDto = {
     id: string;
     /**
@@ -297,6 +370,12 @@ export type ProductImageDto = {
 };
 
 export type ProductDto = {
+    /**
+     * Values of the store's custom fields, by field id.
+     */
+    attributes: {
+        [key: string]: string | number | boolean;
+    };
     id: string;
     /**
      * URL segment: banquinha.app/<handle>/produto/<slug>.
@@ -327,9 +406,25 @@ export type ProductListDto = {
      */
     maxProducts: number;
     maxImagesPerProduct: number;
+    maxFields: number;
+    /**
+     * The store's custom fields, for the product editor.
+     */
+    fields: Array<StoreFieldDto>;
 };
 
 export type CreateProductDto = {
+    /**
+     * Values of the store's custom fields, by field id. Replaces the values of the fields
+     * the plan allows; null or empty text clears one.
+     */
+    attributes?: {
+        [key: string]: string | number | boolean | null;
+    };
+    /**
+     * Hidden from the storefront when false. Defaults to true.
+     */
+    active?: boolean;
     name: string;
     /**
      * A product by default.
@@ -345,10 +440,6 @@ export type CreateProductDto = {
      */
     priceCents?: number | null;
     description?: string | null;
-    /**
-     * Hidden from the storefront when false. Defaults to true.
-     */
-    active?: boolean;
 };
 
 export type ReorderProductsDto = {
@@ -359,6 +450,13 @@ export type ReorderProductsDto = {
 };
 
 export type UpdateProductDto = {
+    /**
+     * Values of the store's custom fields, by field id. Replaces the values of the fields
+     * the plan allows; null or empty text clears one.
+     */
+    attributes?: {
+        [key: string]: string | number | boolean | null;
+    };
     name?: string;
     /**
      * A product by default.
@@ -546,6 +644,10 @@ export type StorefrontProductSummaryDto = {
      * Cover image. Absolute URL or a path served by the web app.
      */
     imageUrl: string | null;
+    /**
+     * Custom field values for the card, formatted ("2019", "45.000 km"). At most two.
+     */
+    highlights: Array<string>;
 };
 
 export type StorefrontStoreDto = {
@@ -578,6 +680,11 @@ export type StorefrontProductImageDto = {
     url: string;
 };
 
+export type StorefrontAttributeDto = {
+    label: string;
+    value: string;
+};
+
 export type StorefrontStoreSummaryDto = {
     handle: string;
     name: string;
@@ -603,6 +710,10 @@ export type StorefrontProductDto = {
      * Cover first.
      */
     images: Array<StorefrontProductImageDto>;
+    /**
+     * Filled-in custom fields, in the store's order.
+     */
+    attributes: Array<StorefrontAttributeDto>;
     store: StorefrontStoreSummaryDto;
 };
 
@@ -889,6 +1000,83 @@ export type ThemesListResponses = {
 };
 
 export type ThemesListResponse = ThemesListResponses[keyof ThemesListResponses];
+
+export type StoreFieldsListData = {
+    body?: never;
+    path: {
+        storeId: string;
+    };
+    query?: never;
+    url: '/stores/{storeId}/fields';
+};
+
+export type StoreFieldsListResponses = {
+    200: StoreFieldListDto;
+};
+
+export type StoreFieldsListResponse = StoreFieldsListResponses[keyof StoreFieldsListResponses];
+
+export type StoreFieldsCreateData = {
+    body: CreateStoreFieldDto;
+    path: {
+        storeId: string;
+    };
+    query?: never;
+    url: '/stores/{storeId}/fields';
+};
+
+export type StoreFieldsCreateResponses = {
+    201: StoreFieldListDto;
+};
+
+export type StoreFieldsCreateResponse = StoreFieldsCreateResponses[keyof StoreFieldsCreateResponses];
+
+export type StoreFieldsReorderData = {
+    body: ReorderStoreFieldsDto;
+    path: {
+        storeId: string;
+    };
+    query?: never;
+    url: '/stores/{storeId}/fields/order';
+};
+
+export type StoreFieldsReorderResponses = {
+    200: StoreFieldListDto;
+};
+
+export type StoreFieldsReorderResponse = StoreFieldsReorderResponses[keyof StoreFieldsReorderResponses];
+
+export type StoreFieldsRemoveData = {
+    body?: never;
+    path: {
+        storeId: string;
+        fieldId: string;
+    };
+    query?: never;
+    url: '/stores/{storeId}/fields/{fieldId}';
+};
+
+export type StoreFieldsRemoveResponses = {
+    200: StoreFieldListDto;
+};
+
+export type StoreFieldsRemoveResponse = StoreFieldsRemoveResponses[keyof StoreFieldsRemoveResponses];
+
+export type StoreFieldsUpdateData = {
+    body: UpdateStoreFieldDto;
+    path: {
+        storeId: string;
+        fieldId: string;
+    };
+    query?: never;
+    url: '/stores/{storeId}/fields/{fieldId}';
+};
+
+export type StoreFieldsUpdateResponses = {
+    200: StoreFieldListDto;
+};
+
+export type StoreFieldsUpdateResponse = StoreFieldsUpdateResponses[keyof StoreFieldsUpdateResponses];
 
 export type ProductsListData = {
     body?: never;

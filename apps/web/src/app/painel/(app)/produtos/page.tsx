@@ -32,6 +32,7 @@ import {
   ExternalLink,
   GripVertical,
   ImageIcon,
+  ListPlus,
   LoaderCircle,
   Plus,
 } from 'lucide-react';
@@ -45,6 +46,7 @@ import { productPath } from '@/lib/storefront-links';
 import { cn } from '@/lib/utils';
 import { refreshStorefront } from '../../actions';
 import { usePanel } from '../_components/panel-context';
+import { FieldsDialog } from './_components/FieldsDialog';
 import { ProductEditor } from './_components/ProductEditor';
 
 async function fetchProducts(
@@ -92,6 +94,7 @@ export default function ProductsPage() {
   // null: closed. 'new': creating. Otherwise the product being edited.
   const [editing, setEditing] = useState<ProductDto | 'new' | null>(null);
   const [moving, setMoving] = useState(false);
+  const [fieldsOpen, setFieldsOpen] = useState(false);
   const sensors = useSensors(
     // A small move before dragging starts, so a tap on the handle isn't a drag.
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -189,13 +192,18 @@ export default function ProductsPage() {
             {products.length} de {maxProducts} no plano {me.plan.name}
           </p>
         </div>
-        <Button
-          variant="brand"
-          disabled={atLimit}
-          onClick={() => setEditing('new')}
-        >
-          <Plus /> Novo item
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setFieldsOpen(true)}>
+            <ListPlus /> Campos
+          </Button>
+          <Button
+            variant="brand"
+            disabled={atLimit}
+            onClick={() => setEditing('new')}
+          >
+            <Plus /> Novo item
+          </Button>
+        </div>
       </header>
 
       {atLimit && (
@@ -251,9 +259,20 @@ export default function ProductsPage() {
           storeId={store.id}
           product={editing === 'new' ? null : editing}
           maxImages={list.maxImagesPerProduct}
+          fields={list.fields.filter((field) => !field.hidden)}
           onSaved={changed}
           onDeleted={changed}
           onClose={() => setEditing(null)}
+        />
+      )}
+
+      {fieldsOpen && (
+        <FieldsDialog
+          storeId={store.id}
+          list={{ fields: list.fields, maxFields: list.maxFields }}
+          planName={me.plan.name}
+          onChanged={changed}
+          onClose={() => setFieldsOpen(false)}
         />
       )}
     </div>

@@ -373,6 +373,21 @@ Base para a comemoração da primeira visita (P2-10), o resumo da semana por e-m
 - [ ] Comemoração da primeira visita no Início
 - [ ] A política de privacidade continua correta
 
+### P2-17 · Campos personalizados 🚧
+
+Informações extras em cada item (Ano, Km e Câmbio de um carro; Quartos e m² de um imóvel; Tecido de uma roupa). A **loja** define os campos uma vez (nome, tipo, unidade, ordem, se aparece no card) e cada item só preenche os valores, todos opcionais. Assim ninguém redigita "Km" em 40 carros e os valores ficam consistentes para filtros depois ([P5-22](#p5-22--filtros-e-modelos-de-campos-)).
+
+- Tipos: texto, número com unidade opcional ("45.000 km"), lista de opções e sim/não. Valores em `products.attributes` (jsonb), validados na API pelo tipo do campo.
+- Não é estoque, preço nem variação: o cliente não escolhe nada num campo (escolha que vai para a sacola é o [P5-19](#p5-19--variações-de-produto-)).
+
+**Como ficou (feito em 2026-10-26):** botão **Campos** na página Produtos abre a lista de campos da loja (criar, editar, subir/descer, apagar; salva na hora). O editor de produto ganha "Informações extras" com um campo por tipo (número aceita "45.000" e "1,5"). A API formata para a vitrine (`45.000 km`, `2019`, `Sim`) em `src/store-fields/field-values.ts`; endpoints em `/stores/:storeId/fields`.
+
+- [x] Campos criados, editados, reordenados e apagados no painel; apagar um campo apaga os valores dele
+- [x] O editor de produto mostra os campos da loja; valor inválido para o tipo é recusado pela API
+- [x] A página do item mostra a ficha; o card mostra até 2 campos marcados
+- [x] Limite por loja no plano (3 no Grátis); campos acima do limite, depois de um downgrade, ficam ocultos e não são apagados
+- [ ] Conferido no navegador, no celular e no desktop
+
 ---
 
 ## P3 · Lançamento público
@@ -426,7 +441,7 @@ E-mails de boas-vindas, link de acesso e aviso de pedido novo.
 Quem procura "formatar computador curitiba" ou "doces para festa londrina" no Google deveria poder cair numa vitrine. Hoje as vitrines têm Open Graph, mas não dados estruturados (o componente `JsonLd` só é usado no blog).
 
 - [ ] Título e descrição da vitrine com o que a loja oferece e a cidade
-- [ ] JSON-LD na vitrine (`LocalBusiness`, com cidade, região de atendimento e contato) e nos itens (`Product` com `Offer`; `Service` para serviços)
+- [ ] JSON-LD na vitrine (`LocalBusiness`, com cidade, região de atendimento e contato) e nos itens (`Product` com `Offer`; `Service` para serviços), com os campos personalizados (P2-17) como `additionalProperty`
 - [ ] Validado no Teste de pesquisa aprimorada do Google (Rich Results Test)
 
 ---
@@ -590,3 +605,10 @@ Para serviços: o lojista define os horários livres e o cliente escolhe um na h
 
 - [ ] Avaliar demanda antes de construir
 - [ ] Disponibilidade por dia da semana, duração por serviço e bloqueio de horários já ocupados
+
+### P5-22 · Filtros e modelos de campos ⬜
+
+Continuação dos campos personalizados (P2-17).
+
+- [ ] Filtros na vitrine pelos campos de número (faixa) e de lista de opções
+- [ ] Modelos prontos ao criar os campos: Veículo (Ano, Km, Câmbio, Combustível), Imóvel (Quartos, m², Vagas), Roupa (Tecido, Medidas)

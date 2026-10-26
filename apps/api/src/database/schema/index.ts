@@ -13,6 +13,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+import type { FieldValues } from '../../store-fields/field-values.js';
 import type { ThemeOverrides, ThemeTokens } from '../../themes/theme-tokens.js';
 
 const timestamps = {
@@ -169,6 +170,8 @@ export const products = pgTable(
     /** Display order on the storefront, ascending. */
     position: integer('position').notNull().default(0),
     active: boolean('active').notNull().default(true),
+    /** Values of the store's custom fields, by field id (src/store-fields/field-values.ts). */
+    attributes: jsonb('attributes').$type<FieldValues>().notNull().default({}),
     ...timestamps,
   },
   (table) => [
@@ -194,6 +197,37 @@ export const productImages = pgTable(
     createdAt: timestamps.createdAt,
   },
   (table) => [index('product_images_product_idx').on(table.productId)],
+);
+
+export const fieldType = pgEnum('field_type', [
+  'text',
+  'number',
+  'choice',
+  'boolean',
+]);
+
+/** Custom fields a store fills in on each item (Ano, Km, Câmbio). */
+export const storeFields = pgTable(
+  'store_fields',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    storeId: uuid('store_id')
+      .notNull()
+      .references(() => stores.id, { onDelete: 'cascade' }),
+    label: text('label').notNull(),
+    /** Fixed once created: changing it would break the values already filled in. */
+    type: fieldType('type').notNull(),
+    /** Number fields only ("km"). */
+    unit: text('unit'),
+    /** Choice fields only. */
+    options: jsonb('options').$type<string[]>(),
+    /** Shown on the storefront card (the first few marked, see MAX_CARD_FIELDS). */
+    showOnCard: boolean('show_on_card').notNull().default(false),
+    /** Display order, ascending. Fields past the plan's limit are hidden, not deleted. */
+    position: integer('position').notNull().default(0),
+    ...timestamps,
+  },
+  (table) => [index('store_fields_store_idx').on(table.storeId)],
 );
 
 /** Online is for orders made only of services. */
@@ -273,8 +307,17 @@ export const orderItems = pgTable(
 
 export const storesRelations = relations(stores, ({ one, many }) => ({
   theme: one(themes, { fields: [stores.themeId], references: [themes.id] }),
+  owner: one(users, { fields: [stores.ownerId], references: [users.id] }),
   products: many(products),
   orders: many(orders),
+  fields: many(storeFields),
+}));
+
+export const storeFieldsRelations = relations(storeFields, ({ one }) => ({
+  store: one(stores, {
+    fields: [storeFields.storeId],
+    references: [stores.id],
+  }),
 }));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({

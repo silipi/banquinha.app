@@ -31,6 +31,11 @@ export function ProductCard({
       <p className="text-sm text-muted-foreground">
         {formatItemPrice(product)}
       </p>
+      {product.highlights.length > 0 && (
+        <p className="mt-1 truncate text-xs text-muted-foreground">
+          {product.highlights.join(' · ')}
+        </p>
+      )}
     </Link>
   );
 }

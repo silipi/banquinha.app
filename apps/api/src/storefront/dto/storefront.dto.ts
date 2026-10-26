@@ -29,6 +29,8 @@ export class StorefrontProductSummaryDto {
   priceCents: number | null;
   /** Cover image. Absolute URL or a path served by the web app. */
   imageUrl: string | null;
+  /** Custom field values for the card, formatted ("2019", "45.000 km"). At most two. */
+  highlights: string[];
 }
 
 export class StorefrontStoreDto extends StorefrontStoreSummaryDto {
@@ -47,6 +49,12 @@ export class StorefrontProductImageDto {
   url: string;
 }
 
+/** A custom field of the item, formatted for reading: "Km" / "45.000 km". */
+export class StorefrontAttributeDto {
+  label: string;
+  value: string;
+}
+
 export class StorefrontProductDto {
   slug: string;
   name: string;
@@ -57,6 +65,8 @@ export class StorefrontProductDto {
   priceCents: number | null;
   /** Cover first. */
   images: StorefrontProductImageDto[];
+  /** Filled-in custom fields, in the store's order. */
+  attributes: StorefrontAttributeDto[];
   store: StorefrontStoreSummaryDto;
 }
 
