@@ -212,6 +212,82 @@ export type ThemeDto = {
     tokens: ThemeTokensDto;
 };
 
+export type ProductImageDto = {
+    id: string;
+    /**
+     * Absolute URL (R2) or a path served by the web app (seed data).
+     */
+    url: string;
+};
+
+export type ProductDto = {
+    id: string;
+    /**
+     * URL segment: banquinha.app/<handle>/produto/<slug>.
+     */
+    slug: string;
+    name: string;
+    description: string | null;
+    priceCents: number;
+    active: boolean;
+    /**
+     * Cover first.
+     */
+    images: Array<ProductImageDto>;
+};
+
+export type ProductListDto = {
+    /**
+     * In display order.
+     */
+    products: Array<ProductDto>;
+    /**
+     * Limits of the owner's plan.
+     */
+    maxProducts: number;
+    maxImagesPerProduct: number;
+};
+
+export type CreateProductDto = {
+    name: string;
+    /**
+     * Price in cents (R$ 25,90 = 2590).
+     */
+    priceCents: number;
+    description?: string | null;
+    /**
+     * Hidden from the storefront when false. Defaults to true.
+     */
+    active?: boolean;
+};
+
+export type ReorderProductsDto = {
+    /**
+     * Every product of the store, in the new display order.
+     */
+    productIds: Array<string>;
+};
+
+export type UpdateProductDto = {
+    name?: string;
+    /**
+     * Price in cents (R$ 25,90 = 2590).
+     */
+    priceCents?: number;
+    description?: string | null;
+    /**
+     * Hidden from the storefront when false. Defaults to true.
+     */
+    active?: boolean;
+};
+
+export type ReorderProductImagesDto = {
+    /**
+     * Every photo of the product, in the new order. The first one is the cover.
+     */
+    imageIds: Array<string>;
+};
+
 export type StorefrontContactDto = {
     /**
      * Digits only, with country code.
@@ -543,6 +619,132 @@ export type ThemesListResponses = {
 };
 
 export type ThemesListResponse = ThemesListResponses[keyof ThemesListResponses];
+
+export type ProductsListData = {
+    body?: never;
+    path: {
+        storeId: string;
+    };
+    query?: never;
+    url: '/stores/{storeId}/products';
+};
+
+export type ProductsListResponses = {
+    200: ProductListDto;
+};
+
+export type ProductsListResponse = ProductsListResponses[keyof ProductsListResponses];
+
+export type ProductsCreateData = {
+    body: CreateProductDto;
+    path: {
+        storeId: string;
+    };
+    query?: never;
+    url: '/stores/{storeId}/products';
+};
+
+export type ProductsCreateResponses = {
+    201: ProductDto;
+};
+
+export type ProductsCreateResponse = ProductsCreateResponses[keyof ProductsCreateResponses];
+
+export type ProductsReorderData = {
+    body: ReorderProductsDto;
+    path: {
+        storeId: string;
+    };
+    query?: never;
+    url: '/stores/{storeId}/products/order';
+};
+
+export type ProductsReorderResponses = {
+    200: ProductListDto;
+};
+
+export type ProductsReorderResponse = ProductsReorderResponses[keyof ProductsReorderResponses];
+
+export type ProductsRemoveData = {
+    body?: never;
+    path: {
+        storeId: string;
+        productId: string;
+    };
+    query?: never;
+    url: '/stores/{storeId}/products/{productId}';
+};
+
+export type ProductsRemoveResponses = {
+    204: void;
+};
+
+export type ProductsRemoveResponse = ProductsRemoveResponses[keyof ProductsRemoveResponses];
+
+export type ProductsUpdateData = {
+    body: UpdateProductDto;
+    path: {
+        storeId: string;
+        productId: string;
+    };
+    query?: never;
+    url: '/stores/{storeId}/products/{productId}';
+};
+
+export type ProductsUpdateResponses = {
+    200: ProductDto;
+};
+
+export type ProductsUpdateResponse = ProductsUpdateResponses[keyof ProductsUpdateResponses];
+
+export type ProductsAddImageData = {
+    body: UploadImageDto;
+    path: {
+        storeId: string;
+        productId: string;
+    };
+    query?: never;
+    url: '/stores/{storeId}/products/{productId}/images';
+};
+
+export type ProductsAddImageResponses = {
+    201: ProductDto;
+};
+
+export type ProductsAddImageResponse = ProductsAddImageResponses[keyof ProductsAddImageResponses];
+
+export type ProductsReorderImagesData = {
+    body: ReorderProductImagesDto;
+    path: {
+        storeId: string;
+        productId: string;
+    };
+    query?: never;
+    url: '/stores/{storeId}/products/{productId}/images/order';
+};
+
+export type ProductsReorderImagesResponses = {
+    200: ProductDto;
+};
+
+export type ProductsReorderImagesResponse = ProductsReorderImagesResponses[keyof ProductsReorderImagesResponses];
+
+export type ProductsRemoveImageData = {
+    body?: never;
+    path: {
+        storeId: string;
+        productId: string;
+        imageId: string;
+    };
+    query?: never;
+    url: '/stores/{storeId}/products/{productId}/images/{imageId}';
+};
+
+export type ProductsRemoveImageResponses = {
+    200: ProductDto;
+};
+
+export type ProductsRemoveImageResponse = ProductsRemoveImageResponses[keyof ProductsRemoveImageResponses];
 
 export type StorefrontGetStoreData = {
     body?: never;

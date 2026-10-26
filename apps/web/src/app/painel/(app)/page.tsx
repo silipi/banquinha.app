@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { panelPath } from '@/lib/panel';
 import { absoluteUrl } from '@/lib/site';
 import { storeDisplayUrl, storePath } from '@/lib/storefront-links';
 import { usePanel } from './_components/panel-context';
@@ -56,6 +57,16 @@ export default function DashboardPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             no plano {me.plan.name}
           </p>
+          <a
+            href={panelPath('/produtos')}
+            className={buttonVariants({
+              size: 'sm',
+              variant: 'outline',
+              className: 'mt-4',
+            })}
+          >
+            Gerenciar produtos
+          </a>
         </div>
       </div>
 

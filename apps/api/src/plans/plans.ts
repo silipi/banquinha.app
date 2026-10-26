@@ -6,6 +6,8 @@ export const PLANS = {
     maxStores: 1,
     /** Products per store, active or not. */
     maxProducts: 10,
+    /** Photos per product. */
+    maxImagesPerProduct: 3,
   },
 } as const;
 

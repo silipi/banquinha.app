@@ -10,7 +10,7 @@ import {
   Receipt,
   Settings,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { StoreAvatar } from '@/app/[handle]/_components/StoreAvatar';
 import { Logo } from '@/components/logo';
@@ -22,7 +22,7 @@ import { SETUP_LABELS, usePanel } from './panel-context';
 
 const NAV = [
   { label: 'Início', icon: Home, href: '/', ready: true },
-  { label: 'Produtos', icon: Package, href: '/produtos', ready: false },
+  { label: 'Produtos', icon: Package, href: '/produtos', ready: true },
   { label: 'Pedidos', icon: Receipt, href: '/pedidos', ready: false },
   {
     label: 'Configurações',
@@ -34,6 +34,8 @@ const NAV = [
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const router = useRouter();
+  // "/produtos" on the app. host, "/painel/produtos" elsewhere.
+  const currentPath = usePathname().replace(/^\/painel(?=\/|$)/, '') || '/';
   const { me } = usePanel();
 
   async function logout() {
@@ -56,8 +58,11 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               key={label}
               href={panelPath(href)}
               onClick={onNavigate}
-              aria-current="page"
-              className="flex h-10 items-center gap-3 rounded-xl bg-muted px-3 text-sm font-medium"
+              aria-current={currentPath === href ? 'page' : undefined}
+              className={cn(
+                'flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium hover:bg-muted/60',
+                currentPath === href && 'bg-muted hover:bg-muted',
+              )}
             >
               <Icon className="size-4" /> {label}
             </a>

@@ -3,6 +3,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { HealthController } from './health/health.controller.js';
 import { ImagesModule } from './images/images.module.js';
+import { ProductsModule } from './products/products.module.js';
 import { StorefrontModule } from './storefront/storefront.module.js';
 import { StoresModule } from './stores/stores.module.js';
 import { ThemesModule } from './themes/themes.module.js';
@@ -14,6 +15,7 @@ import { ThemesModule } from './themes/themes.module.js';
     ImagesModule,
     ThemesModule,
     StoresModule,
+    ProductsModule,
     StorefrontModule,
   ],
   controllers: [HealthController],

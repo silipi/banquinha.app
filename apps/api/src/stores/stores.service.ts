@@ -8,12 +8,12 @@ import {
 } from '@nestjs/common';
 import { and, count, eq, inArray } from 'drizzle-orm';
 import type { AuthUser } from '../auth/current-user.decorator.js';
-import { toSlug } from '../common/slug.js';
 import type { Db } from '../database/database.js';
 import { DB } from '../database/database.module.js';
 import { products, stores, themes, users } from '../database/schema/index.js';
 import { ImagesService } from '../images/images.service.js';
 import { PLANS } from '../plans/plans.js';
+import { uniqueProductSlug } from '../products/product-slug.js';
 import { resolveTheme } from '../themes/theme-tokens.js';
 import { ThemesService } from '../themes/themes.service.js';
 import type { CheckHandleResponseDto } from './dto/check-handle.dto.js';
@@ -37,7 +37,6 @@ const PROBLEM_MESSAGES: Record<StoreHandleProblem, string> = {
   reserved: 'Esse endereço é reservado',
 };
 const HANDLE_TAKEN = 'Esse endereço já está em uso';
-const PRODUCT_SLUG_MAX_LENGTH = 60;
 
 type StoreRow = typeof stores.$inferSelect;
 
@@ -53,18 +52,6 @@ function isUniqueViolation(error: unknown): boolean {
     code(error) === '23505' ||
     code((error as { cause?: unknown }).cause) === '23505'
   );
-}
-
-/** Slugs from product names, unique within the list ("bolo", "bolo-2"). */
-function productSlugs(names: string[]): string[] {
-  const used = new Set<string>();
-  return names.map((name) => {
-    const base = toSlug(name, PRODUCT_SLUG_MAX_LENGTH) || 'produto';
-    let slug = base;
-    for (let n = 2; used.has(slug); n++) slug = `${base}-${n}`;
-    used.add(slug);
-    return slug;
-  });
 }
 
 @Injectable()
@@ -128,7 +115,10 @@ export class StoresService {
     }
 
     const theme = await this.themes.findUsable(user, input.themeId);
-    const slugs = productSlugs(input.products.map(({ name }) => name));
+    const takenSlugs = new Set<string>();
+    const slugs = input.products.map(({ name }) =>
+      uniqueProductSlug(name, takenSlugs),
+    );
 
     try {
       return await this.db.transaction(async (tx) => {
@@ -266,7 +256,8 @@ export class StoresService {
     return this.getDashboard(user, id);
   }
 
-  private async findOwned(user: AuthUser, id: string): Promise<StoreRow> {
+  /** One of the merchant's stores; 404 when it doesn't exist or isn't theirs. */
+  async findOwned(user: AuthUser, id: string): Promise<StoreRow> {
     const [store] = await this.db
       .select()
       .from(stores)

@@ -1,8 +1,14 @@
-import { randomBytes, randomUUID } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import sharp from 'sharp';
 import { createApp } from '../src/app.js';
-import { SESSION_COOKIE } from '../src/auth/session-cookie.js';
+import {
+  as,
+  fetchUpload as fetchUploadFrom,
+  merchantWithStore as newMerchantWithStore,
+  multipart,
+  photo,
+} from './support/merchant.js';
 
 describe('Store logo and banner uploads', () => {
   let app: NestFastifyApplication;
@@ -15,61 +21,8 @@ describe('Store logo and banner uploads', () => {
 
   afterAll(() => app.close());
 
-  const unique = () => randomUUID().slice(0, 8);
-  const as = (session: string) => ({ [SESSION_COOKIE]: session });
-
-  /** Signs up a merchant with a store; returns the session and the store. */
-  async function merchantWithStore() {
-    const signup = await app.inject({
-      method: 'POST',
-      url: '/auth/signup',
-      payload: {
-        name: 'Maria',
-        email: `lojista+${unique()}@exemplo.com`,
-        whatsapp: '(41) 99999-1234',
-        password: 'senha-boa-123',
-      },
-    });
-    const session = signup.cookies.find(
-      (c) => c.name === SESSION_COOKIE,
-    )!.value;
-    const store = await app.inject({
-      method: 'POST',
-      url: '/stores',
-      cookies: as(session),
-      payload: {
-        handle: `fotos-${unique()}`,
-        name: 'Fotos da Maria',
-        whatsapp: '41999991234',
-        products: [{ name: 'Bolo', priceCents: 3000 }],
-      },
-    });
-    return {
-      session,
-      store: store.json<{ id: string; handle: string }>(),
-    };
-  }
-
-  const photo = (width: number, height: number) =>
-    sharp({
-      create: { width, height, channels: 3, background: '#ff5a1f' },
-    })
-      .jpeg()
-      .toBuffer();
-
-  /** Builds a multipart body the way a browser's FormData would. */
-  async function multipart(file: Buffer, type: string, field = 'file') {
-    const form = new FormData();
-    form.append(field, new Blob([new Uint8Array(file)], { type }), 'foto');
-    const request = new Request('http://localhost', {
-      method: 'POST',
-      body: form,
-    });
-    return {
-      headers: { 'content-type': request.headers.get('content-type')! },
-      payload: Buffer.from(await request.arrayBuffer()),
-    };
-  }
+  const merchantWithStore = () => newMerchantWithStore(app);
+  const fetchUpload = (url: string) => fetchUploadFrom(app, url);
 
   async function upload(
     session: string | null,
@@ -85,10 +38,6 @@ describe('Store logo and banner uploads', () => {
       ...(await multipart(file, type)),
     });
   }
-
-  /** Fetches an uploaded image the way the web app's /api proxy would. */
-  const fetchUpload = (url: string) =>
-    app.inject({ method: 'GET', url: url.replace(/^\/api/, '') });
 
   it('stores the logo as a 512px square webp and marks the step done', async () => {
     const { session, store } = await merchantWithStore();

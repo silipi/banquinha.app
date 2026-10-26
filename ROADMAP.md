@@ -225,7 +225,7 @@ Logo depois de criar a conta (P2-02), a pessoa monta a loja em `/comecar`. A con
 - [ ] Testado no navegador interno do Instagram e do TikTok
 - [ ] Funil medido por passo (quantos chegam e quantos concluem cada tela)
 
-### P2-04 · Upload de imagens 🚧
+### P2-04 · Upload de imagens ✅
 
 Envio de fotos de produto e logos para o Cloudflare R2, redimensionadas e convertidas para webp.
 
@@ -238,15 +238,20 @@ Envio de fotos de produto e logos para o Cloudflare R2, redimensionadas e conver
 - [x] Imagens servidas pelo R2 e liberadas no `next/image` (`R2_PUBLIC_URL` no site)
 - [x] Imagens de compartilhamento continuam funcionando com as URLs novas
 - [x] Logo e banner editáveis no checklist do painel; banner aparece no topo da vitrine
-- [ ] Criar o bucket no R2 com domínio público e configurar as chaves na API e no site
-- [ ] Fotos de produto (com o P2-05), com limite de fotos por produto no plano
+- [x] Criar o bucket no R2 com domínio público e configurar as chaves na API e no site (por enquanto no `r2.dev`)
+- [x] Fotos de produto (com o P2-05), com limite de fotos por produto no plano
 
-### P2-05 · Gestão de produtos ⬜
+### P2-05 · Gestão de produtos ✅
 
 Criar, editar, reordenar, ativar/desativar e apagar produtos com várias fotos.
 
-- [ ] Mudanças aparecem na vitrine na hora (`updateTag` em `store:<handle>`)
-- [ ] Slugs gerados a partir do nome, únicos por loja
+**Como ficou (feito em 2026-10-26):** página **Produtos** no painel, com a lista na ordem da vitrine (setas para subir e descer), foto de capa, preço e o selo "Escondido". Tocar num produto abre o editor (tela cheia no celular): fotos (até o limite do plano, a primeira é a capa e dá para escolher outra), nome, preço, descrição e "Mostrar na loja". Nada vai para a loja até tocar em **Salvar**; apagar pede confirmação e leva as fotos junto. Os pedidos antigos continuam com o nome e o preço da época.
+
+- O endereço do produto (slug) nasce do nome e **não muda** quando o nome muda, para os links já compartilhados continuarem funcionando.
+- Endpoints em `/stores/:storeId/products` (lista, criar, editar, apagar, `PUT order`, fotos em `/:productId/images`).
+
+- [x] Mudanças aparecem na vitrine na hora (`updateTag` em `store:<handle>`)
+- [x] Slugs gerados a partir do nome, únicos por loja
 
 ### P2-06 · Configurações da loja ⬜
 
@@ -262,11 +267,11 @@ Listar os pedidos recebidos pela vitrine com status (novo, confirmado, concluíd
 - [ ] Mais recentes primeiro, filtro por status
 - [ ] Abrir um pedido mostra itens, totais e dados do cliente
 
-### P2-08 · Limites do plano grátis 🚧
+### P2-08 · Limites do plano grátis ✅
 
 Aplicar na API os limites do plano grátis (número de produtos, fotos por produto).
 
-- [x] Limites aplicados na API, com mensagens claras em pt-BR (lojas por conta e produtos na criação da loja; falta fotos por produto e o limite ao cadastrar produtos depois, no P2-05)
+- [x] Limites aplicados na API, com mensagens claras em pt-BR: lojas por conta, produtos por loja (no onboarding e depois) e fotos por produto (3 no Grátis)
 - [x] O painel mostra o uso em relação ao limite ("2 de 10 produtos")
 
 ### P2-09 · Painel instalável (PWA) ⬜

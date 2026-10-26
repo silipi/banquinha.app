@@ -488,6 +488,338 @@
         ]
       }
     },
+    "/stores/{storeId}/products": {
+      "get": {
+        "operationId": "productsList",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductListDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "All products, hidden ones included, with the plan limits.",
+        "tags": [
+          "Products"
+        ]
+      },
+      "post": {
+        "operationId": "productsCreate",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "403: the plan's product limit was reached.",
+        "tags": [
+          "Products"
+        ]
+      }
+    },
+    "/stores/{storeId}/products/order": {
+      "put": {
+        "operationId": "productsReorder",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderProductsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductListDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Sets the display order. Must list every product of the store.",
+        "tags": [
+          "Products"
+        ]
+      }
+    },
+    "/stores/{storeId}/products/{productId}": {
+      "patch": {
+        "operationId": "productsUpdate",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Products"
+        ]
+      },
+      "delete": {
+        "operationId": "productsRemove",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Products"
+        ]
+      }
+    },
+    "/stores/{storeId}/products/{productId}/images": {
+      "post": {
+        "operationId": "productsAddImage",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadImageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Adds a photo after the existing ones. 400: not an image. 403: the plan's photo\nlimit was reached. 413: file too large.",
+        "tags": [
+          "Products"
+        ]
+      }
+    },
+    "/stores/{storeId}/products/{productId}/images/order": {
+      "put": {
+        "operationId": "productsReorderImages",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderProductImagesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Sets the photo order; the first one is the cover. Must list every photo.",
+        "tags": [
+          "Products"
+        ]
+      }
+    },
+    "/stores/{storeId}/products/{productId}/images/{imageId}": {
+      "delete": {
+        "operationId": "productsRemoveImage",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Products"
+        ]
+      }
+    },
     "/storefront/{handle}": {
       "get": {
         "operationId": "storefrontGetStore",
@@ -1170,6 +1502,175 @@
           "description",
           "requiredPlan",
           "tokens"
+        ]
+      },
+      "ProductImageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "description": "Absolute URL (R2) or a path served by the web app (seed data)."
+          }
+        },
+        "required": [
+          "id",
+          "url"
+        ]
+      },
+      "ProductDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "description": "URL segment: banquinha.app/<handle>/produto/<slug>."
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "priceCents": {
+            "type": "number"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "images": {
+            "description": "Cover first.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductImageDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "description",
+          "priceCents",
+          "active",
+          "images"
+        ]
+      },
+      "ProductListDto": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "description": "In display order.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductDto"
+            }
+          },
+          "maxProducts": {
+            "type": "number",
+            "description": "Limits of the owner's plan."
+          },
+          "maxImagesPerProduct": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "products",
+          "maxProducts",
+          "maxImagesPerProduct"
+        ]
+      },
+      "CreateProductDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80
+          },
+          "priceCents": {
+            "type": "number",
+            "description": "Price in cents (R$ 25,90 = 2590).",
+            "minimum": 1,
+            "maximum": 10000000
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 500
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Hidden from the storefront when false. Defaults to true."
+          }
+        },
+        "required": [
+          "name",
+          "priceCents"
+        ]
+      },
+      "ReorderProductsDto": {
+        "type": "object",
+        "properties": {
+          "productIds": {
+            "description": "Every product of the store, in the new display order.",
+            "maxItems": 1000,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "productIds"
+        ]
+      },
+      "UpdateProductDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80
+          },
+          "priceCents": {
+            "type": "number",
+            "description": "Price in cents (R$ 25,90 = 2590).",
+            "minimum": 1,
+            "maximum": 10000000
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 500
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Hidden from the storefront when false. Defaults to true."
+          }
+        }
+      },
+      "ReorderProductImagesDto": {
+        "type": "object",
+        "properties": {
+          "imageIds": {
+            "description": "Every photo of the product, in the new order. The first one is the cover.",
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "imageIds"
         ]
       },
       "StorefrontContactDto": {

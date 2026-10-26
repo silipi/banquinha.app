@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthConfigData, AuthConfigResponses, AuthGoogleData, AuthGoogleResponses, AuthLoginData, AuthLoginResponses, AuthLogoutData, AuthLogoutResponses, AuthRequestPasswordResetData, AuthRequestPasswordResetResponses, AuthResetPasswordData, AuthResetPasswordResponses, AuthSignupData, AuthSignupResponses, HealthCheckData, HealthCheckResponses, MeGetData, MeGetResponses, SitemapListStorefrontsData, SitemapListStorefrontsResponses, StorefrontCreateOrderData, StorefrontCreateOrderResponses, StorefrontGetProductData, StorefrontGetProductResponses, StorefrontGetStoreData, StorefrontGetStoreResponses, StoresCheckHandleData, StoresCheckHandleResponses, StoresCreateData, StoresCreateResponses, StoresGetData, StoresGetResponses, StoresRemoveImageData, StoresRemoveImageResponses, StoresUpdateData, StoresUpdateResponses, StoresUploadImageData, StoresUploadImageResponses, ThemesListData, ThemesListResponses } from './types.gen';
+import type { AuthConfigData, AuthConfigResponses, AuthGoogleData, AuthGoogleResponses, AuthLoginData, AuthLoginResponses, AuthLogoutData, AuthLogoutResponses, AuthRequestPasswordResetData, AuthRequestPasswordResetResponses, AuthResetPasswordData, AuthResetPasswordResponses, AuthSignupData, AuthSignupResponses, HealthCheckData, HealthCheckResponses, MeGetData, MeGetResponses, ProductsAddImageData, ProductsAddImageResponses, ProductsCreateData, ProductsCreateResponses, ProductsListData, ProductsListResponses, ProductsRemoveData, ProductsRemoveImageData, ProductsRemoveImageResponses, ProductsRemoveResponses, ProductsReorderData, ProductsReorderImagesData, ProductsReorderImagesResponses, ProductsReorderResponses, ProductsUpdateData, ProductsUpdateResponses, SitemapListStorefrontsData, SitemapListStorefrontsResponses, StorefrontCreateOrderData, StorefrontCreateOrderResponses, StorefrontGetProductData, StorefrontGetProductResponses, StorefrontGetStoreData, StorefrontGetStoreResponses, StoresCheckHandleData, StoresCheckHandleResponses, StoresCreateData, StoresCreateResponses, StoresGetData, StoresGetResponses, StoresRemoveImageData, StoresRemoveImageResponses, StoresUpdateData, StoresUpdateResponses, StoresUploadImageData, StoresUploadImageResponses, ThemesListData, ThemesListResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -154,6 +154,74 @@ export const storesUploadImage = <ThrowOnError extends boolean = false>(options:
  * Platform themes with their design tokens, in display order.
  */
 export const themesList = <ThrowOnError extends boolean = false>(options?: Options<ThemesListData, ThrowOnError>): RequestResult<ThemesListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ThemesListResponses, unknown, ThrowOnError>({ url: '/themes', ...options });
+
+/**
+ * All products, hidden ones included, with the plan limits.
+ */
+export const productsList = <ThrowOnError extends boolean = false>(options: Options<ProductsListData, ThrowOnError>): RequestResult<ProductsListResponses, unknown, ThrowOnError> => (options.client ?? client).get<ProductsListResponses, unknown, ThrowOnError>({ url: '/stores/{storeId}/products', ...options });
+
+/**
+ * 403: the plan's product limit was reached.
+ */
+export const productsCreate = <ThrowOnError extends boolean = false>(options: Options<ProductsCreateData, ThrowOnError>): RequestResult<ProductsCreateResponses, unknown, ThrowOnError> => (options.client ?? client).post<ProductsCreateResponses, unknown, ThrowOnError>({
+    url: '/stores/{storeId}/products',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Sets the display order. Must list every product of the store.
+ */
+export const productsReorder = <ThrowOnError extends boolean = false>(options: Options<ProductsReorderData, ThrowOnError>): RequestResult<ProductsReorderResponses, unknown, ThrowOnError> => (options.client ?? client).put<ProductsReorderResponses, unknown, ThrowOnError>({
+    url: '/stores/{storeId}/products/order',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const productsRemove = <ThrowOnError extends boolean = false>(options: Options<ProductsRemoveData, ThrowOnError>): RequestResult<ProductsRemoveResponses, unknown, ThrowOnError> => (options.client ?? client).delete<ProductsRemoveResponses, unknown, ThrowOnError>({ url: '/stores/{storeId}/products/{productId}', ...options });
+
+export const productsUpdate = <ThrowOnError extends boolean = false>(options: Options<ProductsUpdateData, ThrowOnError>): RequestResult<ProductsUpdateResponses, unknown, ThrowOnError> => (options.client ?? client).patch<ProductsUpdateResponses, unknown, ThrowOnError>({
+    url: '/stores/{storeId}/products/{productId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Adds a photo after the existing ones. 400: not an image. 403: the plan's photo
+ * limit was reached. 413: file too large.
+ */
+export const productsAddImage = <ThrowOnError extends boolean = false>(options: Options<ProductsAddImageData, ThrowOnError>): RequestResult<ProductsAddImageResponses, unknown, ThrowOnError> => (options.client ?? client).post<ProductsAddImageResponses, unknown, ThrowOnError>({
+    ...formDataBodySerializer,
+    url: '/stores/{storeId}/products/{productId}/images',
+    ...options,
+    headers: {
+        'Content-Type': null,
+        ...options.headers
+    }
+});
+
+/**
+ * Sets the photo order; the first one is the cover. Must list every photo.
+ */
+export const productsReorderImages = <ThrowOnError extends boolean = false>(options: Options<ProductsReorderImagesData, ThrowOnError>): RequestResult<ProductsReorderImagesResponses, unknown, ThrowOnError> => (options.client ?? client).put<ProductsReorderImagesResponses, unknown, ThrowOnError>({
+    url: '/stores/{storeId}/products/{productId}/images/order',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const productsRemoveImage = <ThrowOnError extends boolean = false>(options: Options<ProductsRemoveImageData, ThrowOnError>): RequestResult<ProductsRemoveImageResponses, unknown, ThrowOnError> => (options.client ?? client).delete<ProductsRemoveImageResponses, unknown, ThrowOnError>({ url: '/stores/{storeId}/products/{productId}/images/{imageId}', ...options });
 
 /**
  * Public store page: store info and its active products.
