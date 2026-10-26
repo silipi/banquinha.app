@@ -29,9 +29,10 @@ const nextConfig: NextConfig = {
         // Browser calls from the merchant area go through here, so the API's session
         // cookie is first-party and needs no CORS.
         { source: '/api/:path*', destination: `${apiUrl}/:path*` },
-        // app.<domain>/x is served by src/app/painel/x.
+        // app.<domain>/x is served by src/app/painel/x. /painel/* passes through as is,
+        // so absolute /painel/... URLs (manifest, app icons) work on both hosts.
         {
-          source: '/:path((?!api/|_next/|favicon\\.ico).*)',
+          source: '/:path((?!api/|_next/|painel/|favicon\\.ico).*)',
           has: [{ type: 'host', value: 'app\\..+' }],
           destination: '/painel/:path',
         },

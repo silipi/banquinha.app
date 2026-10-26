@@ -820,6 +820,148 @@
         ]
       }
     },
+    "/stores/{storeId}/orders": {
+      "get": {
+        "operationId": "ordersList",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Only orders with this status. All when omitted.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "new",
+                "confirmed",
+                "completed",
+                "canceled"
+              ]
+            }
+          },
+          {
+            "name": "before",
+            "required": false,
+            "in": "query",
+            "description": "Next page: orders numbered below this (`nextBefore` of the previous page).",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderListDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Newest first, a page at a time, optionally by status.",
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/stores/{storeId}/orders/{orderId}": {
+      "get": {
+        "operationId": "ordersGet",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "The order with its items and the customer's details.",
+        "tags": [
+          "Orders"
+        ]
+      },
+      "patch": {
+        "operationId": "ordersUpdate",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Moves the order along: confirmed, completed or canceled (or back to new).",
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
     "/storefront/{handle}": {
       "get": {
         "operationId": "storefrontGetStore",
@@ -1421,6 +1563,41 @@
             "items": {
               "$ref": "#/components/schemas/StoreSetupStepDto"
             }
+          },
+          "accentColor": {
+            "type": "string",
+            "nullable": true,
+            "description": "The store's own accent color, or null when it uses the theme's."
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "whatsapp": {
+            "type": "string",
+            "description": "Digits only, with country code."
+          },
+          "instagram": {
+            "type": "string",
+            "nullable": true,
+            "description": "Username without the @."
+          },
+          "locationUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "pickupEnabled": {
+            "type": "boolean"
+          },
+          "deliveryEnabled": {
+            "type": "boolean"
+          },
+          "orderCount": {
+            "type": "number"
+          },
+          "newOrderCount": {
+            "type": "number",
+            "description": "Orders still marked as new."
           }
         },
         "required": [
@@ -1434,7 +1611,16 @@
           "theme",
           "productCount",
           "maxProducts",
-          "setup"
+          "setup",
+          "accentColor",
+          "city",
+          "whatsapp",
+          "instagram",
+          "locationUrl",
+          "pickupEnabled",
+          "deliveryEnabled",
+          "orderCount",
+          "newOrderCount"
         ]
       },
       "UploadImageDto": {
@@ -1463,6 +1649,48 @@
             "type": "string",
             "description": "A theme from GET /themes.",
             "format": "uuid"
+          },
+          "accentColor": {
+            "type": "string",
+            "nullable": true,
+            "description": "The store's own button and highlight color on top of its theme, as #rrggbb. The text\non it is picked for contrast. Null goes back to the theme's color.",
+            "pattern": "^#[0-9a-f]{6}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 60
+          },
+          "city": {
+            "type": "string",
+            "nullable": true,
+            "description": "Shown next to the location button. Empty removes it.",
+            "maxLength": 60
+          },
+          "whatsapp": {
+            "type": "string",
+            "description": "Where orders go. Any common format; stored as digits with the country code.",
+            "pattern": "^55\\d{11}$"
+          },
+          "instagram": {
+            "type": "string",
+            "nullable": true,
+            "description": "Username, @username or profile link. Empty removes it."
+          },
+          "locationUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "A maps link (Google Maps, Waze...). Empty removes it.",
+            "maxLength": 500,
+            "format": "uri"
+          },
+          "pickupEnabled": {
+            "type": "boolean",
+            "description": "Customers may pick the order up. At least one way to receive must stay on."
+          },
+          "deliveryEnabled": {
+            "type": "boolean",
+            "description": "Customers may ask for delivery."
           }
         }
       },
@@ -1673,6 +1901,222 @@
           "imageIds"
         ]
       },
+      "OrderSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "number": {
+            "type": "number",
+            "description": "Sequential within the store: \"Pedido #12\"."
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "fulfillment": {
+            "type": "string",
+            "enum": [
+              "pickup",
+              "delivery"
+            ]
+          },
+          "totalCents": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "new",
+              "confirmed",
+              "completed",
+              "canceled"
+            ]
+          },
+          "itemCount": {
+            "type": "number",
+            "description": "Units across all items."
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "customerName",
+          "fulfillment",
+          "totalCents",
+          "status",
+          "itemCount",
+          "createdAt"
+        ]
+      },
+      "OrderStatusCountsDto": {
+        "type": "object",
+        "properties": {
+          "new": {
+            "type": "number"
+          },
+          "confirmed": {
+            "type": "number"
+          },
+          "completed": {
+            "type": "number"
+          },
+          "canceled": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "new",
+          "confirmed",
+          "completed",
+          "canceled"
+        ]
+      },
+      "OrderListDto": {
+        "type": "object",
+        "properties": {
+          "orders": {
+            "description": "Newest first.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderSummaryDto"
+            }
+          },
+          "nextBefore": {
+            "type": "number",
+            "nullable": true,
+            "description": "Pass as `before` for the next page; null on the last one."
+          },
+          "counts": {
+            "description": "All the store's orders per status, regardless of the filter.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderStatusCountsDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "orders",
+          "nextBefore",
+          "counts"
+        ]
+      },
+      "OrderItemDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name and price as they were when the order was placed."
+          },
+          "unitPriceCents": {
+            "type": "number"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "productId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Null when the product was deleted since."
+          }
+        },
+        "required": [
+          "name",
+          "unitPriceCents",
+          "quantity",
+          "productId"
+        ]
+      },
+      "OrderDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "number": {
+            "type": "number",
+            "description": "Sequential within the store: \"Pedido #12\"."
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "fulfillment": {
+            "enum": [
+              "pickup",
+              "delivery"
+            ],
+            "type": "string"
+          },
+          "totalCents": {
+            "type": "number"
+          },
+          "status": {
+            "enum": [
+              "new",
+              "confirmed",
+              "completed",
+              "canceled"
+            ],
+            "type": "string"
+          },
+          "itemCount": {
+            "type": "number",
+            "description": "Units across all items."
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string",
+            "nullable": true,
+            "description": "Delivery address; null for pickup."
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItemDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "customerName",
+          "fulfillment",
+          "totalCents",
+          "status",
+          "itemCount",
+          "createdAt",
+          "address",
+          "note",
+          "items"
+        ]
+      },
+      "UpdateOrderDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "new",
+              "confirmed",
+              "completed",
+              "canceled"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
       "StorefrontContactDto": {
         "type": "object",
         "properties": {
@@ -1735,6 +2179,17 @@
           "contact": {
             "$ref": "#/components/schemas/StorefrontContactDto"
           },
+          "fulfillment": {
+            "type": "array",
+            "description": "Ways to receive an order the store offers. Never empty.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "pickup",
+                "delivery"
+              ]
+            }
+          },
           "products": {
             "description": "Active products, in display order.",
             "type": "array",
@@ -1769,6 +2224,7 @@
           "bio",
           "city",
           "contact",
+          "fulfillment",
           "products",
           "handle",
           "name",

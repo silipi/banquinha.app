@@ -57,6 +57,13 @@
       "when": 1792781325220,
       "tag": "0007_stores_use_theme_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793033732312,
+      "tag": "0008_fulfillment_and_order_status",
+      "breakpoints": true
     }
   ]
 }

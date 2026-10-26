@@ -18,25 +18,21 @@ import { panelApi, panelPath } from '@/lib/panel';
 import { themeStyle } from '@/lib/store-theme';
 import { storeDisplayUrl } from '@/lib/storefront-links';
 import { cn } from '@/lib/utils';
+import { InstallApp } from './InstallApp';
 import { SETUP_LABELS, usePanel } from './panel-context';
 
 const NAV = [
-  { label: 'Início', icon: Home, href: '/', ready: true },
-  { label: 'Produtos', icon: Package, href: '/produtos', ready: true },
-  { label: 'Pedidos', icon: Receipt, href: '/pedidos', ready: false },
-  {
-    label: 'Configurações',
-    icon: Settings,
-    href: '/configuracoes',
-    ready: false,
-  },
+  { label: 'Início', icon: Home, href: '/' },
+  { label: 'Produtos', icon: Package, href: '/produtos' },
+  { label: 'Pedidos', icon: Receipt, href: '/pedidos' },
+  { label: 'Configurações', icon: Settings, href: '/configuracoes' },
 ];
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const router = useRouter();
   // "/produtos" on the app. host, "/painel/produtos" elsewhere.
   const currentPath = usePathname().replace(/^\/painel(?=\/|$)/, '') || '/';
-  const { me } = usePanel();
+  const { me, store } = usePanel();
 
   async function logout() {
     await authLogout({ client: panelApi }).catch(() => {});
@@ -52,35 +48,33 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       <StoreSwitcher />
 
       <nav aria-label="Painel" className="flex flex-col gap-0.5">
-        {NAV.map(({ label, icon: Icon, href, ready }) =>
-          ready ? (
-            <a
-              key={label}
-              href={panelPath(href)}
-              onClick={onNavigate}
-              aria-current={currentPath === href ? 'page' : undefined}
-              className={cn(
-                'flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium hover:bg-muted/60',
-                currentPath === href && 'bg-muted hover:bg-muted',
-              )}
-            >
-              <Icon className="size-4" /> {label}
-            </a>
-          ) : (
-            <span
-              key={label}
-              className="flex h-10 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground"
-            >
-              <Icon className="size-4" /> {label}
-              <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[11px]">
-                Em breve
+        {NAV.map(({ label, icon: Icon, href }) => (
+          <a
+            key={label}
+            href={panelPath(href)}
+            onClick={onNavigate}
+            aria-current={currentPath === href ? 'page' : undefined}
+            className={cn(
+              'flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium hover:bg-muted/60',
+              currentPath === href && 'bg-muted hover:bg-muted',
+            )}
+          >
+            <Icon className="size-4" /> {label}
+            {href === '/pedidos' && Boolean(store?.newOrderCount) && (
+              <span
+                className="ml-auto rounded-full bg-brand px-2 py-0.5 text-[11px] font-semibold text-brand-foreground"
+                aria-label={`${store!.newOrderCount} pedidos novos`}
+              >
+                {store!.newOrderCount}
               </span>
-            </span>
-          ),
-        )}
+            )}
+          </a>
+        ))}
       </nav>
 
       <SetupBadge onNavigate={onNavigate} />
+
+      <InstallApp />
 
       <div className="mt-auto flex items-center gap-3 border-t pt-4">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-ink text-sm font-semibold text-ink-foreground">

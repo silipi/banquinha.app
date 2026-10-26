@@ -20,6 +20,7 @@ import {
   type CreateOrderResponseDto,
 } from './dto/create-order.dto.js';
 import { buildOrderMessage, whatsappUrl } from './order-message.js';
+import { offeredFulfillment } from './fulfillment.js';
 
 /** Sums quantities of repeated products, keeping the cart order. */
 function mergeItems(items: CreateOrderItemDto[]): Map<string, number> {
@@ -56,6 +57,13 @@ export class StorefrontOrdersService {
         .where(eq(stores.handle, handle.toLowerCase()))
         .for('update');
       if (!store) throw new NotFoundException('Loja não encontrada');
+      if (!offeredFulfillment(store).includes(input.fulfillment)) {
+        throw new BadRequestException(
+          input.fulfillment === 'delivery'
+            ? 'Essa loja não faz entrega. Escolha retirar o pedido.'
+            : 'Essa loja só faz entrega. Informe o endereço.',
+        );
+      }
 
       const found = await tx
         .select({

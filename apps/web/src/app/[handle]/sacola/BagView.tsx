@@ -15,10 +15,16 @@ import { placeOrder } from './actions';
 
 type Fulfillment = 'pickup' | 'delivery';
 
+const FULFILLMENT_LABELS: Record<Fulfillment, string> = {
+  pickup: 'Vou retirar',
+  delivery: 'Quero entrega',
+};
+
 const field =
   'w-full rounded-store-sm border bg-surface px-4 py-3 outline-none transition-shadow placeholder:text-muted-foreground focus:ring-2 focus:ring-store';
 
-export function BagView() {
+/** `fulfillment`: the ways to receive an order the store offers (never empty). */
+export function BagView({ fulfillment }: { fulfillment: Fulfillment[] }) {
   const cart = useCart();
   const [placed, setPlaced] = useState<{
     number: number;
@@ -73,6 +79,7 @@ export function BagView() {
             </span>
           </div>
           <CheckoutForm
+            fulfillmentOptions={fulfillment}
             onPlaced={(order) => {
               cart.clear();
               setPlaced(order);
@@ -161,12 +168,16 @@ function BagItem({
 }
 
 function CheckoutForm({
+  fulfillmentOptions,
   onPlaced,
 }: {
+  fulfillmentOptions: Fulfillment[];
   onPlaced: (order: { number: number; whatsappUrl: string }) => void;
 }) {
   const cart = useCart();
-  const [fulfillment, setFulfillment] = useState<Fulfillment>('pickup');
+  const [fulfillment, setFulfillment] = useState<Fulfillment>(
+    fulfillmentOptions[0] ?? 'pickup',
+  );
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
 
@@ -214,37 +225,42 @@ function CheckoutForm({
         />
       </label>
 
-      <fieldset>
-        <legend className="mb-2 text-sm font-medium">
-          Como prefere receber?
-        </legend>
-        <div className="grid grid-cols-2 gap-3">
-          {(
-            [
-              ['pickup', 'Vou retirar'],
-              ['delivery', 'Quero entrega'],
-            ] as const
-          ).map(([value, label]) => (
-            <label
-              key={value}
-              className={cn(
-                'flex h-12 cursor-pointer items-center justify-center rounded-full border bg-surface text-sm font-medium transition-colors has-focus-visible:ring-2 has-focus-visible:ring-store',
-                fulfillment === value && 'border-store bg-store-soft',
-              )}
-            >
-              <input
-                type="radio"
-                name="fulfillment"
-                value={value}
-                checked={fulfillment === value}
-                onChange={() => setFulfillment(value)}
-                className="sr-only"
-              />
-              {label}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      {fulfillmentOptions.length === 1 ? (
+        <p className="rounded-store-sm bg-store-soft px-4 py-3 text-sm">
+          {fulfillment === 'pickup'
+            ? 'Essa loja trabalha com retirada: você combina com ela onde e quando buscar.'
+            : 'Essa loja trabalha com entrega: informe o endereço abaixo.'}
+        </p>
+      ) : (
+        <fieldset>
+          <legend className="mb-2 text-sm font-medium">
+            Como prefere receber?
+          </legend>
+          <div className="grid grid-cols-2 gap-3">
+            {fulfillmentOptions
+              .map((value) => [value, FULFILLMENT_LABELS[value]] as const)
+              .map(([value, label]) => (
+                <label
+                  key={value}
+                  className={cn(
+                    'flex h-12 cursor-pointer items-center justify-center rounded-full border bg-surface text-sm font-medium transition-colors has-focus-visible:ring-2 has-focus-visible:ring-store',
+                    fulfillment === value && 'border-store bg-store-soft',
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="fulfillment"
+                    value={value}
+                    checked={fulfillment === value}
+                    onChange={() => setFulfillment(value)}
+                    className="sr-only"
+                  />
+                  {label}
+                </label>
+              ))}
+          </div>
+        </fieldset>
+      )}
 
       {fulfillment === 'delivery' && (
         <label className="block">

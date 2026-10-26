@@ -9,14 +9,16 @@ import {
   productsUpdate,
   type ProductDto,
 } from '@banquinha/api-client';
-import { ImagePlus, LoaderCircle, Star, Trash2, X } from 'lucide-react';
+import { ImagePlus, LoaderCircle, Star, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { SwitchRow } from '@/components/ui/switch';
 import { apiErrorMessage, panelApi } from '@/lib/panel';
 import { formatPriceInput, parsePriceInput } from '@/lib/price-input';
 import { shrinkImage } from '@/lib/shrink-image';
 import { cn } from '@/lib/utils';
+import { Dialog } from '../../../_components/Dialog';
 import { Field, FormError } from '../../../_components/fields';
 
 /** A photo already saved, or one picked here and not uploaded yet. */
@@ -83,7 +85,6 @@ export function ProductEditor({
   const [busy, setBusy] = useState<'save' | 'delete' | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
-  const titleId = useId();
   const priceId = useId();
   const descriptionId = useId();
 
@@ -112,14 +113,6 @@ export function ProductEditor({
     if (product !== initial) void onSaved();
     onClose();
   }
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  });
 
   function edit(changes: Partial<Draft>) {
     setDraft((current) => ({ ...current, ...changes }));
@@ -309,201 +302,11 @@ export function ProductEditor({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6">
-      <button
-        type="button"
-        aria-label="Fechar"
-        onClick={close}
-        className="absolute inset-0 bg-ink/40"
-      />
-      <div
-        role="dialog"
-        aria-modal
-        aria-labelledby={titleId}
-        className="relative flex max-h-dvh w-full flex-col overflow-hidden bg-background shadow-xl max-sm:h-dvh sm:max-h-[90dvh] sm:max-w-lg sm:rounded-3xl"
-      >
-        <header className="flex items-center justify-between border-b px-5 py-4">
-          <h2 id={titleId} className="font-display text-xl font-bold">
-            {initial ? 'Editar produto' : 'Novo produto'}
-          </h2>
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Fechar"
-            className="flex size-9 items-center justify-center rounded-full hover:bg-muted"
-          >
-            <X className="size-5" />
-          </button>
-        </header>
-
-        <div className="relative flex-1 overflow-y-auto">
-          {busy && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-background/70 text-sm font-medium backdrop-blur-[2px]">
-              <LoaderCircle className="size-7 animate-spin" />
-              {busy === 'save' ? 'Salvando produto…' : 'Apagando produto…'}
-            </div>
-          )}
-          <div inert={busy !== null} className="flex flex-col gap-5 p-5">
-            <section>
-              <div className="mb-2 flex items-baseline justify-between">
-                <span className="text-sm font-medium">Fotos</span>
-                <span className="text-xs text-muted-foreground">
-                  {draft.images.length} de {maxImages} · a primeira é a capa
-                </span>
-              </div>
-              <input
-                ref={fileInput}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={(event) => {
-                  const files = event.target.files;
-                  if (files?.length) void pickPhotos(files);
-                  event.target.value = '';
-                }}
-              />
-              <ul className="grid grid-cols-3 gap-3">
-                {draft.images.map((image, index) => (
-                  <li
-                    key={image.key}
-                    className="group relative aspect-square overflow-hidden rounded-2xl border bg-muted"
-                  >
-                    <Image
-                      src={image.url}
-                      alt={`Foto ${index + 1}`}
-                      fill
-                      sizes="160px"
-                      unoptimized={image.url.startsWith('blob:')}
-                      className="object-cover"
-                    />
-                    {index === 0 ? (
-                      <span className="absolute bottom-1.5 left-1.5 flex h-6 items-center gap-1 rounded-full bg-ink px-2 text-[11px] font-medium text-ink-foreground">
-                        <Star className="size-3 fill-current" /> Capa
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => makeCover(image.key)}
-                        aria-label={`Usar a foto ${index + 1} como capa`}
-                        title="Usar como capa"
-                        className="absolute bottom-1.5 left-1.5 flex size-7 items-center justify-center rounded-full bg-background/90"
-                      >
-                        <Star className="size-3.5" />
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => removePhoto(image.key)}
-                      aria-label={`Remover a foto ${index + 1}`}
-                      className="absolute top-1.5 right-1.5 flex size-7 items-center justify-center rounded-full bg-background/90"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
-                  </li>
-                ))}
-                {draft.images.length < maxImages && (
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => fileInput.current?.click()}
-                      className="flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
-                    >
-                      <ImagePlus className="size-6" />
-                      Adicionar
-                    </button>
-                  </li>
-                )}
-              </ul>
-            </section>
-
-            <Field
-              label="Nome"
-              value={draft.name}
-              error={errors.name}
-              maxLength={80}
-              autoCapitalize="sentences"
-              placeholder="Ex.: Bolo de pote de chocolate"
-              onChange={(event) => edit({ name: event.target.value })}
-            />
-
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor={priceId} className="text-sm font-medium">
-                Preço
-              </label>
-              <div
-                className={cn(
-                  'flex h-13 items-center gap-2 rounded-2xl border bg-surface px-4 focus-within:border-foreground/40',
-                  errors.price && 'border-red-400',
-                )}
-              >
-                <span className="text-muted-foreground">R$</span>
-                <input
-                  id={priceId}
-                  inputMode="numeric"
-                  value={formatPriceInput(draft.priceCents)}
-                  placeholder="0,00"
-                  aria-invalid={Boolean(errors.price)}
-                  onChange={(event) =>
-                    edit({ priceCents: parsePriceInput(event.target.value) })
-                  }
-                  className="h-full min-w-0 flex-1 bg-transparent text-base font-medium tabular-nums outline-none placeholder:text-muted-foreground/60"
-                />
-              </div>
-              {errors.price && (
-                <p role="alert" className="text-sm text-red-600">
-                  {errors.price}
-                </p>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor={descriptionId} className="text-sm font-medium">
-                Descrição{' '}
-                <span className="font-normal text-muted-foreground">
-                  (opcional)
-                </span>
-              </label>
-              <textarea
-                id={descriptionId}
-                value={draft.description}
-                rows={3}
-                maxLength={500}
-                placeholder="Tamanho, sabor, material…"
-                onChange={(event) => edit({ description: event.target.value })}
-                className="w-full resize-none rounded-2xl border bg-surface px-4 py-3 text-base outline-none placeholder:text-muted-foreground/60 focus:border-foreground/40"
-              />
-            </div>
-
-            <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border bg-surface px-4 py-3">
-              <span>
-                <span className="block text-sm font-medium">
-                  Mostrar na loja
-                </span>
-                <span className="block text-sm text-muted-foreground">
-                  {draft.active
-                    ? 'Clientes veem e podem pedir.'
-                    : 'Escondido: só você vê aqui no painel.'}
-                </span>
-              </span>
-              <input
-                type="checkbox"
-                role="switch"
-                checked={draft.active}
-                onChange={(event) => edit({ active: event.target.checked })}
-                className="peer sr-only"
-              />
-              <span
-                aria-hidden
-                className="relative h-7 w-12 shrink-0 rounded-full bg-muted transition-colors peer-checked:bg-ink peer-focus-visible:ring-2 peer-focus-visible:ring-brand after:absolute after:top-1 after:left-1 after:size-5 after:rounded-full after:bg-background after:shadow-sm after:transition-transform peer-checked:after:translate-x-5"
-              />
-            </label>
-
-            <FormError>{formError}</FormError>
-          </div>
-        </div>
-
-        <footer className="flex flex-wrap items-center gap-2 border-t px-5 py-4">
+    <Dialog
+      title={initial ? 'Editar produto' : 'Novo produto'}
+      onClose={close}
+      footer={
+        <>
           {initial &&
             (confirmDelete ? (
               <span className="flex flex-1 flex-wrap items-center gap-2">
@@ -551,8 +354,160 @@ export function ProductEditor({
               </Button>
             </span>
           )}
-        </footer>
+        </>
+      }
+    >
+      {busy && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-background/70 text-sm font-medium backdrop-blur-[2px]">
+          <LoaderCircle className="size-7 animate-spin" />
+          {busy === 'save' ? 'Salvando produto…' : 'Apagando produto…'}
+        </div>
+      )}
+      <div inert={busy !== null} className="flex flex-col gap-5 p-5">
+        <section>
+          <div className="mb-2 flex items-baseline justify-between">
+            <span className="text-sm font-medium">Fotos</span>
+            <span className="text-xs text-muted-foreground">
+              {draft.images.length} de {maxImages} · a primeira é a capa
+            </span>
+          </div>
+          <input
+            ref={fileInput}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(event) => {
+              const files = event.target.files;
+              if (files?.length) void pickPhotos(files);
+              event.target.value = '';
+            }}
+          />
+          <ul className="grid grid-cols-3 gap-3">
+            {draft.images.map((image, index) => (
+              <li
+                key={image.key}
+                className="group relative aspect-square overflow-hidden rounded-2xl border bg-muted"
+              >
+                <Image
+                  src={image.url}
+                  alt={`Foto ${index + 1}`}
+                  fill
+                  sizes="160px"
+                  unoptimized={image.url.startsWith('blob:')}
+                  className="object-cover"
+                />
+                {index === 0 ? (
+                  <span className="absolute bottom-1.5 left-1.5 flex h-6 items-center gap-1 rounded-full bg-ink px-2 text-[11px] font-medium text-ink-foreground">
+                    <Star className="size-3 fill-current" /> Capa
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => makeCover(image.key)}
+                    aria-label={`Usar a foto ${index + 1} como capa`}
+                    title="Usar como capa"
+                    className="absolute bottom-1.5 left-1.5 flex size-7 items-center justify-center rounded-full bg-background/90"
+                  >
+                    <Star className="size-3.5" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => removePhoto(image.key)}
+                  aria-label={`Remover a foto ${index + 1}`}
+                  className="absolute top-1.5 right-1.5 flex size-7 items-center justify-center rounded-full bg-background/90"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              </li>
+            ))}
+            {draft.images.length < maxImages && (
+              <li>
+                <button
+                  type="button"
+                  onClick={() => fileInput.current?.click()}
+                  className="flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+                >
+                  <ImagePlus className="size-6" />
+                  Adicionar
+                </button>
+              </li>
+            )}
+          </ul>
+        </section>
+
+        <Field
+          label="Nome"
+          value={draft.name}
+          error={errors.name}
+          maxLength={80}
+          autoCapitalize="sentences"
+          placeholder="Ex.: Bolo de pote de chocolate"
+          onChange={(event) => edit({ name: event.target.value })}
+        />
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={priceId} className="text-sm font-medium">
+            Preço
+          </label>
+          <div
+            className={cn(
+              'flex h-13 items-center gap-2 rounded-2xl border bg-surface px-4 focus-within:border-foreground/40',
+              errors.price && 'border-red-400',
+            )}
+          >
+            <span className="text-muted-foreground">R$</span>
+            <input
+              id={priceId}
+              inputMode="numeric"
+              value={formatPriceInput(draft.priceCents)}
+              placeholder="0,00"
+              aria-invalid={Boolean(errors.price)}
+              onChange={(event) =>
+                edit({ priceCents: parsePriceInput(event.target.value) })
+              }
+              className="h-full min-w-0 flex-1 bg-transparent text-base font-medium tabular-nums outline-none placeholder:text-muted-foreground/60"
+            />
+          </div>
+          {errors.price && (
+            <p role="alert" className="text-sm text-red-600">
+              {errors.price}
+            </p>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={descriptionId} className="text-sm font-medium">
+            Descrição{' '}
+            <span className="font-normal text-muted-foreground">
+              (opcional)
+            </span>
+          </label>
+          <textarea
+            id={descriptionId}
+            value={draft.description}
+            rows={3}
+            maxLength={500}
+            placeholder="Tamanho, sabor, material…"
+            onChange={(event) => edit({ description: event.target.value })}
+            className="w-full resize-none rounded-2xl border bg-surface px-4 py-3 text-base outline-none placeholder:text-muted-foreground/60 focus:border-foreground/40"
+          />
+        </div>
+
+        <SwitchRow
+          label="Mostrar na loja"
+          description={
+            draft.active
+              ? 'Clientes veem e podem pedir.'
+              : 'Escondido: só você vê aqui no painel.'
+          }
+          checked={draft.active}
+          onChange={(active) => edit({ active })}
+        />
+
+        <FormError>{formError}</FormError>
       </div>
-    </div>
+    </Dialog>
   );
 }

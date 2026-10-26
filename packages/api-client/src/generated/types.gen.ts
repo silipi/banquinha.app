@@ -177,6 +177,27 @@ export type StoreDashboardDto = {
      * Optional customizations, in the order to suggest them.
      */
     setup: Array<StoreSetupStepDto>;
+    /**
+     * The store's own accent color, or null when it uses the theme's.
+     */
+    accentColor: string | null;
+    city: string | null;
+    /**
+     * Digits only, with country code.
+     */
+    whatsapp: string;
+    /**
+     * Username without the @.
+     */
+    instagram: string | null;
+    locationUrl: string | null;
+    pickupEnabled: boolean;
+    deliveryEnabled: boolean;
+    orderCount: number;
+    /**
+     * Orders still marked as new.
+     */
+    newOrderCount: number;
 };
 
 export type UploadImageDto = {
@@ -195,6 +216,36 @@ export type UpdateStoreDto = {
      * A theme from GET /themes.
      */
     themeId?: string;
+    /**
+     * The store's own button and highlight color on top of its theme, as #rrggbb. The text
+     * on it is picked for contrast. Null goes back to the theme's color.
+     */
+    accentColor?: string | null;
+    name?: string;
+    /**
+     * Shown next to the location button. Empty removes it.
+     */
+    city?: string | null;
+    /**
+     * Where orders go. Any common format; stored as digits with the country code.
+     */
+    whatsapp?: string;
+    /**
+     * Username, @username or profile link. Empty removes it.
+     */
+    instagram?: string | null;
+    /**
+     * A maps link (Google Maps, Waze...). Empty removes it.
+     */
+    locationUrl?: string | null;
+    /**
+     * Customers may pick the order up. At least one way to receive must stay on.
+     */
+    pickupEnabled?: boolean;
+    /**
+     * Customers may ask for delivery.
+     */
+    deliveryEnabled?: boolean;
 };
 
 export type ThemeDto = {
@@ -288,6 +339,85 @@ export type ReorderProductImagesDto = {
     imageIds: Array<string>;
 };
 
+export type OrderSummaryDto = {
+    id: string;
+    /**
+     * Sequential within the store: "Pedido #12".
+     */
+    number: number;
+    customerName: string;
+    fulfillment: 'pickup' | 'delivery';
+    totalCents: number;
+    status: 'new' | 'confirmed' | 'completed' | 'canceled';
+    /**
+     * Units across all items.
+     */
+    itemCount: number;
+    createdAt: string;
+};
+
+export type OrderStatusCountsDto = {
+    new: number;
+    confirmed: number;
+    completed: number;
+    canceled: number;
+};
+
+export type OrderListDto = {
+    /**
+     * Newest first.
+     */
+    orders: Array<OrderSummaryDto>;
+    /**
+     * Pass as `before` for the next page; null on the last one.
+     */
+    nextBefore: number | null;
+    /**
+     * All the store's orders per status, regardless of the filter.
+     */
+    counts: OrderStatusCountsDto;
+};
+
+export type OrderItemDto = {
+    /**
+     * Name and price as they were when the order was placed.
+     */
+    name: string;
+    unitPriceCents: number;
+    quantity: number;
+    /**
+     * Null when the product was deleted since.
+     */
+    productId: string | null;
+};
+
+export type OrderDto = {
+    id: string;
+    /**
+     * Sequential within the store: "Pedido #12".
+     */
+    number: number;
+    customerName: string;
+    fulfillment: 'pickup' | 'delivery';
+    totalCents: number;
+    status: 'new' | 'confirmed' | 'completed' | 'canceled';
+    /**
+     * Units across all items.
+     */
+    itemCount: number;
+    createdAt: string;
+    /**
+     * Delivery address; null for pickup.
+     */
+    address: string | null;
+    note: string | null;
+    items: Array<OrderItemDto>;
+};
+
+export type UpdateOrderDto = {
+    status: 'new' | 'confirmed' | 'completed' | 'canceled';
+};
+
 export type StorefrontContactDto = {
     /**
      * Digits only, with country code.
@@ -314,6 +444,10 @@ export type StorefrontStoreDto = {
     bio: string | null;
     city: string | null;
     contact: StorefrontContactDto;
+    /**
+     * Ways to receive an order the store offers. Never empty.
+     */
+    fulfillment: Array<'pickup' | 'delivery'>;
     /**
      * Active products, in display order.
      */
@@ -745,6 +879,62 @@ export type ProductsRemoveImageResponses = {
 };
 
 export type ProductsRemoveImageResponse = ProductsRemoveImageResponses[keyof ProductsRemoveImageResponses];
+
+export type OrdersListData = {
+    body?: never;
+    path: {
+        storeId: string;
+    };
+    query?: {
+        /**
+         * Only orders with this status. All when omitted.
+         */
+        status?: 'new' | 'confirmed' | 'completed' | 'canceled';
+        /**
+         * Next page: orders numbered below this (`nextBefore` of the previous page).
+         */
+        before?: number;
+    };
+    url: '/stores/{storeId}/orders';
+};
+
+export type OrdersListResponses = {
+    200: OrderListDto;
+};
+
+export type OrdersListResponse = OrdersListResponses[keyof OrdersListResponses];
+
+export type OrdersGetData = {
+    body?: never;
+    path: {
+        storeId: string;
+        orderId: string;
+    };
+    query?: never;
+    url: '/stores/{storeId}/orders/{orderId}';
+};
+
+export type OrdersGetResponses = {
+    200: OrderDto;
+};
+
+export type OrdersGetResponse = OrdersGetResponses[keyof OrdersGetResponses];
+
+export type OrdersUpdateData = {
+    body: UpdateOrderDto;
+    path: {
+        storeId: string;
+        orderId: string;
+    };
+    query?: never;
+    url: '/stores/{storeId}/orders/{orderId}';
+};
+
+export type OrdersUpdateResponses = {
+    200: OrderDto;
+};
+
+export type OrdersUpdateResponse = OrdersUpdateResponses[keyof OrdersUpdateResponses];
 
 export type StorefrontGetStoreData = {
     body?: never;

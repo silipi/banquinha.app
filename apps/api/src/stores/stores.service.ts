@@ -6,15 +6,22 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, count, eq, inArray } from 'drizzle-orm';
+import { and, count, eq, inArray, sql } from 'drizzle-orm';
 import type { AuthUser } from '../auth/current-user.decorator.js';
 import type { Db } from '../database/database.js';
 import { DB } from '../database/database.module.js';
-import { products, stores, themes, users } from '../database/schema/index.js';
+import {
+  orders,
+  products,
+  stores,
+  themes,
+  users,
+} from '../database/schema/index.js';
 import { ImagesService } from '../images/images.service.js';
 import { PLANS } from '../plans/plans.js';
 import { uniqueProductSlug } from '../products/product-slug.js';
-import { resolveTheme } from '../themes/theme-tokens.js';
+import { readableTextOn } from '../themes/contrast.js';
+import { resolveTheme, type ThemeOverrides } from '../themes/theme-tokens.js';
 import { ThemesService } from '../themes/themes.service.js';
 import type { CheckHandleResponseDto } from './dto/check-handle.dto.js';
 import type {
@@ -39,6 +46,30 @@ const PROBLEM_MESSAGES: Record<StoreHandleProblem, string> = {
 const HANDLE_TAKEN = 'Esse endereço já está em uso';
 
 type StoreRow = typeof stores.$inferSelect;
+
+/** Overrides with the accent color (and legible text on it) set, or removed for null. */
+function withAccent(
+  overrides: ThemeOverrides | null,
+  accent: string | null,
+): ThemeOverrides | null {
+  const {
+    accent: _accent,
+    accentForeground: _accentForeground,
+    ...colors
+  } = overrides?.colors ?? {};
+  const next: ThemeOverrides = {
+    ...overrides,
+    colors: accent
+      ? {
+          ...colors,
+          accent: accent.toLowerCase(),
+          accentForeground: readableTextOn(accent),
+        }
+      : colors,
+  };
+  if (Object.keys(next.colors ?? {}).length === 0) delete next.colors;
+  return Object.keys(next).length > 0 ? next : null;
+}
 
 const IMAGE_COLUMNS = {
   logo: 'logoUrl',
@@ -171,6 +202,13 @@ export class StoresService {
       .select({ productCount: count() })
       .from(products)
       .where(eq(products.storeId, store.id));
+    const [orderCounts = { total: 0, fresh: 0 }] = await this.db
+      .select({
+        total: count(),
+        fresh: count(sql`case when ${orders.status} = 'new' then 1 end`),
+      })
+      .from(orders)
+      .where(eq(orders.storeId, store.id));
     const [theme] = await this.db
       .select({ tokens: themes.tokens })
       .from(themes)
@@ -186,8 +224,17 @@ export class StoresService {
       bannerUrl: store.bannerUrl,
       themeId: store.themeId,
       theme: resolveTheme(theme.tokens, store.themeOverrides),
+      accentColor: store.themeOverrides?.colors?.accent ?? null,
+      city: store.city,
+      whatsapp: store.whatsapp,
+      instagram: store.instagram,
+      locationUrl: store.locationUrl,
+      pickupEnabled: store.pickupEnabled,
+      deliveryEnabled: store.deliveryEnabled,
       productCount,
       maxProducts: PLANS[user.plan].maxProducts,
+      orderCount: orderCounts.total,
+      newOrderCount: orderCounts.fresh,
       setup: [
         { id: 'logo', done: Boolean(store.logoUrl) },
         { id: 'banner', done: Boolean(store.bannerUrl) },
@@ -196,17 +243,46 @@ export class StoresService {
     };
   }
 
+  /** Edits store details. Only the fields sent change. */
   async update(
     user: AuthUser,
     id: string,
     input: UpdateStoreDto,
   ): Promise<StoreDashboardDto> {
-    await this.findOwned(user, id);
+    const store = await this.findOwned(user, id);
     const changes: Partial<StoreRow> = {};
-    if (input.bio !== undefined) changes.bio = input.bio;
+    for (const field of [
+      'bio',
+      'name',
+      'city',
+      'whatsapp',
+      'instagram',
+      'locationUrl',
+      'pickupEnabled',
+      'deliveryEnabled',
+    ] as const) {
+      if (input[field] !== undefined) {
+        (changes as Record<string, unknown>)[field] = input[field];
+      }
+    }
     if (input.themeId !== undefined) {
       changes.themeId = (await this.themes.findUsable(user, input.themeId)).id;
     }
+    if (input.accentColor !== undefined) {
+      changes.themeOverrides = withAccent(
+        store.themeOverrides,
+        input.accentColor,
+      );
+    }
+
+    const pickup = changes.pickupEnabled ?? store.pickupEnabled;
+    const delivery = changes.deliveryEnabled ?? store.deliveryEnabled;
+    if (!pickup && !delivery) {
+      throw new BadRequestException(
+        'Deixe pelo menos uma forma de receber ligada: retirada ou entrega.',
+      );
+    }
+
     if (Object.keys(changes).length > 0) {
       await this.db.update(stores).set(changes).where(eq(stores.id, id));
     }

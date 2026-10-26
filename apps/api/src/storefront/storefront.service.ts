@@ -4,6 +4,7 @@ import type { Db } from '../database/database.js';
 import { DB } from '../database/database.module.js';
 import { productImages, products, stores } from '../database/schema/index.js';
 import { resolveTheme, type ThemeTokens } from '../themes/theme-tokens.js';
+import { offeredFulfillment } from './fulfillment.js';
 import type {
   SitemapStoreDto,
   StorefrontProductDto,
@@ -64,6 +65,7 @@ export class StorefrontService {
         instagram: store.instagram,
         locationUrl: store.locationUrl,
       },
+      fulfillment: offeredFulfillment(store),
       products: store.products.map((product) => ({
         slug: product.slug,
         name: product.name,

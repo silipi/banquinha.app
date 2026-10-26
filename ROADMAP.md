@@ -253,19 +253,23 @@ Criar, editar, reordenar, ativar/desativar e apagar produtos com várias fotos.
 - [x] Mudanças aparecem na vitrine na hora (`updateTag` em `store:<handle>`)
 - [x] Slugs gerados a partir do nome, únicos por loja
 
-### P2-06 · Configurações da loja ⬜
+### P2-06 · Configurações da loja ✅
 
 Editar nome, bio, cidade, logo, cor, WhatsApp, Instagram, link de localização e quais formas de receber a loja oferece (retirada, entrega).
 
-- [ ] A sacola só mostra as formas de receber que a loja oferece
-- [ ] A cor da loja mantém contraste legível nos botões
+**Como ficou (feito em 2026-10-26):** página **Configurações** com nome da loja, WhatsApp dos pedidos, Instagram (aceita `@nome` ou o link do perfil), link da localização, cidade e as formas de receber (retirada e entrega; pelo menos uma fica ligada). Salva tudo de uma vez. O endereço da loja aparece, mas não muda. Logo, banner, descrição, tema e **cor dos botões** ficam na vitrine editável do Início, com prévia. A cor vem de 8 sugestões ou de qualquer cor; a API escolhe texto branco ou escuro em cima dela pelo contraste (WCAG) e o painel avisa quando a cor é clara demais para textos.
 
-### P2-07 · Lista de pedidos ⬜
+- [x] A sacola só mostra as formas de receber que a loja oferece (e a API recusa pedido numa forma desligada)
+- [x] A cor da loja mantém contraste legível nos botões
+
+### P2-07 · Lista de pedidos ✅
 
 Listar os pedidos recebidos pela vitrine com status (novo, confirmado, concluído, cancelado).
 
-- [ ] Mais recentes primeiro, filtro por status
-- [ ] Abrir um pedido mostra itens, totais e dados do cliente
+**Como ficou (feito em 2026-10-26):** página **Pedidos** com filtros por status (com a contagem de cada um), 30 por página ("Ver mais pedidos"), e o detalhe com itens, preços da época, total, retirada ou entrega (com link do endereço no mapa) e observação. O botão principal leva o pedido para o próximo passo (confirmar → concluir), com cancelar e reabrir. O menu mostra quantos pedidos novos existem.
+
+- [x] Mais recentes primeiro, filtro por status
+- [x] Abrir um pedido mostra itens, totais e dados do cliente
 
 ### P2-08 · Limites do plano grátis ✅
 
@@ -274,12 +278,14 @@ Aplicar na API os limites do plano grátis (número de produtos, fotos por produ
 - [x] Limites aplicados na API, com mensagens claras em pt-BR: lojas por conta, produtos por loja (no onboarding e depois) e fotos por produto (3 no Grátis)
 - [x] O painel mostra o uso em relação ao limite ("2 de 10 produtos")
 
-### P2-09 · Painel instalável (PWA) ⬜
+### P2-09 · Painel instalável (PWA) 🚧
 
 Manifest, ícones e um shell que funciona offline para o lojista instalar o painel no celular.
 
-- [ ] Instalável no Android e no iOS
-- [ ] Abre direto no painel
+**Como ficou (feito em 2026-10-26):** manifest em `/painel/manifest.webmanifest` (o início e o escopo mudam conforme o host: `/` no `app.`, `/painel/` no site), ícones "b." gerados com a fonte da marca (também como ícone adaptável do Android e da tela inicial do iPhone) e um service worker (`public/painel/sw.js`) que guarda os arquivos do app e mostra uma tela "Você está sem internet" em vez do erro do navegador. Na sidebar, "Instalar no celular": no Android abre o pedido de instalação; no iPhone explica Compartilhar → Adicionar à Tela de Início.
+
+- [ ] Instalável no Android e no iOS (testar num celular de verdade depois do deploy)
+- [x] Abre direto no painel
 
 ### P2-10 · Ativação depois do cadastro 🚧
 
@@ -288,14 +294,15 @@ Fazer a loja recém-criada virar uma loja que vende. A pessoa já saiu do onboar
 **Layout do painel (feito em 2026-10-23):** sidebar + conteúdo. A sidebar tem o seletor de loja (uma loja por conta hoje; mais lojas podem vir com os planos pagos), o menu, o **mini wizard "Deixe sua loja completa"** e o usuário logado com o botão de sair. No celular, a sidebar vira um menu lateral.
 
 - **Checklist "Deixe sua loja completa"** (calculado na API, em `setup`): por enquanto logo, banner e descrição. Aparece na sidebar e em detalhe na página inicial; some quando tudo estiver feito. Tarefas incompletas ficam na cabeça (efeito Zeigarnik).
-- **Vitrine editável "Sua vitrine"** (feito em 2026-10-26): na página inicial, no lugar de um checklist, uma cópia da loja (banner, logo, nome, descrição, botão de WhatsApp e 3 produtos de exemplo) onde a pessoa toca no que quer mudar, mais a escolha de tema. As mudanças ficam num rascunho, com prévia na hora, até tocar em **Publicar** (ou Descartar); sair da página com rascunho pede confirmação. O que ainda falta aparece com um "!" laranja. Fica sempre disponível, para a primeira vez e para ajustes depois, e pode ser recolhida (lembrado no aparelho).
-- **Momentos de comemoração:** primeira visita na loja, primeiro pedido. Mensagem curta no painel, com algo para fazer em seguida.
+- **Vitrine editável "Sua vitrine"** (feito em 2026-10-26): na página inicial, no lugar de um checklist, uma cópia da loja (banner, logo, nome, descrição, botão de WhatsApp e 3 produtos de exemplo) onde a pessoa toca no que quer mudar, mais a escolha de tema e da cor dos botões. As mudanças ficam num rascunho, com prévia na hora, até tocar em **Publicar** (ou Descartar); sair da página com rascunho pede confirmação. O que ainda falta aparece com um "!" discreto. Fica sempre disponível, para a primeira vez e para ajustes depois, e pode ser recolhida (lembrado no aparelho).
+- **Momentos de comemoração:** primeira visita na loja, primeiro pedido. Mensagem curta no painel, com algo para fazer em seguida. O do primeiro pedido está feito (2026-10-26): um card "Seu primeiro pedido chegou!" no Início, até a pessoa fechar ou abrir os pedidos. O da primeira visita depende de contar visitas na loja, que ainda não existe.
 - **E-mails de retorno** (depende do P3-03): "sua loja está quase pronta" para quem criou a conta e não publicou, e um resumo da primeira semana (visitas e pedidos).
 
 - [x] Checklist com progresso na sidebar e no painel, que reflete o que já foi feito
 - [x] Logo, banner, descrição e tema editáveis numa prévia da loja, publicados juntos
 - [x] Logo e banner editáveis
-- [ ] Comemoração do primeiro pedido
+- [x] Comemoração do primeiro pedido
+- [ ] Comemoração da primeira visita (depende de contar visitas)
 - [ ] E-mail de lembrete para quem criou a conta e não publicou
 
 ---

@@ -30,6 +30,8 @@ export class StorefrontStoreDto extends StorefrontStoreSummaryDto {
   bio: string | null;
   city: string | null;
   contact: StorefrontContactDto;
+  /** Ways to receive an order the store offers. Never empty. */
+  fulfillment: ('pickup' | 'delivery')[];
   /** Active products, in display order. */
   products: StorefrontProductSummaryDto[];
 }

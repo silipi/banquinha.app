@@ -3,9 +3,11 @@ import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   ArrayMinSize,
+  IsBoolean,
   IsInt,
   IsOptional,
   IsString,
+  IsUrl,
   IsUUID,
   Matches,
   Max,
@@ -14,6 +16,10 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
+import {
+  INSTAGRAM_USERNAME,
+  toInstagramUsername,
+} from '../../common/instagram.js';
 import { toWhatsappNumber } from '../../common/whatsapp-number.js';
 import { ThemeTokensDto } from '../../themes/dto/theme.dto.js';
 
@@ -93,6 +99,70 @@ export class UpdateStoreDto {
   @IsOptional()
   @IsUUID('all', { message: 'Escolha um dos temas' })
   themeId?: string;
+
+  /**
+   * The store's own button and highlight color on top of its theme, as #rrggbb. The text
+   * on it is picked for contrast. Null goes back to the theme's color.
+   */
+  @IsOptional()
+  @Matches(/^#[0-9a-f]{6}$/i, { message: 'Escolha uma cor válida' })
+  accentColor?: string | null;
+
+  @IsOptional()
+  @Transform(trim)
+  @IsString()
+  @MinLength(2, { message: 'Dê um nome à sua loja' })
+  @MaxLength(60, { message: 'Nome da loja muito longo' })
+  name?: string;
+
+  /** Shown next to the location button. Empty removes it. */
+  @IsOptional()
+  @Transform(trimOrNull)
+  @IsString()
+  @MaxLength(60, { message: 'Nome da cidade muito longo' })
+  city?: string | null;
+
+  /** Where orders go. Any common format; stored as digits with the country code. */
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? (toWhatsappNumber(value) ?? value) : value,
+  )
+  @IsString()
+  @Matches(/^55\d{11}$/, {
+    message: 'Confira o WhatsApp: use o DDD e o número do celular',
+  })
+  whatsapp?: string;
+
+  /** Username, @username or profile link. Empty removes it. */
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? toInstagramUsername(value) || null : value,
+  )
+  @IsString()
+  @Matches(INSTAGRAM_USERNAME, {
+    message: 'Confira o Instagram: use só o nome de usuário, como @minhaloja',
+  })
+  instagram?: string | null;
+
+  /** A maps link (Google Maps, Waze...). Empty removes it. */
+  @IsOptional()
+  @Transform(trimOrNull)
+  @IsUrl(
+    { protocols: ['http', 'https'], require_protocol: true },
+    { message: 'Cole o link completo, começando com https://' },
+  )
+  @MaxLength(500, { message: 'Link muito longo' })
+  locationUrl?: string | null;
+
+  /** Customers may pick the order up. At least one way to receive must stay on. */
+  @IsOptional()
+  @IsBoolean()
+  pickupEnabled?: boolean;
+
+  /** Customers may ask for delivery. */
+  @IsOptional()
+  @IsBoolean()
+  deliveryEnabled?: boolean;
 }
 
 export const STORE_IMAGE_SLOTS = ['logo', 'banner'] as const;
@@ -130,4 +200,17 @@ export class StoreDashboardDto extends StoreSummaryDto {
   maxProducts: number;
   /** Optional customizations, in the order to suggest them. */
   setup: StoreSetupStepDto[];
+  /** The store's own accent color, or null when it uses the theme's. */
+  accentColor: string | null;
+  city: string | null;
+  /** Digits only, with country code. */
+  whatsapp: string;
+  /** Username without the @. */
+  instagram: string | null;
+  locationUrl: string | null;
+  pickupEnabled: boolean;
+  deliveryEnabled: boolean;
+  orderCount: number;
+  /** Orders still marked as new. */
+  newOrderCount: number;
 }

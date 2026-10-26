@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthConfigData, AuthConfigResponses, AuthGoogleData, AuthGoogleResponses, AuthLoginData, AuthLoginResponses, AuthLogoutData, AuthLogoutResponses, AuthRequestPasswordResetData, AuthRequestPasswordResetResponses, AuthResetPasswordData, AuthResetPasswordResponses, AuthSignupData, AuthSignupResponses, HealthCheckData, HealthCheckResponses, MeGetData, MeGetResponses, ProductsAddImageData, ProductsAddImageResponses, ProductsCreateData, ProductsCreateResponses, ProductsListData, ProductsListResponses, ProductsRemoveData, ProductsRemoveImageData, ProductsRemoveImageResponses, ProductsRemoveResponses, ProductsReorderData, ProductsReorderImagesData, ProductsReorderImagesResponses, ProductsReorderResponses, ProductsUpdateData, ProductsUpdateResponses, SitemapListStorefrontsData, SitemapListStorefrontsResponses, StorefrontCreateOrderData, StorefrontCreateOrderResponses, StorefrontGetProductData, StorefrontGetProductResponses, StorefrontGetStoreData, StorefrontGetStoreResponses, StoresCheckHandleData, StoresCheckHandleResponses, StoresCreateData, StoresCreateResponses, StoresGetData, StoresGetResponses, StoresRemoveImageData, StoresRemoveImageResponses, StoresUpdateData, StoresUpdateResponses, StoresUploadImageData, StoresUploadImageResponses, ThemesListData, ThemesListResponses } from './types.gen';
+import type { AuthConfigData, AuthConfigResponses, AuthGoogleData, AuthGoogleResponses, AuthLoginData, AuthLoginResponses, AuthLogoutData, AuthLogoutResponses, AuthRequestPasswordResetData, AuthRequestPasswordResetResponses, AuthResetPasswordData, AuthResetPasswordResponses, AuthSignupData, AuthSignupResponses, HealthCheckData, HealthCheckResponses, MeGetData, MeGetResponses, OrdersGetData, OrdersGetResponses, OrdersListData, OrdersListResponses, OrdersUpdateData, OrdersUpdateResponses, ProductsAddImageData, ProductsAddImageResponses, ProductsCreateData, ProductsCreateResponses, ProductsListData, ProductsListResponses, ProductsRemoveData, ProductsRemoveImageData, ProductsRemoveImageResponses, ProductsRemoveResponses, ProductsReorderData, ProductsReorderImagesData, ProductsReorderImagesResponses, ProductsReorderResponses, ProductsUpdateData, ProductsUpdateResponses, SitemapListStorefrontsData, SitemapListStorefrontsResponses, StorefrontCreateOrderData, StorefrontCreateOrderResponses, StorefrontGetProductData, StorefrontGetProductResponses, StorefrontGetStoreData, StorefrontGetStoreResponses, StoresCheckHandleData, StoresCheckHandleResponses, StoresCreateData, StoresCreateResponses, StoresGetData, StoresGetResponses, StoresRemoveImageData, StoresRemoveImageResponses, StoresUpdateData, StoresUpdateResponses, StoresUploadImageData, StoresUploadImageResponses, ThemesListData, ThemesListResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -222,6 +222,28 @@ export const productsReorderImages = <ThrowOnError extends boolean = false>(opti
 });
 
 export const productsRemoveImage = <ThrowOnError extends boolean = false>(options: Options<ProductsRemoveImageData, ThrowOnError>): RequestResult<ProductsRemoveImageResponses, unknown, ThrowOnError> => (options.client ?? client).delete<ProductsRemoveImageResponses, unknown, ThrowOnError>({ url: '/stores/{storeId}/products/{productId}/images/{imageId}', ...options });
+
+/**
+ * Newest first, a page at a time, optionally by status.
+ */
+export const ordersList = <ThrowOnError extends boolean = false>(options: Options<OrdersListData, ThrowOnError>): RequestResult<OrdersListResponses, unknown, ThrowOnError> => (options.client ?? client).get<OrdersListResponses, unknown, ThrowOnError>({ url: '/stores/{storeId}/orders', ...options });
+
+/**
+ * The order with its items and the customer's details.
+ */
+export const ordersGet = <ThrowOnError extends boolean = false>(options: Options<OrdersGetData, ThrowOnError>): RequestResult<OrdersGetResponses, unknown, ThrowOnError> => (options.client ?? client).get<OrdersGetResponses, unknown, ThrowOnError>({ url: '/stores/{storeId}/orders/{orderId}', ...options });
+
+/**
+ * Moves the order along: confirmed, completed or canceled (or back to new).
+ */
+export const ordersUpdate = <ThrowOnError extends boolean = false>(options: Options<OrdersUpdateData, ThrowOnError>): RequestResult<OrdersUpdateResponses, unknown, ThrowOnError> => (options.client ?? client).patch<OrdersUpdateResponses, unknown, ThrowOnError>({
+    url: '/stores/{storeId}/orders/{orderId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * Public store page: store info and its active products.

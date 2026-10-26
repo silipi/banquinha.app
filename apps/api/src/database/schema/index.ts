@@ -126,6 +126,9 @@ export const stores = pgTable('stores', {
   /** Username without the @. */
   instagram: text('instagram'),
   locationUrl: text('location_url'),
+  /** How customers can receive orders. At least one is on. */
+  pickupEnabled: boolean('pickup_enabled').notNull().default(true),
+  deliveryEnabled: boolean('delivery_enabled').notNull().default(true),
   ...timestamps,
 });
 
@@ -172,6 +175,14 @@ export const fulfillmentMethod = pgEnum('fulfillment_method', [
   'delivery',
 ]);
 
+/** Where an order stands, set by the merchant from the dashboard. */
+export const orderStatus = pgEnum('order_status', [
+  'new',
+  'confirmed',
+  'completed',
+  'canceled',
+]);
+
 // Orders are placed from the storefront and finished on the merchant's WhatsApp.
 export const orders = pgTable(
   'orders',
@@ -187,10 +198,13 @@ export const orders = pgTable(
     address: text('address'),
     note: text('note'),
     totalCents: integer('total_cents').notNull(),
+    status: orderStatus('status').notNull().default('new'),
     createdAt: timestamps.createdAt,
+    updatedAt: timestamps.updatedAt,
   },
   (table) => [
     uniqueIndex('orders_store_number_idx').on(table.storeId, table.number),
+    index('orders_store_status_idx').on(table.storeId, table.status),
   ],
 );
 

@@ -23,6 +23,7 @@ import Image from 'next/image';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { apiErrorMessage, panelApi } from '@/lib/panel';
+import { contrastRatio, readableTextOn } from '@/lib/contrast';
 import { shrinkImage } from '@/lib/shrink-image';
 import { themeStyle } from '@/lib/store-theme';
 import { storeDisplayUrl } from '@/lib/storefront-links';
@@ -40,6 +41,8 @@ interface Draft {
   banner?: ImageChange;
   bio?: string;
   themeId?: string;
+  /** Null: back to the theme's color. */
+  accentColor?: string | null;
 }
 
 // A bit above what the API stores (512px logo, 2048px banner), so it has room to crop.
@@ -56,9 +59,10 @@ const without = (draft: Draft, ...fields: (keyof Draft)[]): Draft => {
 };
 
 /**
- * The store's look, edited on a live copy of the storefront: logo, banner, description
- * and theme. Changes stay in a draft until "Publicar". Always on the dashboard, so it
- * works for the first setup and for later tweaks; items still missing get a badge.
+ * The store's look, edited on a live copy of the storefront: logo, banner,
+ * description, theme and accent color. Changes stay in a draft until "Publicar".
+ * Always on the dashboard, so it works for the first setup and for later tweaks;
+ * items still missing get a badge.
  */
 export function StoreBuilder() {
   const { store, setStore } = usePanel();
@@ -108,10 +112,21 @@ export function StoreBuilder() {
   const bio = draft.bio ?? store.bio ?? '';
   const themeId = draft.themeId ?? store.themeId;
   // The store's own tokens include its overrides; other themes show as they come.
-  const theme: ThemeTokensDto =
-    themeId === store.themeId
-      ? store.theme
-      : (themes.find((t) => t.id === themeId)?.tokens ?? store.theme);
+  const accentColor =
+    draft.accentColor !== undefined ? draft.accentColor : store.accentColor;
+  // Until the themes load, the store's own resolved tokens stand in.
+  const themeTokens =
+    themes.find((t) => t.id === themeId)?.tokens ?? store.theme;
+  const theme: ThemeTokensDto = accentColor
+    ? {
+        ...themeTokens,
+        colors: {
+          ...themeTokens.colors,
+          accent: accentColor,
+          accentForeground: readableTextOn(accentColor),
+        },
+      }
+    : themeTokens;
 
   const missing = {
     logo: !imageUrl('logo'),
@@ -137,6 +152,7 @@ export function StoreBuilder() {
         delete next.bio;
       }
       if (next.themeId === store!.themeId) delete next.themeId;
+      if (next.accentColor === store!.accentColor) delete next.accentColor;
       for (const slot of ['logo', 'banner'] as const) {
         const previous = current[slot];
         if (previous && previous !== 'removed' && previous !== next[slot]) {
@@ -218,11 +234,19 @@ export function StoreBuilder() {
         settle(slot, data);
       }
 
-      if (draft.bio !== undefined || draft.themeId !== undefined) {
+      if (
+        draft.bio !== undefined ||
+        draft.themeId !== undefined ||
+        draft.accentColor !== undefined
+      ) {
         const { data, error } = await storesUpdate({
           client: panelApi,
           path: { id: store!.id },
-          body: { bio: draft.bio, themeId: draft.themeId },
+          body: {
+            bio: draft.bio,
+            themeId: draft.themeId,
+            accentColor: draft.accentColor,
+          },
         });
         if (!data) {
           setMessage(apiErrorMessage(error, 'Não deu certo. Tente de novo.'));
@@ -230,7 +254,9 @@ export function StoreBuilder() {
         }
         latest = data;
         setStore(data);
-        setDraft((current) => without(current, 'bio', 'themeId'));
+        setDraft((current) =>
+          without(current, 'bio', 'themeId', 'accentColor'),
+        );
       }
       setMessage('Publicado! Sua loja já está atualizada.');
     } catch {
@@ -266,7 +292,7 @@ export function StoreBuilder() {
           </span>
           <span className="mt-0.5 block text-sm text-muted-foreground">
             {done === store.setup.length
-              ? 'Logo, banner, descrição e tema. Mude quando quiser.'
+              ? 'Logo, banner, descrição, tema e cor. Mude quando quiser.'
               : `${done} de ${store.setup.length} itens prontos. Lojas completas passam mais confiança.`}
           </span>
         </span>
@@ -321,11 +347,19 @@ export function StoreBuilder() {
               />
             </div>
 
-            <ThemePicker
-              themes={themes}
-              selected={themeId}
-              onSelect={(id) => change({ themeId: id })}
-            />
+            <div className="flex flex-col gap-6">
+              <ThemePicker
+                themes={themes}
+                selected={themeId}
+                onSelect={(id) => change({ themeId: id })}
+              />
+              <AccentPicker
+                themeAccent={themeTokens.colors.accent}
+                background={themeTokens.colors.background}
+                selected={accentColor}
+                onSelect={(color) => change({ accentColor: color })}
+              />
+            </div>
           </div>
 
           <footer className="sticky bottom-0 flex flex-wrap items-center gap-3 border-t bg-surface/95 px-5 py-4 backdrop-blur">
@@ -638,6 +672,103 @@ function ThemePicker({
             );
           })}
         </div>
+      )}
+    </div>
+  );
+}
+
+// Strong, distinct colors that read well as buttons with white or dark text.
+const ACCENT_PRESETS = [
+  { color: '#ff5a1f', name: 'Laranja' },
+  { color: '#e11d48', name: 'Vermelho' },
+  { color: '#c2477a', name: 'Rosa' },
+  { color: '#7c3aed', name: 'Roxo' },
+  { color: '#2563eb', name: 'Azul' },
+  { color: '#0f766e', name: 'Verde-água' },
+  { color: '#4f7a3a', name: 'Verde' },
+  { color: '#1a1714', name: 'Preto' },
+];
+
+function AccentPicker({
+  themeAccent,
+  background,
+  selected,
+  onSelect,
+}: {
+  themeAccent: string;
+  background: string;
+  /** Null when the theme's color is used. */
+  selected: string | null;
+  onSelect: (color: string | null) => void;
+}) {
+  const current = selected ?? themeAccent;
+  const custom =
+    selected !== null && !ACCENT_PRESETS.some((p) => p.color === selected);
+  // Accent also colors text on the page background (initials, links).
+  const lowContrast = contrastRatio(current, background) < 3;
+  const swatch =
+    'relative flex size-9 items-center justify-center rounded-full border-2 border-background ring-1 ring-border transition-transform hover:scale-105 aria-checked:ring-2 aria-checked:ring-foreground';
+
+  return (
+    <div>
+      <p className="mb-3 text-sm font-medium">Cor dos botões</p>
+      <div
+        role="radiogroup"
+        aria-label="Cor dos botões"
+        className="flex flex-wrap gap-2"
+      >
+        <button
+          type="button"
+          role="radio"
+          aria-checked={selected === null}
+          aria-label="Cor do tema"
+          title="Cor do tema"
+          onClick={() => onSelect(null)}
+          className={cn(swatch, 'overflow-hidden')}
+          style={{ background: themeAccent }}
+        >
+          <span className="absolute inset-x-0 bottom-0 bg-background/85 text-[8px] leading-3 font-bold">
+            TEMA
+          </span>
+        </button>
+        {ACCENT_PRESETS.filter(({ color }) => color !== themeAccent).map(
+          ({ color, name }) => (
+            <button
+              key={color}
+              type="button"
+              role="radio"
+              aria-checked={selected === color}
+              aria-label={name}
+              title={name}
+              onClick={() => onSelect(color)}
+              className={swatch}
+              style={{ background: color }}
+            />
+          ),
+        )}
+        <label
+          title="Outra cor"
+          className={cn(
+            swatch,
+            'cursor-pointer bg-[conic-gradient(#e11d48,#f59e0b,#16a34a,#2563eb,#7c3aed,#e11d48)]',
+            custom && 'ring-2 ring-foreground',
+          )}
+          style={custom ? { background: selected } : undefined}
+        >
+          <input
+            type="color"
+            value={current}
+            onChange={(event) => onSelect(event.target.value)}
+            aria-label="Escolher outra cor"
+            className="sr-only"
+          />
+        </label>
+      </div>
+      {lowContrast && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Cor bem clara: os botões ficam legíveis, mas textos nessa cor podem
+          sumir no fundo da loja.
+        </p>
       )}
     </div>
   );
