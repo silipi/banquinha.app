@@ -29,6 +29,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
+  ChevronRight,
   ExternalLink,
   GripVertical,
   ImageIcon,
@@ -306,7 +307,7 @@ function ProductRow({
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(
-        'relative flex items-center gap-1 rounded-2xl border bg-surface p-2 pr-3',
+        'relative flex items-center gap-1 rounded-2xl border bg-surface p-2 pr-3 transition-colors has-[[data-edit]:hover]:border-foreground/25 has-[[data-edit]:hover]:bg-muted/40',
         isDragging && 'z-10 shadow-lg ring-2 ring-ink/10',
       )}
     >
@@ -326,7 +327,8 @@ function ProductRow({
       <button
         type="button"
         onClick={onEdit}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left"
+        data-edit
+        className="group/edit flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-brand"
       >
         <span className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted text-muted-foreground">
           {product.images[0] ? (
@@ -357,6 +359,7 @@ function ProductRow({
             )}
           </span>
         </span>
+        <ChevronRight className="size-5 shrink-0 text-muted-foreground transition-transform group-hover/edit:translate-x-0.5 group-hover/edit:text-foreground" />
       </button>
       {product.active && (
         <a
