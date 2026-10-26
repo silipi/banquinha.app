@@ -13,6 +13,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      // Read by apps/web/next.config.ts at build time (allowed next/image origin).
+      "env": ["R2_PUBLIC_URL"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "dev": {
