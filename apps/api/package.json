@@ -7,11 +7,11 @@
     "build": "nest build",
     "dev": "nest start --watch --preserveWatchOutput",
     "start": "node --enable-source-maps dist/main",
-    "lint": "oxlint src/ test/",
+    "lint": "oxlint src/ test/ scripts/",
     "typecheck": "tsc --noEmit",
     "test": "vitest run && vitest run --config ./vitest.config.e2e.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "node scripts/migrate.ts",
     "openapi": "node dist/openapi.js",
     "db:seed": "nest build && node --enable-source-maps dist/database/seed/run.js"
   },
