@@ -100,11 +100,7 @@ export function ProductEditor({
   const [product, setProduct] = useState(initial);
   const [draft, setDraft] = useState(() => draftFrom(initial, fields));
   const [saved] = useState(() => draftFrom(initial, fields));
-  const [errors, setErrors] = useState<{
-    name?: string;
-    price?: string;
-    attribute?: { fieldId: string; message: string };
-  }>({});
+  const [errors, setErrors] = useState<{ name?: string; price?: string }>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState<'save' | 'delete' | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -147,7 +143,6 @@ export function ProductEditor({
         'priceCents' in changes || 'priceType' in changes
           ? undefined
           : current.price,
-      attribute: 'attributes' in changes ? undefined : current.attribute,
     }));
   }
 
@@ -201,13 +196,6 @@ export function ProductEditor({
     if (draft.name.trim().length < 2) found.name = 'Dê um nome';
     const priceError = pricingError(draft);
     if (priceError) found.price = priceError;
-    const attributes = fieldValuesForApi(fields, draft.attributes);
-    if ('invalid' in attributes) {
-      found.attribute = {
-        fieldId: attributes.invalid.id,
-        message: 'Digite só números, como 45000 ou 1,5',
-      };
-    }
     setErrors(found);
     return Object.keys(found).length === 0;
   }
@@ -220,10 +208,6 @@ export function ProductEditor({
       setFormError(apiErrorMessage(error, 'Não deu certo. Tente de novo.'));
 
     try {
-      const toApi = (d: Draft) => {
-        const attributes = fieldValuesForApi(fields, d.attributes);
-        return 'values' in attributes ? attributes.values : {};
-      };
       const changes = {
         name: draft.name,
         kind: draft.kind,
@@ -231,7 +215,7 @@ export function ProductEditor({
         priceCents: priceForApi(draft),
         description: draft.description,
         active: draft.active,
-        attributes: toApi(draft),
+        attributes: fieldValuesForApi(fields, draft.attributes),
       };
       let current = product;
       if (!current) {
@@ -252,7 +236,7 @@ export function ProductEditor({
           priceCents: priceForApi(saved),
           description: saved.description,
           active: saved.active,
-          attributes: toApi(saved),
+          attributes: fieldValuesForApi(fields, saved.attributes),
         })
       ) {
         const { data, error } = await productsUpdate({
@@ -537,7 +521,6 @@ export function ProductEditor({
         <FieldInputs
           fields={fields}
           value={draft.attributes}
-          error={errors.attribute ?? null}
           onChange={(attributes) => edit({ attributes })}
         />
 

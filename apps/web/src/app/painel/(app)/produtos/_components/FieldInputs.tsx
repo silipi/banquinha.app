@@ -13,13 +13,10 @@ const control =
 export function FieldInputs({
   fields,
   value,
-  error,
   onChange,
 }: {
   fields: StoreFieldDto[];
   value: FieldDraft;
-  /** Field id with a value that isn't valid, and why. */
-  error: { fieldId: string; message: string } | null;
   onChange: (value: FieldDraft) => void;
 }) {
   if (fields.length === 0) return null;
@@ -34,7 +31,6 @@ export function FieldInputs({
           key={field.id}
           field={field}
           value={value[field.id] ?? ''}
-          error={error?.fieldId === field.id ? error.message : null}
           onChange={(text) => onChange({ ...value, [field.id]: text })}
         />
       ))}
@@ -45,12 +41,10 @@ export function FieldInputs({
 function FieldInput({
   field,
   value,
-  error,
   onChange,
 }: {
   field: StoreFieldDto;
   value: string;
-  error: string | null;
   onChange: (value: string) => void;
 }) {
   const id = useId();
@@ -94,12 +88,28 @@ function FieldInput({
           <input
             id={id}
             value={value}
-            inputMode={field.type === 'number' ? 'decimal' : undefined}
-            maxLength={field.type === 'number' ? 20 : 80}
-            aria-invalid={Boolean(error)}
-            aria-describedby={error ? `${id}-error` : undefined}
+            {...(field.type === 'number'
+              ? {
+                  type: 'number',
+                  inputMode: 'decimal',
+                  step: 'any',
+                  // Letters an <input type="number"> still lets through (1e5, +1).
+                  onKeyDown: (event: React.KeyboardEvent) => {
+                    if (['e', 'E', '+'].includes(event.key)) {
+                      event.preventDefault();
+                    }
+                  },
+                  // A scroll over a focused number input would change it.
+                  onWheel: (event: React.WheelEvent<HTMLInputElement>) =>
+                    event.currentTarget.blur(),
+                }
+              : { maxLength: 80 })}
             onChange={(event) => onChange(event.target.value)}
-            className={cn(control, field.unit && 'pr-16')}
+            className={cn(
+              control,
+              '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
+              field.unit && 'pr-16',
+            )}
           />
           {field.unit && (
             <span className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-muted-foreground">
@@ -107,11 +117,6 @@ function FieldInput({
             </span>
           )}
         </div>
-      )}
-      {error && (
-        <p id={`${id}-error`} role="alert" className="text-sm text-red-600">
-          {error}
-        </p>
       )}
     </div>
   );
