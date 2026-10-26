@@ -152,7 +152,7 @@ export type StoreSetupStepDto = {
     /**
      * Something the merchant can still customize after the onboarding.
      */
-    id: 'description' | 'logo' | 'banner';
+    id: 'logo' | 'banner' | 'description';
     done: boolean;
 };
 
@@ -177,6 +177,13 @@ export type StoreDashboardDto = {
      * Optional customizations, in the order to suggest them.
      */
     setup: Array<StoreSetupStepDto>;
+};
+
+export type UploadImageDto = {
+    /**
+     * JPG, PNG or WebP, up to 10 MB. Stored as webp.
+     */
+    file: Blob | File;
 };
 
 export type UpdateStoreDto = {
@@ -487,6 +494,38 @@ export type StoresUpdateResponses = {
 };
 
 export type StoresUpdateResponse = StoresUpdateResponses[keyof StoresUpdateResponses];
+
+export type StoresRemoveImageData = {
+    body?: never;
+    path: {
+        id: string;
+        slot: 'logo' | 'banner';
+    };
+    query?: never;
+    url: '/stores/{id}/images/{slot}';
+};
+
+export type StoresRemoveImageResponses = {
+    200: StoreDashboardDto;
+};
+
+export type StoresRemoveImageResponse = StoresRemoveImageResponses[keyof StoresRemoveImageResponses];
+
+export type StoresUploadImageData = {
+    body: UploadImageDto;
+    path: {
+        id: string;
+        slot: 'logo' | 'banner';
+    };
+    query?: never;
+    url: '/stores/{id}/images/{slot}';
+};
+
+export type StoresUploadImageResponses = {
+    200: StoreDashboardDto;
+};
+
+export type StoresUploadImageResponse = StoresUploadImageResponses[keyof StoresUploadImageResponses];
 
 export type ThemesListData = {
     body?: never;

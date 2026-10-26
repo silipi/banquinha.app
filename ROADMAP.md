@@ -225,13 +225,21 @@ Logo depois de criar a conta (P2-02), a pessoa monta a loja em `/comecar`. A con
 - [ ] Testado no navegador interno do Instagram e do TikTok
 - [ ] Funil medido por passo (quantos chegam e quantos concluem cada tela)
 
-### P2-04 · Upload de imagens ⬜
+### P2-04 · Upload de imagens 🚧
 
 Envio de fotos de produto e logos para o Cloudflare R2, redimensionadas e convertidas para webp.
 
-- [ ] Upload direto com limite de tamanho e de tipo
-- [ ] Imagens servidas pelo R2 e liberadas no `next/image`
-- [ ] Imagens de compartilhamento continuam funcionando com URLs do R2
+**Como funciona (feito em 2026-10-26):** o painel diminui a foto no próprio celular antes de enviar (uma foto de 12 MP vira poucas centenas de KB, rápido no 4G). A API recebe o arquivo (até 10 MB), confere se é imagem de verdade, corrige a rotação das fotos de celular, tira os metadados (localização GPS incluída), redimensiona e grava em webp no R2 com um nome aleatório (cache de um ano). Ao trocar ou remover, o arquivo antigo é apagado. Sem as chaves do R2, em dev, as imagens ficam numa pasta local (`apps/api/.uploads`); em produção sem R2 o envio fica indisponível com uma mensagem clara.
+
+- Logo: quadrado de 512 px (aparece num círculo). Banner: até 2048 px, sem cortar. Produto: até 1600 px.
+- Endpoints: `PUT` e `DELETE /stores/:id/images/logo|banner`. As fotos de produto usam a mesma base e entram junto com a gestão de produtos (P2-05).
+
+- [x] Upload direto com limite de tamanho e de tipo
+- [x] Imagens servidas pelo R2 e liberadas no `next/image` (`R2_PUBLIC_URL` no site)
+- [x] Imagens de compartilhamento continuam funcionando com as URLs novas
+- [x] Logo e banner editáveis no checklist do painel; banner aparece no topo da vitrine
+- [ ] Criar o bucket no R2 com domínio público e configurar as chaves na API e no site
+- [ ] Fotos de produto (com o P2-05), com limite de fotos por produto no plano
 
 ### P2-05 · Gestão de produtos ⬜
 
@@ -280,7 +288,7 @@ Fazer a loja recém-criada virar uma loja que vende. A pessoa já saiu do onboar
 
 - [x] Checklist com progresso na sidebar e no painel, que reflete o que já foi feito
 - [x] Descrição editável direto no checklist (aparece na vitrine na hora)
-- [ ] Logo e banner editáveis (depende do P2-04)
+- [x] Logo e banner editáveis
 - [ ] Comemoração do primeiro pedido
 - [ ] E-mail de lembrete para quem criou a conta e não publicou
 

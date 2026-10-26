@@ -11,11 +11,18 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
 // Merchant area origin (app.banquinha.app). Unset before the custom domain: then the
 // area is reached at /painel on the site's own host.
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+// Public origin of the R2 bucket with uploaded images. Unset in development, where the API
+// keeps uploads on disk and serves them under /api/uploads (a local path, allowed by default).
+const imagesUrl = process.env.R2_PUBLIC_URL?.replace(/\/+$/, '');
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   transpilePackages: ['@banquinha/api-client'],
+  // Uploads are served with a one-year immutable Cache-Control, which next/image honors.
+  images: {
+    remotePatterns: imagesUrl ? [new URL(`${imagesUrl}/stores/**`)] : [],
+  },
   async rewrites() {
     return {
       beforeFiles: [

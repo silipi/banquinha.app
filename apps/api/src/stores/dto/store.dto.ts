@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
@@ -87,6 +88,16 @@ export class UpdateStoreDto {
   @IsString()
   @MaxLength(300, { message: 'Descrição muito longa (até 300 caracteres)' })
   bio?: string | null;
+}
+
+export const STORE_IMAGE_SLOTS = ['logo', 'banner'] as const;
+export type StoreImageSlot = (typeof STORE_IMAGE_SLOTS)[number];
+
+/** multipart/form-data body of an image upload. */
+export class UploadImageDto {
+  /** JPG, PNG or WebP, up to 10 MB. Stored as webp. */
+  @ApiProperty({ type: 'string', format: 'binary' })
+  file: Blob;
 }
 
 export class StoreSummaryDto {

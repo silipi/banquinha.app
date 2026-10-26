@@ -1,4 +1,5 @@
 import fastifyCookie from '@fastify/cookie';
+import fastifyMultipart from '@fastify/multipart';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import {
@@ -7,6 +8,7 @@ import {
 } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
+import { MAX_UPLOAD_BYTES } from './images/process-image.js';
 
 const lowerFirst = (value: string) =>
   value.charAt(0).toLowerCase() + value.slice(1);
@@ -27,6 +29,10 @@ export async function createApp(
   );
   // Reads the session cookie (see auth/session-cookie.ts).
   await app.register(fastifyCookie);
+  // Image uploads (see images/images.service.ts): one file per request.
+  await app.register(fastifyMultipart, {
+    limits: { fileSize: MAX_UPLOAD_BYTES, files: 1, fields: 5 },
+  });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   return app;
 }

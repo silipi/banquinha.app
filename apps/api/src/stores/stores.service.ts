@@ -12,6 +12,7 @@ import { toSlug } from '../common/slug.js';
 import type { Db } from '../database/database.js';
 import { DB } from '../database/database.module.js';
 import { products, stores, themes, users } from '../database/schema/index.js';
+import { ImagesService } from '../images/images.service.js';
 import { PLANS } from '../plans/plans.js';
 import { resolveTheme } from '../themes/theme-tokens.js';
 import { ThemesService } from '../themes/themes.service.js';
@@ -19,6 +20,7 @@ import type { CheckHandleResponseDto } from './dto/check-handle.dto.js';
 import type {
   CreateStoreDto,
   StoreDashboardDto,
+  StoreImageSlot,
   StoreSummaryDto,
   UpdateStoreDto,
 } from './dto/store.dto.js';
@@ -38,6 +40,11 @@ const HANDLE_TAKEN = 'Esse endereço já está em uso';
 const PRODUCT_SLUG_MAX_LENGTH = 60;
 
 type StoreRow = typeof stores.$inferSelect;
+
+const IMAGE_COLUMNS = {
+  logo: 'logoUrl',
+  banner: 'bannerUrl',
+} as const satisfies Record<StoreImageSlot, keyof StoreRow>;
 
 /** Postgres unique violation, also when wrapped by Drizzle. */
 function isUniqueViolation(error: unknown): boolean {
@@ -65,6 +72,7 @@ export class StoresService {
   constructor(
     @Inject(DB) private readonly db: Db,
     private readonly themes: ThemesService,
+    private readonly images: ImagesService,
   ) {}
 
   async checkHandle(input: string): Promise<CheckHandleResponseDto> {
@@ -209,6 +217,49 @@ export class StoresService {
         .update(stores)
         .set({ bio: input.bio })
         .where(eq(stores.id, id));
+    }
+    return this.getDashboard(user, id);
+  }
+
+  async setImage(
+    user: AuthUser,
+    id: string,
+    slot: StoreImageSlot,
+    file: Buffer,
+  ): Promise<StoreDashboardDto> {
+    const store = await this.findOwned(user, id);
+    const column = IMAGE_COLUMNS[slot];
+    const url = await this.images.save(
+      file,
+      slot,
+      `stores/${store.id}/${slot}`,
+    );
+    try {
+      await this.db
+        .update(stores)
+        .set({ [column]: url })
+        .where(eq(stores.id, id));
+    } catch (error) {
+      await this.images.remove(url);
+      throw error;
+    }
+    await this.images.remove(store[column]);
+    return this.getDashboard(user, id);
+  }
+
+  async removeImage(
+    user: AuthUser,
+    id: string,
+    slot: StoreImageSlot,
+  ): Promise<StoreDashboardDto> {
+    const store = await this.findOwned(user, id);
+    const column = IMAGE_COLUMNS[slot];
+    if (store[column]) {
+      await this.db
+        .update(stores)
+        .set({ [column]: null })
+        .where(eq(stores.id, id));
+      await this.images.remove(store[column]);
     }
     return this.getDashboard(user, id);
   }

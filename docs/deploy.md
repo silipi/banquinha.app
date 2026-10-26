@@ -123,4 +123,30 @@ Both are optional: without `GOOGLE_CLIENT_ID` the Google button is hidden, and w
 | `RESEND_API_KEY`   | Resend, after verifying the sending domain; Secret Manager secret |
 
 Add them to the `gcloud run deploy` flags in `ci.yml` (`--set-env-vars` / `--set-secrets`) when they exist.
+
+## Image uploads (Cloudflare R2)
+
+Without R2 the API refuses uploads in production ("envio de imagens indisponível").
+
+1. Cloudflare dashboard → R2 → create bucket `banquinha-images`, location **Automatic** (R2 has
+   no South America region; a custom domain serves images from Cloudflare's São Paulo cache).
+2. Bucket → Settings → Public access: connect a custom domain (e.g. `img.banquinha.app`) once the
+   domain is on Cloudflare, or enable the `r2.dev` URL meanwhile (rate limited and uncached, fine
+   for the beta). Stored image URLs are absolute, so moving from `r2.dev` to the custom domain
+   later needs a one-off `UPDATE` replacing the prefix in `stores` and `product_images`.
+3. R2 → Manage API tokens → create a token with **Object Read & Write** on that bucket only.
+
+| Name                   | Where                                                                   |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `R2_ACCOUNT_ID`        | API: plain env var (Cloudflare account id)                              |
+| `R2_BUCKET`            | API: plain env var                                                      |
+| `R2_PUBLIC_URL`        | API **and Vercel** (Production, Preview): public bucket URL, no `/` end |
+| `R2_ACCESS_KEY_ID`     | API: Secret Manager secret `r2-access-key-id`                           |
+| `R2_SECRET_ACCESS_KEY` | API: Secret Manager secret `r2-secret-access-key`                       |
+
+Then add them to `gcloud run deploy` in `ci.yml` and grant `banquinha-api` the
+`secretAccessor` role on both secrets, like `database-url`. The web app reads `R2_PUBLIC_URL` at
+build time to allow those images in `next/image`, so redeploy it after setting the variable.
+Use a separate bucket (or at least the same one with separate keys) for Preview if preview
+uploads should not mix with production.
 Function region: `gru1` (Settings → Functions).

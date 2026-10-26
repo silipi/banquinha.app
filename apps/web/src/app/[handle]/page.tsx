@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { AtSign, MapPin, MessageCircle } from 'lucide-react';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { getStore } from '@/lib/storefront';
@@ -41,12 +42,33 @@ async function StoreHome({ params }: Pick<Props, 'params'>) {
 
   return (
     <>
-      <header className="flex flex-col items-center text-center">
+      <header
+        className={cn(
+          'flex flex-col items-center text-center',
+          !store.bannerUrl && 'pt-12',
+        )}
+      >
+        {store.bannerUrl && (
+          <div className="relative aspect-[2/1] w-full overflow-hidden rounded-store bg-store-soft sm:aspect-[3/1]">
+            <Image
+              src={store.bannerUrl}
+              alt=""
+              fill
+              preload
+              sizes="(min-width: 1024px) 992px, 100vw"
+              className="object-cover"
+            />
+          </div>
+        )}
         <StoreAvatar
           name={store.name}
           logoUrl={store.logoUrl}
           size={96}
-          className="ring-4 ring-surface"
+          className={cn(
+            'ring-4 ring-surface',
+            // Overlaps the banner's bottom edge.
+            store.bannerUrl && '-mt-12',
+          )}
         />
         <h1 className="mt-5 font-display text-4xl font-bold tracking-tight text-balance">
           {store.name}
@@ -136,7 +158,7 @@ function StoreHomeSkeleton() {
 
 export default function StorePage({ params }: Props) {
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-16">
+    <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-4">
       <Suspense fallback={<StoreHomeSkeleton />}>
         <StoreHome params={params} />
       </Suspense>

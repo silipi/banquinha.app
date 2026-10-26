@@ -19,6 +19,7 @@ import { storeDisplayUrl, storePath } from '@/lib/storefront-links';
 import { cn } from '@/lib/utils';
 import { refreshStorefront } from '../actions';
 import { SETUP_LABELS, usePanel } from './_components/panel-context';
+import { StoreImageEditor } from './_components/StoreImageEditor';
 
 export default function DashboardPage() {
   const { me, store } = usePanel();
@@ -174,13 +175,12 @@ function SetupCard() {
                     {SETUP_LABELS[step.id].text}
                   </span>
                 </span>
-                {step.id !== 'description' && (
-                  <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">
-                    Em breve
-                  </span>
-                )}
               </div>
-              {step.id === 'description' && <DescriptionEditor />}
+              {step.id === 'description' ? (
+                <DescriptionEditor />
+              ) : (
+                <StoreImageEditor slot={step.id} />
+              )}
             </li>
           );
         })}

@@ -369,6 +369,100 @@
         ]
       }
     },
+    "/stores/{id}/images/{slot}": {
+      "put": {
+        "operationId": "storesUploadImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "slot",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "logo",
+                "banner"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadImageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreDashboardDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Sets the store's logo or banner from an uploaded image, replacing the previous one.\n400: not an image. 413: file too large.",
+        "tags": [
+          "Stores"
+        ]
+      },
+      "delete": {
+        "operationId": "storesRemoveImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "slot",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "logo",
+                "banner"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreDashboardDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Removes the store's logo or banner.",
+        "tags": [
+          "Stores"
+        ]
+      }
+    },
     "/themes": {
       "get": {
         "operationId": "themesList",
@@ -933,9 +1027,9 @@
             "type": "string",
             "description": "Something the merchant can still customize after the onboarding.",
             "enum": [
-              "description",
               "logo",
-              "banner"
+              "banner",
+              "description"
             ]
           },
           "done": {
@@ -1009,6 +1103,19 @@
           "productCount",
           "maxProducts",
           "setup"
+        ]
+      },
+      "UploadImageDto": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "JPG, PNG or WebP, up to 10 MB. Stored as webp.",
+            "format": "binary"
+          }
+        },
+        "required": [
+          "file"
         ]
       },
       "UpdateStoreDto": {
