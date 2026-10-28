@@ -3,6 +3,7 @@
 import { meGet, type MeDto } from '@banquinha/api-client';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { identifyMerchant } from '@/lib/analytics';
 import { panelApi, panelPath } from '@/lib/panel';
 
 /**
@@ -18,6 +19,7 @@ export function usePanelMe(area: 'dashboard' | 'onboarding') {
     meGet({ client: panelApi })
       .then(({ data }) => {
         if (!data) return router.replace(panelPath('/login'));
+        identifyMerchant(data);
         if (area === 'dashboard' && !data.onboardingCompleted) {
           return router.replace(panelPath('/comecar'));
         }

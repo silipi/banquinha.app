@@ -183,9 +183,9 @@ Definir a marca final antes de lojistas reais começarem a divulgar links. Escol
 - [x] `banquinha.app/cadastro` passa a redirecionar para `minha.banquinha.app/cadastro`, levando o nome escolhido na landing
 - [x] Cadastro com nome, e-mail, WhatsApp, senha e confirmação; login e saída com e-mail e senha
 - [x] Recuperar senha com código por e-mail (expira em 15 minutos, com limite de tentativas e de reenvio)
-- [ ] Entrar com Google testado de ponta a ponta (falta criar o OAuth client no Google Cloud)
-- [ ] Testado de verdade no navegador interno do Instagram e do TikTok
-- [ ] Envio de e-mail em produção (Resend + domínio verificado)
+- [ ] Entrar com Google testado de ponta a ponta (falta criar o OAuth client no Google Cloud; adiado, o lançamento sai só com e-mail e senha)
+- [x] Testado de verdade no navegador interno do Instagram e do TikTok
+- [x] Envio de e-mail em produção (Resend + domínio verificado, 2026-10-28)
 - [x] As rotas da API são protegidas por padrão; rotas públicas são marcadas explicitamente
 - [x] `stores` ganha um dono (migration)
 
@@ -222,7 +222,7 @@ Logo depois de criar a conta (P2-02), a pessoa monta a loja em `/comecar`. A con
 - [x] A loja fica no ar ao fim do fluxo, com prévia ao vivo durante ele
 - [x] Sair no meio e voltar retoma do mesmo passo
 - [x] Flag de onboarding: sem loja vai para o onboarding; com loja, direto para o painel
-- [ ] Testado no navegador interno do Instagram e do TikTok
+- [x] Testado no navegador interno do Instagram e do TikTok
 - [ ] Funil medido por passo (quantos chegam e quantos concluem cada tela)
 
 ### P2-04 · Upload de imagens ✅
@@ -278,13 +278,13 @@ Aplicar na API os limites do plano grátis (número de produtos, fotos por produ
 - [x] Limites aplicados na API, com mensagens claras em pt-BR: lojas por conta, produtos por loja (no onboarding e depois) e fotos por produto (3 no Grátis)
 - [x] O painel mostra o uso em relação ao limite ("2 de 10 produtos")
 
-### P2-09 · Painel instalável (PWA) 🚧
+### P2-09 · Painel instalável (PWA) ✅
 
 Manifest, ícones e um shell que funciona offline para o lojista instalar o painel no celular.
 
 **Como ficou (feito em 2026-10-26):** manifest em `/painel/manifest.webmanifest` (o início e o escopo mudam conforme o host: `/` no `minha.`, `/painel/` no site), ícones "b." gerados com a fonte da marca (também como ícone adaptável do Android e da tela inicial do iPhone) e um service worker (`public/painel/sw.js`) que guarda os arquivos do app e mostra uma tela "Você está sem internet" em vez do erro do navegador. Na sidebar, "Instalar no celular": no Android abre o pedido de instalação; no iPhone explica Compartilhar → Adicionar à Tela de Início.
 
-- [ ] Instalável no Android e no iOS (testar num celular de verdade depois do deploy)
+- [x] Instalável no Android e no iOS (testado num celular de verdade)
 - [x] Abre direto no painel
 
 ### P2-10 · Ativação depois do cadastro 🚧
@@ -398,8 +398,8 @@ Vercel (web), Google Cloud Run em `southamerica-east1` (API), Neon em `aws-sa-ea
 
 - [ ] Ambientes de produção e de preview com bancos separados
 - [x] Migrations rodam no deploy
-- [ ] DNS e TLS para o site e o `minha.` (passo a passo em `docs/deploy.md`, seção Domains). `api.` fica de fora por enquanto: o navegador só fala com a API por `/api/*` no próprio site, e o Cloud Run não mapeia domínio próprio em `southamerica-east1` sem um load balancer pago
-- [ ] Imagens em `img.banquinha.app` (domínio próprio no R2) em vez do `r2.dev`, com o `UPDATE` das URLs já gravadas
+- [x] DNS e TLS para o site e o `minha.` (passo a passo em `docs/deploy.md`, seção Domains). `api.` fica de fora por enquanto: o navegador só fala com a API por `/api/*` no próprio site, e o Cloud Run não mapeia domínio próprio em `southamerica-east1` sem um load balancer pago
+- [x] Imagens em `img.banquinha.app` (domínio próprio no R2) em vez do `r2.dev`, com o `UPDATE` das URLs já gravadas; `r2.dev` desligado
 - [ ] `INTERNAL_API_KEY` configurada no site e na API
 - [ ] Limite de pedidos com armazenamento compartilhado (Redis ou similar) se a API rodar em mais de uma instância; hoje o contador fica na memória
 - [x] API configurada para ler o IP real atrás do proxy do provedor (`trustProxy`)
@@ -410,16 +410,18 @@ Tirar a trava do beta; os botões da landing levam ao cadastro.
 
 - [ ] Qualquer pessoa consegue criar uma loja a partir da landing
 
-### P3-03 · E-mails transacionais ⬜
+### P3-03 · E-mails transacionais 🚧
 
 E-mails de boas-vindas, link de acesso e aviso de pedido novo.
 
-- [ ] E-mails enviados de um domínio verificado
+- [x] E-mails enviados de um domínio verificado (Resend em `send.banquinha.app`, DMARC publicado; `oi@banquinha.app` recebe pelo Cloudflare Email Routing)
 - [ ] O lojista pode ligar e desligar o aviso de pedidos
 
-### P3-04 · Monitoramento de erros e logs ⬜
+### P3-04 · Monitoramento de erros e logs 🚧
 
-- [ ] Erros do web e da API registrados com contexto
+**PostHog (2026-10-28)**, uma ferramenta só para analytics de produto e erros: páginas, cliques, gravações de sessão e erros do navegador na landing, no blog e no painel (nunca nas vitrines), mais os erros 5xx do servidor do site e da API. O lojista logado é identificado (id, nome e e-mail). Desligado até a chave estar configurada: ver `docs/deploy.md`.
+
+- [ ] Erros do web e da API registrados com contexto (código pronto; falta a chave do PostHog em produção)
 - [ ] Alertas para picos de erros 5xx
 
 ### P3-05 · Backups e recuperação ⬜

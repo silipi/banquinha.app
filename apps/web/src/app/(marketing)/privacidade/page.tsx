@@ -12,7 +12,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Política de Privacidade"
-      updatedAt="22 de outubro de 2026"
+      updatedAt="28 de outubro de 2026"
       intro={
         <p>
           Esta política explica quais dados pessoais a banquinha.app trata, para
@@ -75,13 +75,25 @@ export default function PrivacyPage() {
         {
           title: 'Estatísticas de acesso',
           body: (
-            <p>
-              Medimos visitas ao site e às lojas de forma agregada, para saber
-              quais páginas são mais vistas e melhorar o serviço. Usamos o
-              Vercel Web Analytics, que não usa cookies e não identifica quem
-              você é: os dados são contagens de visitas, páginas, país e tipo de
-              dispositivo.
-            </p>
+            <>
+              <p>
+                Medimos visitas ao site e às lojas de forma agregada, para saber
+                quais páginas são mais vistas e melhorar o serviço. Usamos o
+                Vercel Web Analytics, que não usa cookies e não identifica quem
+                você é: os dados são contagens de visitas, páginas, país e tipo
+                de dispositivo.
+              </p>
+              <p>
+                Nas páginas da banquinha.app (a página inicial, o blog e o
+                painel do lojista), usamos também o PostHog para entender como a
+                plataforma é usada: páginas visitadas, cliques, erros e
+                gravações da navegação na tela, com os campos de texto
+                mascarados. Ele guarda um identificador no seu navegador e,
+                quando o lojista entra na conta, associa o uso ao nome e ao
+                e-mail dele. As lojas não usam o PostHog: quem compra numa loja
+                não é acompanhado.
+              </p>
+            </>
           ),
         },
         {

@@ -13,6 +13,7 @@ import {
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { StoreAvatar } from '@/app/[handle]/_components/StoreAvatar';
+import { resetAnalytics } from '@/lib/analytics';
 import { Logo } from '@/components/logo';
 import { panelApi, panelPath } from '@/lib/panel';
 import { themeStyle } from '@/lib/store-theme';
@@ -36,6 +37,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   async function logout() {
     await authLogout({ client: panelApi }).catch(() => {});
+    resetAnalytics();
     router.replace(panelPath('/login'));
   }
 

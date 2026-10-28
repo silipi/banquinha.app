@@ -149,6 +149,23 @@ After the domains are live:
    UPDATE product_images SET url = replace(url, '<r2.dev origin>', 'https://img.banquinha.app');
    ```
 
+## Analytics and error tracking (PostHog)
+
+PostHog runs on the platform's own pages (landing, blog, legal pages, merchant area),
+never on storefronts (`apps/web/src/lib/analytics.ts`). It records page views, clicks,
+session replays and browser errors; the web server (`src/instrumentation.ts`) and the API
+(`ErrorReportingInterceptor`) report 5xx errors to the same project. Everything is off
+while the key is unset.
+
+| Name                       | Where                                                     |
+| -------------------------- | --------------------------------------------------------- |
+| `NEXT_PUBLIC_POSTHOG_KEY`  | Vercel, Production only: the project API key (`phc_...`)  |
+| `NEXT_PUBLIC_POSTHOG_HOST` | Vercel, Production only: `https://us.i.posthog.com` or EU |
+| `POSTHOG_KEY`              | GitHub repository variable (passed to Cloud Run by CI)    |
+| `POSTHOG_HOST`             | GitHub repository variable, same host as the web          |
+
+The project key is public (it ships to browsers), so it is a variable, not a secret.
+
 ## Sign-in configuration (API)
 
 Both are optional: without `GOOGLE_CLIENT_ID` the Google button is hidden, and without `RESEND_API_KEY` "forgot password" cannot send its email.

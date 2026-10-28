@@ -42,6 +42,10 @@ const envSchema = z.object({
   R2_BUCKET: optional(z.string()),
   /** Public origin the bucket is served from (custom domain or r2.dev), no trailing slash. */
   R2_PUBLIC_URL: optional(z.url()),
+  /** PostHog project key for error tracking. Errors are only logged when unset. */
+  POSTHOG_KEY: optional(z.string()),
+  /** PostHog ingestion host; the SDK defaults to the US cloud. */
+  POSTHOG_HOST: optional(z.url()),
   /** Local folder for uploads when R2 is not configured. */
   UPLOADS_DIR: z.string().default('.uploads'),
 });
