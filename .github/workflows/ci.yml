@@ -84,4 +84,4 @@ jobs:
             --max-instances 1 \
             --cpu-boost \
             --set-env-vars "WEB_ORIGIN=${{ vars.WEB_ORIGIN }},R2_ACCOUNT_ID=39897974cb09c05474b5515d228f9bfd,R2_BUCKET=banquinha-images,R2_PUBLIC_URL=https://img.banquinha.app" \
-            --set-secrets "DATABASE_URL=database-url:latest,INTERNAL_API_KEY=internal-api-key:latest,R2_ACCESS_KEY_ID=r2-access-key-id:latest,R2_SECRET_ACCESS_KEY=r2-secret-access-key:latest"
+            --set-secrets "DATABASE_URL=database-url:latest,INTERNAL_API_KEY=internal-api-key:latest,R2_ACCESS_KEY_ID=r2-access-key-id:latest,R2_SECRET_ACCESS_KEY=r2-secret-access-key:latest,RESEND_API_KEY=resend-api-key:latest"

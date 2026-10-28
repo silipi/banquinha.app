@@ -153,10 +153,10 @@ After the domains are live:
 
 Both are optional: without `GOOGLE_CLIENT_ID` the Google button is hidden, and without `RESEND_API_KEY` "forgot password" cannot send its email.
 
-| Name               | Where                                                             |
-| ------------------ | ----------------------------------------------------------------- |
-| `GOOGLE_CLIENT_ID` | OAuth client (Web) in Google Cloud → Credentials; plain env var   |
-| `RESEND_API_KEY`   | Resend, after verifying the sending domain; Secret Manager secret |
+| Name               | Where                                                                                                    |
+| ------------------ | -------------------------------------------------------------------------------------------------------- |
+| `GOOGLE_CLIENT_ID` | OAuth client (Web) in Google Cloud → Credentials; plain env var                                          |
+| `RESEND_API_KEY`   | Resend, after verifying the sending domain; Secret Manager secret `resend-api-key` (already in `ci.yml`) |
 
 Add them to the `gcloud run deploy` flags in `ci.yml` (`--set-env-vars` / `--set-secrets`) when they exist.
 
