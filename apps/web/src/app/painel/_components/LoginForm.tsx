@@ -86,7 +86,7 @@ export function LoginForm() {
           autoComplete="current-password"
           enterKeyHint="go"
         />
-        {/* Relative, so it works both on the app. host and under /painel. */}
+        {/* Relative, so it works both on the minha. host and under /painel. */}
         <a
           href="recuperar-senha"
           className="-mt-2 w-fit text-sm font-medium underline underline-offset-4"

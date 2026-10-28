@@ -10,8 +10,7 @@ Backlog do produto organizado em tickets. Cada ticket tem um ID (`P<fase>-<sequ�
 | ------------------------------ | ----------------------------------------------------------------------------------------------- |
 | `banquinha.app`                | Site: landing, blog, páginas legais                                                             |
 | `banquinha.app/<nome-da-loja>` | Vitrine de cada loja, igual no plano grátis e no pago                                           |
-| `app.banquinha.app`            | Área logada do lojista (SPA): `/login`, `/cadastro`, `/configuracoes`, `/produtos`, `/pedidos`… |
-| `api.banquinha.app`            | API                                                                                             |
+| `minha.banquinha.app`          | Área logada do lojista (SPA): `/login`, `/cadastro`, `/configuracoes`, `/produtos`, `/pedidos`… |
 
 O nome da loja só aceita letras minúsculas, números e hífens, e não pode ser um caminho da plataforma (`blog`, `termos`, `cadastro`…). A lista fica em `apps/api/src/stores/store-handle.ts` e precisa ser atualizada sempre que o site ganhar uma rota nova na raiz.
 
@@ -166,11 +165,12 @@ Definir a marca final antes de lojistas reais começarem a divulgar links. Escol
 - [x] Nome escolhido
 - [x] Marca trocada no código, nos textos e no blog
 - [ ] Pesquisa no INPI (classes 35, 42 e 9)
-- [ ] Domínio `banquinha.app` e @ das redes registrados
+- [x] Domínio `banquinha.app` registrado (Cloudflare, 2026-10-28)
+- [ ] @ das redes registrados
 
 ### P2-02 · Contas de lojista e login 🚧
 
-Área logada do lojista em `app.banquinha.app`, com as rotas `/login`, `/cadastro`, `/recuperar-senha`, `/configuracoes`, `/produtos`, `/pedidos` etc. Sessões controladas pela API.
+Área logada do lojista em `minha.banquinha.app`, com as rotas `/login`, `/cadastro`, `/recuperar-senha`, `/configuracoes`, `/produtos`, `/pedidos` etc. Sessões controladas pela API.
 
 **Cadastro (decidido em 2026-10-23):** nome, e-mail, WhatsApp, senha e confirmação de senha (mínimo 8 caracteres), mais o botão do Google. É o formato que todo mundo conhece, inclusive o público mais velho. O WhatsApp é guardado na conta e reaproveitado como número da loja no P2-03. Login com e-mail e senha, ou Google. "Esqueci minha senha" envia um código de 6 números por e-mail.
 
@@ -179,8 +179,8 @@ Definir a marca final antes de lojistas reais começarem a divulgar links. Escol
 - Senhas com scrypt (nativo do Node). Depois de 10 senhas erradas em 15 minutos, o e-mail fica bloqueado por um tempo.
 - Para "esqueci minha senha" funcionar em produção falta um provedor de e-mail (Resend) com o domínio verificado, que depende de comprar `banquinha.app` (P2-01).
 
-- [x] A área do lojista roda em `app.banquinha.app` (em dev, `app.localhost:3000`; sem o domínio, em `/painel`)
-- [x] `banquinha.app/cadastro` passa a redirecionar para `app.banquinha.app/cadastro`, levando o nome escolhido na landing
+- [x] A área do lojista roda em `minha.banquinha.app` (em dev, `minha.localhost:3000`; sem o domínio, em `/painel`)
+- [x] `banquinha.app/cadastro` passa a redirecionar para `minha.banquinha.app/cadastro`, levando o nome escolhido na landing
 - [x] Cadastro com nome, e-mail, WhatsApp, senha e confirmação; login e saída com e-mail e senha
 - [x] Recuperar senha com código por e-mail (expira em 15 minutos, com limite de tentativas e de reenvio)
 - [ ] Entrar com Google testado de ponta a ponta (falta criar o OAuth client no Google Cloud)
@@ -282,7 +282,7 @@ Aplicar na API os limites do plano grátis (número de produtos, fotos por produ
 
 Manifest, ícones e um shell que funciona offline para o lojista instalar o painel no celular.
 
-**Como ficou (feito em 2026-10-26):** manifest em `/painel/manifest.webmanifest` (o início e o escopo mudam conforme o host: `/` no `app.`, `/painel/` no site), ícones "b." gerados com a fonte da marca (também como ícone adaptável do Android e da tela inicial do iPhone) e um service worker (`public/painel/sw.js`) que guarda os arquivos do app e mostra uma tela "Você está sem internet" em vez do erro do navegador. Na sidebar, "Instalar no celular": no Android abre o pedido de instalação; no iPhone explica Compartilhar → Adicionar à Tela de Início.
+**Como ficou (feito em 2026-10-26):** manifest em `/painel/manifest.webmanifest` (o início e o escopo mudam conforme o host: `/` no `minha.`, `/painel/` no site), ícones "b." gerados com a fonte da marca (também como ícone adaptável do Android e da tela inicial do iPhone) e um service worker (`public/painel/sw.js`) que guarda os arquivos do app e mostra uma tela "Você está sem internet" em vez do erro do navegador. Na sidebar, "Instalar no celular": no Android abre o pedido de instalação; no iPhone explica Compartilhar → Adicionar à Tela de Início.
 
 - [ ] Instalável no Android e no iOS (testar num celular de verdade depois do deploy)
 - [x] Abre direto no painel
@@ -394,11 +394,12 @@ Informações extras em cada item (Ano, Km e Câmbio de um carro; Quartos e m² 
 
 ### P3-01 · Infraestrutura de produção 🚧
 
-Vercel (web), Google Cloud Run em `southamerica-east1` (API), Neon em `aws-sa-east-1` (Postgres) e R2, com os domínios `banquinha.app`, `app.banquinha.app` e `api.banquinha.app`.
+Vercel (web), Google Cloud Run em `southamerica-east1` (API), Neon em `aws-sa-east-1` (Postgres) e R2, com os domínios `banquinha.app` e `minha.banquinha.app` (área do lojista; escolhido em 2026-10-28 no lugar de `app.`). A API fica no endereço do Cloud Run, sem domínio próprio.
 
 - [ ] Ambientes de produção e de preview com bancos separados
 - [x] Migrations rodam no deploy
-- [ ] DNS e TLS para o site, `app.` e `api.`
+- [ ] DNS e TLS para o site e o `minha.` (passo a passo em `docs/deploy.md`, seção Domains). `api.` fica de fora por enquanto: o navegador só fala com a API por `/api/*` no próprio site, e o Cloud Run não mapeia domínio próprio em `southamerica-east1` sem um load balancer pago
+- [ ] Imagens em `img.banquinha.app` (domínio próprio no R2) em vez do `r2.dev`, com o `UPDATE` das URLs já gravadas
 - [ ] `INTERNAL_API_KEY` configurada no site e na API
 - [ ] Limite de pedidos com armazenamento compartilhado (Redis ou similar) se a API rodar em mais de uma instância; hoje o contador fica na memória
 - [x] API configurada para ler o IP real atrás do proxy do provedor (`trustProxy`)

@@ -11,7 +11,7 @@ export function RegisterServiceWorker() {
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') return;
     if (!('serviceWorker' in navigator)) return;
-    // /sw.js on the app. host (rewritten to /painel/sw.js, scope "/"), /painel/sw.js elsewhere.
+    // /sw.js on the minha. host (rewritten to /painel/sw.js, scope "/"), /painel/sw.js elsewhere.
     navigator.serviceWorker.register(panelPath('/sw.js')).catch(() => {});
   }, []);
   return null;

@@ -27,7 +27,7 @@ export function AuthPage({
       {footer && (
         <p className="text-center text-sm text-muted-foreground">
           {footer.text}{' '}
-          {/* Relative, so it works both on the app. host and under /painel. */}
+          {/* Relative, so it works both on the minha. host and under /painel. */}
           <a
             href={footer.href}
             className="font-medium text-foreground underline underline-offset-4"

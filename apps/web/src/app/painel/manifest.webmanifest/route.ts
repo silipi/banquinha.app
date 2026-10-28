@@ -3,7 +3,7 @@
 // the start URL and scope depend on the host that serves it.
 export function GET(request: Request) {
   const host = request.headers.get('host') ?? '';
-  const base = host.startsWith('app.') ? '/' : '/painel/';
+  const base = host.startsWith('minha.') ? '/' : '/painel/';
 
   const manifest = {
     id: base,

@@ -30,7 +30,7 @@ const NAV = [
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const router = useRouter();
-  // "/produtos" on the app. host, "/painel/produtos" elsewhere.
+  // "/produtos" on the minha. host, "/painel/produtos" elsewhere.
   const currentPath = usePathname().replace(/^\/painel(?=\/|$)/, '') || '/';
   const { me, store } = usePanel();
 

@@ -19,7 +19,7 @@ export const PLATFORM_ROOT_PATHS = [
   'cadastro', // redirects to the merchant area
   'lojas', // public/lojas: example store images
   'opengraph-image',
-  'painel', // merchant area (app.banquinha.app)
+  'painel', // merchant area (minha.banquinha.app)
   'privacidade',
   'robots',
   'sitemap',

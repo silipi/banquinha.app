@@ -108,10 +108,46 @@ The web app needs the same `INTERNAL_API_KEY`:
 | `NEXT_PUBLIC_SITE_URL` | Public site URL, no trailing slash                                                 | Production, Preview |
 | `INTERNAL_API_KEY`     | `gcloud secrets versions access latest --secret=internal-api-key` (mark Sensitive) | Production, Preview |
 
-Once `app.banquinha.app` points to Vercel, add `NEXT_PUBLIC_APP_URL=https://app.banquinha.app`.
+Once `minha.banquinha.app` points to Vercel, add `NEXT_PUBLIC_APP_URL=https://minha.banquinha.app`.
 Until then the merchant area is at `/painel` on the site.
 
 `NEXT_PUBLIC_*` values are inlined at build time: redeploy after changing them.
+
+## Domains
+
+`banquinha.app` is registered at Cloudflare, so its DNS lives there. `.app` is on the HSTS
+preload list: every host must serve HTTPS, which Vercel and R2 handle.
+
+| Host                    | Points to                                                       | Cloudflare record                                    |
+| ----------------------- | --------------------------------------------------------------- | ---------------------------------------------------- |
+| `banquinha.app`         | Vercel                                                          | Values Vercel shows when adding the domain, DNS only |
+| `www.banquinha.app`     | Vercel (redirects)                                              | CNAME from Vercel, DNS only                          |
+| `minha.banquinha.app`   | Vercel (same project)                                           | CNAME from Vercel, DNS only                          |
+| `img.banquinha.app`     | R2 bucket                                                       | Created by R2 when connecting the custom domain      |
+| `send.banquinha.app`    | Resend                                                          | MX/TXT records Resend shows when adding the domain   |
+| `banquinha.app` (email) | Cloudflare Email Routing, forwarding `oi@` to the owner's inbox | MX/TXT created by Email Routing                      |
+
+Vercel records stay **DNS only** (grey cloud): Vercel issues the certificates and runs its own
+CDN, and proxying through Cloudflare breaks certificate renewal.
+
+There is no `api.banquinha.app`. Browsers reach the API through `/api/*` on the web host (see
+`next.config.ts`), and Cloud Run domain mappings are not available in `southamerica-east1`; a
+custom API domain would need a global external load balancer (~US$18/month). The API keeps its
+`run.app` URL in `NEXT_PUBLIC_API_URL`.
+
+After the domains are live:
+
+1. Vercel: `NEXT_PUBLIC_SITE_URL=https://banquinha.app` and
+   `NEXT_PUBLIC_APP_URL=https://minha.banquinha.app` (Production), then redeploy.
+2. GitHub variable `WEB_ORIGIN=https://banquinha.app`.
+3. Images: move `R2_PUBLIC_URL` to `https://img.banquinha.app` in `ci.yml` and Vercel, then
+   rewrite the stored URLs once:
+
+   ```sql
+   UPDATE stores SET logo_url = replace(logo_url, '<r2.dev origin>', 'https://img.banquinha.app'),
+     banner_url = replace(banner_url, '<r2.dev origin>', 'https://img.banquinha.app');
+   UPDATE product_images SET url = replace(url, '<r2.dev origin>', 'https://img.banquinha.app');
+   ```
 
 ## Sign-in configuration (API)
 

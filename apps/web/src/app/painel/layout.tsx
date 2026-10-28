@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { RegisterServiceWorker } from './_components/RegisterServiceWorker';
 
-// /painel/* also works on the app. host (next.config.ts lets it through), so these
+// /painel/* also works on the minha. host (next.config.ts lets it through), so these
 // paths are valid on both hosts.
 export const metadata: Metadata = {
   title: { default: 'Painel', template: '%s · banquinha.app' },
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: '#faf7f2' };
 
-// Merchant area, served at app.banquinha.app (see the host rewrite in next.config.ts).
+// Merchant area, served at minha.banquinha.app (see the host rewrite in next.config.ts).
 // (auth): sign-in screens. comecar: the onboarding. (app): the dashboard with the sidebar.
 export default function PanelRootLayout({ children }: LayoutProps<'/painel'>) {
   return (

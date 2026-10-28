@@ -8,7 +8,7 @@ if (existsSync('../../.env')) {
 }
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
-// Merchant area origin (app.banquinha.app). Unset before the custom domain: then the
+// Merchant area origin (minha.banquinha.app). Unset before the custom domain: then the
 // area is reached at /painel on the site's own host.
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 // Public origin of the R2 bucket with uploaded images. Unset in development, where the API
@@ -29,11 +29,11 @@ const nextConfig: NextConfig = {
         // Browser calls from the merchant area go through here, so the API's session
         // cookie is first-party and needs no CORS.
         { source: '/api/:path*', destination: `${apiUrl}/:path*` },
-        // app.<domain>/x is served by src/app/painel/x. /painel/* passes through as is,
+        // minha.<domain>/x is served by src/app/painel/x. /painel/* passes through as is,
         // so absolute /painel/... URLs (manifest, app icons) work on both hosts.
         {
           source: '/:path((?!api/|_next/|painel/|favicon\\.ico).*)',
-          has: [{ type: 'host', value: 'app\\..+' }],
+          has: [{ type: 'host', value: 'minha\\..+' }],
           destination: '/painel/:path',
         },
       ],
@@ -47,7 +47,7 @@ const nextConfig: NextConfig = {
       {
         source: '/cadastro',
         // On the merchant host itself, /cadastro is the sign-up page.
-        missing: [{ type: 'host', value: 'app\\..+' }],
+        missing: [{ type: 'host', value: 'minha\\..+' }],
         destination: appUrl ? `${appUrl}/cadastro` : '/painel/cadastro',
         permanent: false,
       },

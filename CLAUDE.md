@@ -6,7 +6,7 @@ Product context and decision history (pt-BR): `../CLAUDE.md`. This file covers *
 
 ```
 apps/web             Next.js 16 (App Router, Tailwind v4): landing, SEO, storefronts, merchant UI
-apps/api             NestJS 12 + Fastify + Drizzle/Postgres: the backend (api.banquinha.app)
+apps/api             NestJS 12 + Fastify + Drizzle/Postgres: the backend (Cloud Run)
 packages/api-client  Typed API client generated from the API's OpenAPI document
 ```
 
@@ -15,8 +15,8 @@ Tooling: **pnpm** workspaces + **Turborepo**. Everything is ESM (`"type": "modul
 ## URLs
 
 - `banquinha.app/<handle>`: storefronts, served by the root dynamic route `apps/web/src/app/[handle]`. Static routes win over it, and the API reserves every root path in `PLATFORM_ROOT_PATHS` (`apps/api/src/stores/store-handle.ts`). **When adding a route at the root of the web app, add it there too** (a unit test covers the list).
-- `app.banquinha.app`: merchant area, served by `apps/web/src/app/painel` through a host rewrite in `next.config.ts` (`app.localhost:3000` in dev; without the `app.` host, reach it at `/painel`). `banquinha.app/cadastro` redirects there.
-- `/api/*` on the web app is proxied to the API, so the merchant area calls it same-origin and the session cookie is first-party. `api.banquinha.app`: the API itself.
+- `minha.banquinha.app`: merchant area, served by `apps/web/src/app/painel` through a host rewrite in `next.config.ts` (`minha.localhost:3000` in dev; without the `minha.` host, reach it at `/painel`). `banquinha.app/cadastro` redirects there.
+- `/api/*` on the web app is proxied to the API, so the merchant area calls it same-origin and the session cookie is first-party. The API keeps its Cloud Run `run.app` URL (no custom domain, see `docs/deploy.md`).
 
 ## Architecture rules
 
@@ -60,9 +60,9 @@ Env: copy `.env.example` to `.env` at the root. The API loads `../../.env` in de
 ## Web (apps/web)
 
 - Next 16 with `cacheComponents` and `partialPrefetching`. APIs differ from Next 13–15: read `apps/web/AGENTS.md` and `node_modules/next/dist/docs/` before using something new. Middleware is now called **proxy** (none in use: host routing is a rewrite in `next.config.ts`).
-- Merchant area (`src/app/painel`) is client-rendered: it calls the API with `panelApi` from `@/lib/panel` (base URL `/api`) and navigates with `panelPath()`, which works on both the `app.` host and `/painel`. Route groups: `(auth)` sign-in screens, `comecar` the onboarding, `(app)` the dashboard (sidebar + content, state in `panel-context.tsx`). `usePanelMe()` routes by `me.onboardingCompleted`: no store yet → `/comecar`, otherwise → dashboard.
+- Merchant area (`src/app/painel`) is client-rendered: it calls the API with `panelApi` from `@/lib/panel` (base URL `/api`) and navigates with `panelPath()`, which works on both the `minha.` host and `/painel`. Route groups: `(auth)` sign-in screens, `comecar` the onboarding, `(app)` the dashboard (sidebar + content, state in `panel-context.tsx`). `usePanelMe()` routes by `me.onboardingCompleted`: no store yet → `/comecar`, otherwise → dashboard.
 - **Storefront themes are data**, not CSS: the API sends design tokens and `themeStyle()` (`src/lib/store-theme.ts`) turns them into CSS variables on the element with the `storefront` class. Inside it, use the token utilities (`bg-background`, `bg-surface`, `text-muted-foreground`, `bg-store`, `text-store-foreground`, `rounded-store`, `rounded-store-sm`), never fixed colors or `text-white`. Never add per-theme CSS. Details: [`docs/themes.md`](docs/themes.md).
-- The merchant area is an installable PWA: manifest at `src/app/painel/manifest.webmanifest` (start URL and scope follow the host), icons at `painel/icons/[file]`, service worker at `public/painel/sw.js` (production only). `/painel/*` passes through the `app.` host rewrite so those absolute paths work on both hosts.
+- The merchant area is an installable PWA: manifest at `src/app/painel/manifest.webmanifest` (start URL and scope follow the host), icons at `painel/icons/[file]`, service worker at `public/painel/sw.js` (production only). `/painel/*` passes through the `minha.` host rewrite so those absolute paths work on both hosts.
 - Panel modals use `Dialog` (`src/app/painel/_components/Dialog.tsx`); on/off settings use `SwitchRow` (`src/components/ui/switch.tsx`).
 - After a merchant edit, call the `refreshStorefront(handle)` server action (`src/app/painel/actions.ts`) so the cached storefront updates right away.
 - Unstable values (`new Date()`, `Math.random()`) in Server Components break prerendering: use `'use cache'` + `cacheLife`, or move them to the client.

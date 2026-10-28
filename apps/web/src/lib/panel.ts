@@ -1,12 +1,14 @@
 import { createClient, createConfig } from '@banquinha/api-client';
 
 /**
- * Path inside the merchant area, for client-side navigation. On app.banquinha.app the
+ * Path inside the merchant area, for client-side navigation. On minha.banquinha.app the
  * area is the whole host (next.config.ts rewrites it to /painel); elsewhere it lives
  * under /painel.
  */
 export function panelPath(path: string) {
-  return window.location.hostname.startsWith('app.') ? path : `/painel${path}`;
+  return window.location.hostname.startsWith('minha.')
+    ? path
+    : `/painel${path}`;
 }
 
 // Browser calls from the merchant area go through the web app's /api proxy
