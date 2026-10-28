@@ -1,4 +1,4 @@
-import { eq, isNotNull } from 'drizzle-orm';
+import { eq, isNotNull, isNull } from 'drizzle-orm';
 import { syncSystemThemes } from '../../themes/sync-system-themes.js';
 import type { Db } from '../database.js';
 import { productImages, products, stores, themes } from '../schema/index.js';
@@ -32,9 +32,18 @@ export async function seedExampleStores(db: Db): Promise<void> {
       const [upserted] = await tx
         .insert(stores)
         .values(values)
-        .onConflictDoUpdate({ target: stores.handle, set: values })
+        // Example stores have no owner; never take over a merchant's store.
+        .onConflictDoUpdate({
+          target: stores.handle,
+          set: values,
+          setWhere: isNull(stores.ownerId),
+        })
         .returning({ id: stores.id });
-      const storeId = upserted!.id;
+      if (!upserted) {
+        console.warn(`Skipped "${store.handle}": a merchant owns that handle.`);
+        continue;
+      }
+      const storeId = upserted.id;
 
       await tx.delete(products).where(eq(products.storeId, storeId));
 

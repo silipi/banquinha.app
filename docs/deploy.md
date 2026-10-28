@@ -10,8 +10,10 @@
 
 1. `check` passes.
 2. `pnpm db:migrate` against the production branch (direct connection string).
-3. Docker image built from `apps/api/Dockerfile`, pushed to Artifact Registry (`banquinha/api:<sha>`).
-4. `gcloud run deploy banquinha-api` with secrets from Secret Manager.
+3. `pnpm db:seed` upserts the example stores and replaces their products. It only touches
+   ownerless stores with the example handles, which merchants cannot register.
+4. Docker image built from `apps/api/Dockerfile`, pushed to Artifact Registry (`banquinha/api:<sha>`).
+5. `gcloud run deploy banquinha-api` with secrets from Secret Manager.
 
 Migrations run before the new revision serves traffic, so every migration must work with the
 previous API version too (add columns before using them, drop them a release later).

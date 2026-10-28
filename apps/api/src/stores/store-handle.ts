@@ -1,4 +1,5 @@
 import { toSlug } from '../common/slug.js';
+import { exampleStores } from '../database/seed/example-stores.js';
 
 // The handle is the store's public path: banquinha.app/<handle>.
 // Only lowercase letters, digits and single hyphens, so it never needs URL encoding
@@ -89,6 +90,8 @@ const RESERVED_HANDLES = new Set<string>([
   'uploads',
   // Brand
   'banquinha',
+  // Example stores, seeded on every deploy (database/seed)
+  ...exampleStores.map((store) => store.handle),
 ]);
 
 /**

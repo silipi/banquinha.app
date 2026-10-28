@@ -59,6 +59,11 @@ jobs:
         run: pnpm db:migrate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL_DIRECT }}
+      # Keeps the example stores (landing showcase) in sync with example-stores.ts.
+      - name: Seed example stores
+        run: pnpm db:seed
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_DIRECT }}
       - uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}

@@ -29,6 +29,7 @@ describe('findStoreHandleProblem', () => {
     ['clara--joias', 'invalid'],
     ['clara_joias', 'invalid'],
     ['api', 'reserved'],
+    ['techdorafa', 'reserved'],
     ['clara.joias', 'invalid'],
     ['clara/joias', 'invalid'],
     ['clara%20joias', 'invalid'],
