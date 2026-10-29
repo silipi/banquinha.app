@@ -1,6 +1,30 @@
 # banquinha.app (monorepo)
 
-Product context and decision history (pt-BR): `../CLAUDE.md`. This file covers **how the code is organized and how to work in it**.
+Product context and decisions come first (in pt-BR, for the owner); the rest covers **how the code is organized and how to work in it**.
+
+## Produto
+
+Plataforma brasileira para criar uma loja online simples em minutos e vender por um link único (bio do Instagram, WhatsApp, TikTok). Um "Shopify pequeno" adaptado ao Brasil; inspiração de UX: [tiny.store](https://tiny.store) (mobile-first, setup em 3 passos, vitrine com avatar + nome + bio + botões-pílula + grid de produtos).
+
+- **Público:** quem hoje vende ou presta serviço pelo Instagram/WhatsApp e não sabe programar. Foco em autônomos: marmiteira, manicure, revendedora, marido de aluguel, diarista, professor.
+- **Promessa:** loja pronta em menos de 10 minutos, gerenciada do celular.
+- **O que a plataforma oferece (ou vai oferecer):** vitrine personalizável (temas, cores, logo) em `banquinha.app/<loja>`; catálogo de produtos e serviços com fotos; carrinho e pedido; painel de pedidos e clientes; mais tarde estoque, analytics, notificações, assistente que guia a criação da loja e domínio próprio.
+- **Planos:** grátis com limite + pago (valores a definir).
+- **Idioma:** produto, copies e textos de UI em português do Brasil. Código, comentários, testes e docs técnicas em inglês. `ROADMAP.md` e este bloco ficam em pt-BR.
+
+## Decisões de produto
+
+- **Checkout:** no MVP o pedido vai para o WhatsApp do lojista, e o pós-venda segue por lá. Pix, cartão e boleto via Mercado Pago entram numa fase seguinte, com o dinheiro direto na conta do lojista.
+- **Sem app nativo** por enquanto: web mobile-first instalável (PWA).
+- **Toda regra de negócio na API** (NestJS, escolhido por convenção forte e porque o dono já conhece Nest, para manter sem IA). O Next.js é só frontend.
+- **Hospedagem em São Paulo** para a vitrine não atravessar continentes: Vercel, Cloud Run `southamerica-east1`, Neon `aws-sa-east-1`, Cloudflare R2. Postgres padrão para poder migrar. Home server (Coolify) e Fly.io foram descartados para produção.
+- **Domínio:** `banquinha.app` (DNS no Cloudflare). Área do lojista em `minha.banquinha.app` (`app.` soava genérico). Sem `api.banquinha.app`.
+- **Temas como dados:** quase tudo da loja vai ser customizável, e um dia lojistas pagantes vão criar os próprios temas (theme builder). Por isso temas são tokens no banco, nunca CSS fixo por tema.
+- **Produtos e serviços:** cada item é um ou outro, com preço fixo, por hora, por dia, "a partir de" ou sob orçamento. O cliente indica onde (endereço da loja, o dele ou online) e quando prefere; sem agenda por enquanto.
+- **Identidade visual:** fundo papel quente, tinta quase preta, acento laranja `#ff5a1f`, pastéis (sage, lilac, butter, sky); Bricolage Grotesque (títulos) + Geist.
+- **Lojas de exemplo:** Cozinha da Cida (`/cozinhadacida`, marmitas, Recife, tema `tempero`), Unhas da Jéssica (`/unhasdajessica`, manicure, Florianópolis, `docinho`), Neide Beleza & Casa (`/neidebeleza`, revendedora, Goiânia, `perfumaria`) e Zé Faz Tudo (`/zefaztudo`, marido de aluguel, Campinas, `oficina`). Fotos geradas com IA; prompts em `docs/history/example-stores-image-prompts.md`. Sem marcas reais (nada de Avon, Tupperware etc.).
+- **Não usar nem mencionar:** o nome antigo do projeto (nem variações próximas) e promoções antigas como "acesso vitalício grátis" para os primeiros da fila de espera. Não existe lista de espera a honrar.
+- **E-mail do dono** para contas e integrações: gabriel.silipi@gmail.com.
 
 ## Layout
 
