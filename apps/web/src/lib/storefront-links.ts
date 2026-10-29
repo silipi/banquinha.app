@@ -7,7 +7,7 @@ export function storePath(handle: string) {
   return `/${handle}`;
 }
 
-/** Store address as people read and type it, e.g. "banquinha.app/luluca". */
+/** Store address as people read and type it, e.g. "banquinha.app/zefaztudo". */
 export function storeDisplayUrl(handle: string) {
   return `${brandDomain}${storePath(handle)}`;
 }

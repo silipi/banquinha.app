@@ -69,10 +69,19 @@ describe('Store onboarding and dashboard', () => {
       'classico',
       'jardim',
       'docinho',
+      'oficina',
+      'perfumaria',
+      'tempero',
     ]);
     expect(themeBySlug('jardim')).toMatchObject({
       requiredPlan: 'free',
       tokens: { version: 1, colors: { accent: '#4f7a3a' }, radius: 'large' },
+    });
+    expect(themeBySlug('oficina')).toMatchObject({
+      tokens: {
+        colors: { accent: '#f2b705', accentForeground: '#1c1a16' },
+        radius: 'small',
+      },
     });
   });
 

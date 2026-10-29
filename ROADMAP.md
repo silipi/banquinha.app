@@ -14,7 +14,7 @@ Backlog do produto organizado em tickets. Cada ticket tem um ID (`P<fase>-<sequ�
 
 O nome da loja só aceita letras minúsculas, números e hífens, e não pode ser um caminho da plataforma (`blog`, `termos`, `cadastro`…). A lista fica em `apps/api/src/stores/store-handle.ts` e precisa ser atualizada sempre que o site ganhar uma rota nova na raiz.
 
-**Ideia central:** a vitrine roda no modelo de dados real desde o primeiro dia. As lojas de exemplo (Paulo, Luluca, Clara) são dados de seed no Postgres servidos pela API, então a landing leva para lojas de verdade e o painel do lojista depois escreve nas mesmas tabelas.
+**Ideia central:** a vitrine roda no modelo de dados real desde o primeiro dia. As lojas de exemplo (hoje Cozinha da Cida, Unhas da Jéssica, Neide Beleza & Casa e Zé Faz Tudo) são dados de seed no Postgres servidos pela API, então a landing leva para lojas de verdade e o painel do lojista depois escreve nas mesmas tabelas.
 
 ## Visão geral
 

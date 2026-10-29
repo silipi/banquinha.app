@@ -56,7 +56,7 @@ export function Hero() {
               <div className="min-w-0">
                 <p className="text-sm font-semibold">Novo pedido!</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  Marina pediu 2 itens · R$ 70,00
+                  Marina pediu 3 marmitas · R$ 70,00
                 </p>
               </div>
             </div>

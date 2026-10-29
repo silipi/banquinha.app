@@ -16,12 +16,12 @@ describe('Storefront', () => {
     it("renders with the theme's tokens plus the store's overrides", async () => {
       const res = await app.inject({
         method: 'GET',
-        url: '/storefront/luluca',
+        url: '/storefront/unhasdajessica',
       });
-      // Background and radius from the Docinho theme; the accent is Luluca's own.
+      // Background and radius from the Docinho theme; the accent is Jéssica's own.
       expect(res.json().theme).toMatchObject({
         version: 1,
-        colors: { background: '#fcf4f7', accent: '#7c5cbf' },
+        colors: { background: '#fcf4f7', accent: '#d6336c' },
         radius: 'large',
       });
     });
@@ -29,25 +29,25 @@ describe('Storefront', () => {
     it('returns the store with its products in display order', async () => {
       const res = await app.inject({
         method: 'GET',
-        url: '/storefront/pauloplantas',
+        url: '/storefront/neidebeleza',
       });
       expect(res.statusCode).toBe(200);
 
       const store = res.json();
       expect(store).toMatchObject({
-        handle: 'pauloplantas',
-        name: 'Plantinhas do Paulo',
-        logoUrl: '/lojas/pauloplantas/logo.webp',
+        handle: 'neidebeleza',
+        name: 'Neide Beleza & Casa',
+        logoUrl: '/lojas/neidebeleza/logo.webp',
         contact: { whatsapp: '5545999158412', instagram: 'banquinhaapp' },
       });
       expect(store.products).toHaveLength(6);
       expect(store.products[0]).toEqual({
-        slug: 'costela-de-adao',
-        name: 'Costela-de-Adão',
+        slug: 'perfume-floral-75ml',
+        name: 'Perfume Floral 75 ml',
         kind: 'product',
         priceType: 'fixed',
-        priceCents: 4500,
-        imageUrl: '/lojas/pauloplantas/costela-de-adao.webp',
+        priceCents: 8990,
+        imageUrl: '/lojas/neidebeleza/perfume-floral-75ml.webp',
         highlights: [],
       });
     });
@@ -55,7 +55,7 @@ describe('Storefront', () => {
     it('matches the handle case-insensitively', async () => {
       const res = await app.inject({
         method: 'GET',
-        url: '/storefront/PauloPlantas',
+        url: '/storefront/NeideBeleza',
       });
       expect(res.statusCode).toBe(200);
     });
@@ -74,22 +74,23 @@ describe('Storefront', () => {
     it('returns the product with its images and store summary', async () => {
       const res = await app.inject({
         method: 'GET',
-        url: '/storefront/clarajoias/products/colar-aurora',
+        url: '/storefront/zefaztudo/products/instalacao-de-chuveiro',
       });
       expect(res.statusCode).toBe(200);
       expect(res.json()).toMatchObject({
-        slug: 'colar-aurora',
-        name: 'Colar Aurora',
-        priceCents: 21900,
-        images: [{ url: '/lojas/clarajoias/colar-aurora.webp' }],
-        store: { handle: 'clarajoias', name: 'Clara Joias' },
+        slug: 'instalacao-de-chuveiro',
+        name: 'Instalação de chuveiro',
+        kind: 'service',
+        priceCents: 8000,
+        images: [{ url: '/lojas/zefaztudo/instalacao-de-chuveiro.webp' }],
+        store: { handle: 'zefaztudo', name: 'Zé Faz Tudo' },
       });
     });
 
     it('does not find a product through another store', async () => {
       const res = await app.inject({
         method: 'GET',
-        url: '/storefront/luluca/products/colar-aurora',
+        url: '/storefront/neidebeleza/products/instalacao-de-chuveiro',
       });
       expect(res.statusCode).toBe(404);
       expect(res.json()).toMatchObject({ message: 'Produto não encontrado' });
@@ -98,7 +99,7 @@ describe('Storefront', () => {
     it('returns 404 for an unknown store', async () => {
       const res = await app.inject({
         method: 'GET',
-        url: '/storefront/nao-existe/products/colar-aurora',
+        url: '/storefront/nao-existe/products/instalacao-de-chuveiro',
       });
       expect(res.statusCode).toBe(404);
     });
@@ -112,12 +113,12 @@ describe('Storefront', () => {
       });
       expect(res.statusCode).toBe(200);
 
-      const paulo = res
+      const neide = res
         .json()
-        .find((store: { handle: string }) => store.handle === 'pauloplantas');
-      expect(paulo.products).toHaveLength(6);
-      expect(paulo.products[0]).toEqual({
-        slug: 'costela-de-adao',
+        .find((store: { handle: string }) => store.handle === 'neidebeleza');
+      expect(neide.products).toHaveLength(6);
+      expect(neide.products[0]).toEqual({
+        slug: 'perfume-floral-75ml',
         updatedAt: expect.any(String),
       });
     });

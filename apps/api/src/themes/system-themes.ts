@@ -77,6 +77,66 @@ export const SYSTEM_THEMES: SystemTheme[] = [
       radius: 'large',
     },
   },
+  {
+    slug: 'oficina',
+    name: 'Oficina',
+    description: 'Amarelo e firme, para serviços, reparos e ferramentas.',
+    requiredPlan: 'free',
+    tokens: {
+      version: 1,
+      colors: {
+        background: '#f5f2ea',
+        surface: '#ffffff',
+        foreground: '#1c1a16',
+        muted: '#ebe6da',
+        mutedForeground: '#66604f',
+        border: '#dcd5c4',
+        accent: '#f2b705',
+        accentForeground: '#1c1a16',
+      },
+      radius: 'small',
+    },
+  },
+  {
+    slug: 'perfumaria',
+    name: 'Perfumaria',
+    description: 'Lilás e elegante, para beleza, cosméticos e revenda.',
+    requiredPlan: 'free',
+    tokens: {
+      version: 1,
+      colors: {
+        background: '#f7f3fa',
+        surface: '#ffffff',
+        foreground: '#231a2b',
+        muted: '#ece3f3',
+        mutedForeground: '#6d6079',
+        border: '#e0d4ea',
+        accent: '#7a3e9d',
+        accentForeground: '#ffffff',
+      },
+      radius: 'large',
+    },
+  },
+  {
+    slug: 'tempero',
+    name: 'Tempero',
+    description: 'Quente e caseiro, para comida, doces e delivery.',
+    requiredPlan: 'free',
+    tokens: {
+      version: 1,
+      colors: {
+        background: '#fbf4ea',
+        surface: '#ffffff',
+        foreground: '#24170f',
+        muted: '#f3e6d4',
+        mutedForeground: '#74604c',
+        border: '#e9d8c1',
+        accent: '#c4421a',
+        accentForeground: '#ffffff',
+      },
+      radius: 'medium',
+    },
+  },
 ];
 
 export const DEFAULT_THEME_SLUG = SYSTEM_THEMES[0]!.slug;

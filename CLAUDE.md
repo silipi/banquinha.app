@@ -45,7 +45,7 @@ pnpm check          # lint + typecheck + tests + prettier. Run before calling an
 pnpm format
 pnpm db:generate    # create a migration from apps/api/src/database/schema
 pnpm db:migrate
-pnpm db:seed        # upsert the example stores (pauloplantas, luluca, clarajoias, techdorafa)
+pnpm db:seed        # upsert the example stores (cozinhadacida, unhasdajessica, neidebeleza, zefaztudo)
 ```
 
 Env: copy `.env.example` to `.env` at the root. The API loads `../../.env` in dev and `next.config.ts` loads it for the web.

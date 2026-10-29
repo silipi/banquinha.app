@@ -21,12 +21,12 @@ describe('Order rate limit', () => {
     customerName: 'Ana',
     customerWhatsapp: '41999990000',
     fulfillment: 'pickup',
-    items: [{ slug: 'jiboia', quantity: 1 }],
+    items: [{ slug: 'kit-batons', quantity: 1 }],
   };
   const placeOrder = (headers: Record<string, string> = {}) =>
     app.inject({
       method: 'POST',
-      url: '/storefront/pauloplantas/orders',
+      url: '/storefront/neidebeleza/orders',
       payload: order,
       headers,
     });

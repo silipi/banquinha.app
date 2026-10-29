@@ -1,12 +1,12 @@
-import { eq, isNotNull, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import { syncSystemThemes } from '../../themes/sync-system-themes.js';
 import type { Db } from '../database.js';
 import { productImages, products, stores, themes } from '../schema/index.js';
-import { exampleStores } from './example-stores.js';
+import { exampleStores, retiredExampleHandles } from './example-stores.js';
 
 /**
- * Upserts the example stores and replaces their products. Safe to run repeatedly;
- * other stores are left untouched.
+ * Upserts the example stores, replaces their products and deletes retired ones.
+ * Safe to run repeatedly; merchants' stores are left untouched.
  */
 export async function seedExampleStores(db: Db): Promise<void> {
   await syncSystemThemes(db);
@@ -17,6 +17,16 @@ export async function seedExampleStores(db: Db): Promise<void> {
   const themeIdBySlug = new Map(platformThemes.map((t) => [t.slug, t.id]));
 
   await db.transaction(async (tx) => {
+    // Products, images and demo orders go with the store (on delete cascade).
+    await tx
+      .delete(stores)
+      .where(
+        and(
+          inArray(stores.handle, retiredExampleHandles),
+          isNull(stores.ownerId),
+        ),
+      );
+
     for (const {
       products: storeProducts,
       themeSlug,

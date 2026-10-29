@@ -34,234 +34,258 @@ export type ExampleStore = {
   products: ExampleProduct[];
 };
 
+/** Former example stores. The seed deletes them unless a merchant owns the handle. */
+export const retiredExampleHandles = [
+  'pauloplantas',
+  'luluca',
+  'clarajoias',
+  'techdorafa',
+];
+
 export const exampleStores: ExampleStore[] = [
   {
-    handle: 'pauloplantas',
-    name: 'Plantinhas do Paulo',
-    bio: 'Sou o Paulo, seu plant lover de Curitiba! Minhas plantas são cultivadas e cuidadas com muito carinho, prontas pra deixar seu lar mais verde.',
-    city: 'Curitiba, PR',
-    themeSlug: 'jardim',
-    themeOverrides: { colors: { accent: '#4f7a3a' } },
+    handle: 'cozinhadacida',
+    name: 'Cozinha da Cida',
+    bio: 'Comida caseira de verdade, feita por mim na minha cozinha. Marmitas congeladas, bolo de pote e encomendas pro fim de semana. Pedidos até quinta!',
+    city: 'Recife, PE',
+    themeSlug: 'tempero',
+    themeOverrides: null,
     whatsapp: DEMO_WHATSAPP,
     instagram: DEMO_INSTAGRAM,
     products: [
       {
-        slug: 'costela-de-adao',
-        name: 'Costela-de-Adão',
-        priceCents: 4500,
+        slug: 'marmita-frango-legumes',
+        name: 'Marmita Frango com Legumes',
+        priceCents: 2200,
         description:
-          'A Costela-de-Adão é a diva da decoração botânica. Folhas amplas e recortadas dão ao seu espaço um ar sofisticado e tropical. Fácil de cuidar e de grande impacto visual, ela transforma salas e varandas em pequenos refúgios de selva urbana.',
+          'Peito de frango grelhado, arroz branco, feijão preto, brócolis e cenoura no vapor. Leve, temperada na medida e pronta em 5 minutos no micro-ondas.',
       },
       {
-        slug: 'samambaia',
-        name: 'Samambaia',
-        priceCents: 2500,
+        slug: 'marmita-carne-de-sol',
+        name: 'Marmita Carne de Sol com Macaxeira',
+        priceCents: 2600,
         description:
-          'Nossa Samambaia é pura poesia em verde. Suas delicadas frondes criam um efeito “cortina de vida” em qualquer cantinho, trazendo frescor e aconchego. Ideal para vasos suspensos ou estantes, ela exige cuidados simples e recompensa com uma atmosfera naturalmente relaxante.',
+          'Carne de sol desfiada na manteiga com cebola, macaxeira frita, arroz e saladinha. O sabor de almoço de domingo em qualquer dia da semana.',
       },
       {
-        slug: 'jiboia',
-        name: 'Jiboia',
-        priceCents: 2800,
+        slug: 'kit-semana',
+        name: 'Kit Semana (5 marmitas)',
+        priceCents: 9900,
         description:
-          'Nossa Jiboia é especialista em driblar a monotonia: suas folhas em cascata criam movimentos suaves que empoderam qualquer prateleira ou suporte. Cresce rápido, adora sombra e se integra a ambientes internos, trazendo uma vibração acolhedora e cheia de vida.',
+          'Cinco marmitas diferentes para a semana toda: frango, carne de panela, peixe com pirão, macarrão e feijão com legumes. Congeladas e etiquetadas.',
       },
       {
-        slug: 'lirio-da-paz',
-        name: 'Lírio da Paz',
-        priceCents: 3500,
+        slug: 'bolo-de-pote',
+        name: 'Bolo de Pote',
+        priceCents: 1200,
         description:
-          'O Lírio da Paz une elegância e tranquilidade. Com suas flores brancas que parecem flutuar, ele ilumina cantos mais escuros e transmite serenidade. Prefere ambientes com luz indireta e um pouquinho de atenção, retribuindo com charme e ar puro.',
+          'Camadas de bolo de chocolate molhadinho com creme de brigadeiro e granulado. Aquele docinho depois do almoço.',
       },
       {
-        slug: 'espada-sao-jorge',
-        name: 'Espada de São Jorge',
-        priceCents: 3000,
-        description:
-          'A Espada de São Jorge é o escudo verde do seu espaço. Com folhas firmes e eretas, ela purifica o ar e adiciona personalidade a ambientes urbanos. Baixa manutenção e alta presença: perfeita para quem busca estilo prático e um toque de proteção natural.',
-      },
-      {
-        slug: 'suculenta-mix',
-        name: 'Suculenta Mix',
-        priceCents: 1500,
-        description:
-          'Este Mix de Suculentas é uma pequena coleção de guerreiros resilientes. Cada espécie traz uma forma e um verde únicos, ideal para composições em mini-jardins, terrários ou vasinhos charmosos. Prontas para encantar com mínimo esforço de rega e muita personalidade.',
-      },
-    ],
-  },
-  {
-    handle: 'luluca',
-    name: 'Mimos da Luluca',
-    bio: 'Oi! Eu sou a Luluca 💕 Mamãe e artesã, crio brinquedos e mimos com muito amor para deixar o mundo das crianças ainda mais encantado. Tudo feito à mão, com carinho e segurança.',
-    city: 'Belo Horizonte, MG',
-    themeSlug: 'docinho',
-    themeOverrides: { colors: { accent: '#7c5cbf' } },
-    whatsapp: DEMO_WHATSAPP,
-    instagram: DEMO_INSTAGRAM,
-    products: [
-      {
-        slug: 'coelhinho-de-pano',
-        name: 'Coelhinho de Pano',
+        slug: 'bolo-de-rolo',
+        name: 'Bolo de Rolo (inteiro)',
         priceCents: 5500,
         description:
-          'Um coelhinho fofinho feito à mão com tecido de algodão, perfeito para abraçar na hora de dormir. Ideal para crianças pequenas e cheio de personalidade!',
+          'Bolo de rolo pernambucano com massa fininha e muitas camadas de goiabada. Feito sob encomenda, com dois dias de antecedência.',
       },
       {
-        slug: 'mobile-nuvens',
-        name: 'Móbile de Nuvens',
-        priceCents: 6500,
+        slug: 'cuscuz-recheado',
+        name: 'Cuscuz Recheado',
+        priceCents: 1800,
         description:
-          'Um móbile delicado com nuvens e gotinhas coloridas, ideal para pendurar no berço ou no cantinho de leitura das crianças.',
-      },
-      {
-        slug: 'naninha-urso-azul',
-        name: 'Naninha Urso Azul',
-        priceCents: 4800,
-        description:
-          'A clássica naninha em formato de urso azul, feita com tecido antialérgico e pronta para ser o melhor amigo do seu bebê.',
-      },
-      {
-        slug: 'almofada-estrelinha',
-        name: 'Almofada Estrelinha',
-        priceCents: 4000,
-        description:
-          'Almofada em forma de estrela, super macia e com cheirinho suave de lavanda. Decora o quarto e acalma nos momentos de descanso.',
-      },
-      {
-        slug: 'livrinhos-tecido',
-        name: 'Kit Mini Livrinhos de Tecido',
-        priceCents: 5000,
-        description:
-          'Conjunto com 3 livrinhos de tecido lavável, com ilustrações simples e coloridas para estimular a imaginação desde cedo.',
-      },
-      {
-        slug: 'cestinha-croche',
-        name: 'Cestinha de Brinquedos de Crochê',
-        priceCents: 7000,
-        description:
-          'Cestinha recheada com frutinhas e bichinhos feitos em crochê. Estimula o faz-de-conta e a coordenação motora.',
+          'Cuscuz de milho quentinho recheado com queijo coalho, ovo mexido e carne de sol. Café da manhã nordestino completo.',
       },
     ],
   },
   {
-    handle: 'clarajoias',
-    name: 'Clara Joias',
-    bio: 'Joias feitas à mão com metais nobres e pedras naturais brasileiras. Design delicado, elegante e atemporal. Produzido no Brasil, com carinho e autenticidade.',
-    city: 'São Paulo, SP',
-    themeSlug: 'classico',
-    themeOverrides: { colors: { accent: '#b0892f' } },
+    handle: 'unhasdajessica',
+    name: 'Unhas da Jéssica',
+    bio: 'Manicure e nail designer há 6 anos 💅 Atendo no meu espacinho no Campeche ou vou até você. Unhas bem feitas, material esterilizado e aquele papo bom.',
+    city: 'Florianópolis, SC',
+    themeSlug: 'docinho',
+    themeOverrides: { colors: { accent: '#d6336c' } },
     whatsapp: DEMO_WHATSAPP,
     instagram: DEMO_INSTAGRAM,
-    products: [
-      {
-        slug: 'colar-aurora',
-        name: 'Colar Aurora',
-        priceCents: 21900,
-        description:
-          'Corrente delicada de ouro 18k com pingente de pedra da lua natural. Feminino, suave e cheio de luz.',
-      },
-      {
-        slug: 'anel-horizonte',
-        name: 'Anel Horizonte',
-        priceCents: 18900,
-        description:
-          'Anel aberto em prata 950 com acabamento martelado e detalhe em quartzo rosa. Inspirado em formas orgânicas.',
-      },
-      {
-        slug: 'brinco-semente',
-        name: 'Brinco Semente',
-        priceCents: 14900,
-        description:
-          'Par de brincos pequenos em formato de gota, banhados a ouro, com pedra de citrino. Minimalismo com energia.',
-      },
-      {
-        slug: 'pulseira-encanto',
-        name: 'Pulseira Encanto',
-        priceCents: 12900,
-        description:
-          'Pulseira fina com elos retorcidos em prata polida. Um toque sutil de brilho no pulso.',
-      },
-      {
-        slug: 'brinco-lua-crescente',
-        name: 'Brinco Lua Crescente',
-        priceCents: 16900,
-        description:
-          'Argolinhas com pingente de meia-lua em ouro fosco. Elegância discreta para todos os dias.',
-      },
-      {
-        slug: 'anel-duo-cristal',
-        name: 'Anel Duo Cristal',
-        priceCents: 19900,
-        description:
-          'Anel duplo com duas pedras de cristal incolor em base de prata texturizada. Versátil e cheio de charme.',
-      },
-    ],
-  },
-  {
-    handle: 'techdorafa',
-    name: 'Tech do Rafa',
-    bio: 'Técnico de informática há 12 anos. Formato, limpo, monto e conserto computadores e notebooks, na sua casa, na minha oficina ou por acesso remoto.',
-    city: 'Porto Alegre, RS',
-    themeSlug: 'classico',
-    themeOverrides: { colors: { accent: '#2f5fd0' } },
-    whatsapp: DEMO_WHATSAPP,
-    instagram: DEMO_INSTAGRAM,
-    serviceArea: 'Porto Alegre e região metropolitana',
+    serviceArea: 'Florianópolis e São José',
     pickupEnabled: true,
     deliveryEnabled: true,
-    onlineEnabled: true,
     products: [
       {
-        slug: 'formatacao-de-computador',
-        name: 'Formatação de computador',
+        slug: 'manicure-tradicional',
+        name: 'Manicure tradicional',
         kind: 'service',
         priceType: 'fixed',
-        priceCents: 12000,
+        priceCents: 3500,
         description:
-          'Backup dos seus arquivos, Windows atualizado, drivers e os programas do dia a dia instalados. Computador rápido de novo em até 24 horas.',
+          'Cutilagem, lixamento e esmaltação com a cor que você escolher. Material esterilizado e lixa descartável.',
       },
       {
-        slug: 'suporte-remoto',
-        name: 'Suporte remoto',
+        slug: 'pe-e-mao',
+        name: 'Pé e mão',
         kind: 'service',
-        priceType: 'hourly',
+        priceType: 'fixed',
         priceCents: 6000,
         description:
-          'Resolvo problemas de programas, e-mail, impressora e lentidão pela internet, sem você sair de casa. Cobrado por hora de atendimento.',
+          'Manicure e pedicure completas, com hidratação nos pés. Dá pra fazer as duas com a mesma cor ou combinar.',
       },
       {
-        slug: 'limpeza-de-notebook',
-        name: 'Limpeza interna de notebook',
-        kind: 'service',
-        priceType: 'from',
-        priceCents: 9000,
-        description:
-          'Limpeza do cooler e troca da pasta térmica para o notebook parar de esquentar e de fazer barulho. O valor final depende do modelo.',
-      },
-      {
-        slug: 'montagem-de-pc-gamer',
-        name: 'Montagem de PC gamer',
-        kind: 'service',
-        priceType: 'quote',
-        priceCents: null,
-        description:
-          'Ajudo a escolher as peças pelo seu orçamento, monto, organizo os cabos e entrego testado. Me conta o que você quer jogar.',
-      },
-      {
-        slug: 'instalacao-de-rede-wi-fi',
-        name: 'Instalação de rede Wi-Fi',
+        slug: 'alongamento-em-gel',
+        name: 'Alongamento em gel',
         kind: 'service',
         priceType: 'fixed',
         priceCents: 15000,
         description:
-          'Configuração do roteador, senha segura e sinal na casa toda, com repetidor se precisar (o equipamento é cobrado à parte).',
+          'Unhas alongadas em gel no formato que você preferir (amendoada, quadrada, bailarina), com acabamento brilhante. Dura de 3 a 4 semanas.',
       },
       {
-        slug: 'pen-drive-64-gb',
-        name: 'Pen drive 64 GB',
-        priceCents: 4500,
+        slug: 'manutencao-do-alongamento',
+        name: 'Manutenção do alongamento',
+        kind: 'service',
+        priceType: 'from',
+        priceCents: 9000,
         description:
-          'Pen drive USB 3.0 de 64 GB, ótimo para backup. Posso levar junto no atendimento.',
+          'Preenchimento do crescimento e reparo de unhas quebradas. O valor final depende de quantas unhas precisam de reparo.',
+      },
+      {
+        slug: 'nail-art',
+        name: 'Nail art',
+        kind: 'service',
+        priceType: 'from',
+        priceCents: 1000,
+        description:
+          'Desenhos feitos à mão: florzinhas, linhas, francesinha colorida, pedrarias. Me manda a referência e eu passo o valor.',
+      },
+      {
+        slug: 'noivas-e-eventos',
+        name: 'Noivas e eventos',
+        kind: 'service',
+        priceType: 'quote',
+        priceCents: null,
+        description:
+          'Atendimento para noiva, madrinhas e convidadas no local do evento. Me conta a data e quantas pessoas que eu monto o orçamento.',
+      },
+    ],
+  },
+  {
+    handle: 'neidebeleza',
+    name: 'Neide Beleza & Casa',
+    bio: 'Oi, eu sou a Neide! Revendo cosméticos e utilidades pra casa há 8 anos. Faço entrega no bairro, aceito encomenda e sempre tem um mimo no pacote 💜',
+    city: 'Goiânia, GO',
+    themeSlug: 'perfumaria',
+    themeOverrides: null,
+    whatsapp: DEMO_WHATSAPP,
+    instagram: DEMO_INSTAGRAM,
+    products: [
+      {
+        slug: 'perfume-floral-75ml',
+        name: 'Perfume Floral 75 ml',
+        priceCents: 8990,
+        description:
+          'Fragrância floral suave, com notas de rosa e flor de laranjeira. Fixa bem e é ótima para o dia a dia.',
+      },
+      {
+        slug: 'hidratante-corporal',
+        name: 'Hidratante Corporal 400 ml',
+        priceCents: 3490,
+        description:
+          'Hidratante de lavanda que absorve rápido e não deixa a pele grudando. Embalagem com válvula pump.',
+      },
+      {
+        slug: 'kit-batons',
+        name: 'Kit 3 Batons Matte',
+        priceCents: 4990,
+        description:
+          'Três batons matte de longa duração nos tons nude, rosa e vinho. Um pra cada ocasião.',
+      },
+      {
+        slug: 'kit-potes-hermeticos',
+        name: 'Kit 5 Potes Herméticos',
+        priceCents: 6990,
+        description:
+          'Cinco potes com tampa de trava, do pequeno ao grande. Vão ao micro-ondas, ao freezer e à lava-louças.',
+      },
+      {
+        slug: 'garrafa-termica',
+        name: 'Garrafa Térmica 1 L',
+        priceCents: 5490,
+        description:
+          'Garrafa de inox que mantém o café quente por 12 horas e a água gelada por 24. Acabamento fosco lilás.',
+      },
+      {
+        slug: 'kit-presente',
+        name: 'Kit Presente Autocuidado',
+        priceCents: 11990,
+        description:
+          'Caixa presente com perfume, hidratante, protetor labial e esponja de banho, embalada com laço. Pronta pra entregar.',
+      },
+    ],
+  },
+  {
+    handle: 'zefaztudo',
+    name: 'Zé Faz Tudo',
+    bio: 'Sou o Zé, marido de aluguel há 15 anos. Instalo, monto, conserto e pinto. Chego no horário, deixo tudo limpo e cobro o combinado.',
+    city: 'Campinas, SP',
+    themeSlug: 'oficina',
+    themeOverrides: null,
+    whatsapp: DEMO_WHATSAPP,
+    instagram: DEMO_INSTAGRAM,
+    serviceArea: 'Campinas e região',
+    pickupEnabled: false,
+    deliveryEnabled: true,
+    products: [
+      {
+        slug: 'instalacao-de-chuveiro',
+        name: 'Instalação de chuveiro',
+        kind: 'service',
+        priceType: 'fixed',
+        priceCents: 8000,
+        description:
+          'Instalo ou troco o chuveiro elétrico, confiro a fiação e o disjuntor. O chuveiro fica por sua conta.',
+      },
+      {
+        slug: 'montagem-de-moveis',
+        name: 'Montagem de móveis',
+        kind: 'service',
+        priceType: 'from',
+        priceCents: 10000,
+        description:
+          'Monto guarda-roupa, cômoda, rack, cama e escrivaninha. O valor final depende do tamanho do móvel.',
+      },
+      {
+        slug: 'pequenos-reparos',
+        name: 'Pequenos reparos',
+        kind: 'service',
+        priceType: 'hourly',
+        priceCents: 7000,
+        description:
+          'Aquela lista de coisinhas: torneira pingando, porta rangendo, tomada solta, puxador quebrado. Cobro por hora de serviço.',
+      },
+      {
+        slug: 'pintura-de-parede',
+        name: 'Pintura de parede',
+        kind: 'service',
+        priceType: 'daily',
+        priceCents: 28000,
+        description:
+          'Pinto quartos, salas e áreas externas, com proteção do piso e dos móveis. Diária de 8 horas; a tinta é à parte.',
+      },
+      {
+        slug: 'instalacao-de-prateleiras',
+        name: 'Instalação de prateleiras e suportes',
+        kind: 'service',
+        priceType: 'fixed',
+        priceCents: 6000,
+        description:
+          'Instalo prateleiras, suporte de TV, varão de cortina e quadros, tudo no nível. Até 3 peças no mesmo atendimento.',
+      },
+      {
+        slug: 'reforma-de-banheiro',
+        name: 'Reparos no banheiro',
+        kind: 'service',
+        priceType: 'quote',
+        priceCents: null,
+        description:
+          'Troca de rejunte, vaso, pia e azulejos soltos. Me manda fotos pelo WhatsApp que eu passo o orçamento.',
       },
     ],
   },

@@ -24,65 +24,65 @@ describe('POST /storefront/:handle/orders', () => {
     customerWhatsapp: '(41) 99999-0000',
     fulfillment: 'pickup',
     items: [
-      { slug: 'samambaia', quantity: 2 },
-      { slug: 'jiboia', quantity: 1 },
+      { slug: 'hidratante-corporal', quantity: 2 },
+      { slug: 'kit-batons', quantity: 1 },
     ],
   };
 
   it('prices the order on the server and returns a WhatsApp link', async () => {
-    const res = await placeOrder('pauloplantas', validOrder);
+    const res = await placeOrder('neidebeleza', validOrder);
     expect(res.statusCode).toBe(201);
 
     const order = res.json();
-    expect(order.totalCents).toBe(2 * 2500 + 2800);
+    expect(order.totalCents).toBe(2 * 3490 + 4990);
     expect(order.number).toBeGreaterThan(0);
 
     const url = new URL(order.whatsappUrl);
     expect(url.origin + url.pathname).toBe('https://wa.me/5545999158412');
     const message = url.searchParams.get('text');
     expect(message).toContain(`*Pedido #${order.number}*`);
-    expect(message).toContain('2x Samambaia — R$ 50,00');
+    expect(message).toContain('2x Hidratante Corporal 400 ml — R$ 69,80');
     expect(message).toContain('Nome: Marina\n');
   });
 
   it('numbers orders sequentially within the store', async () => {
-    const lulucaOrder = {
+    const cidaOrder = {
       customerName: 'Ana',
       customerWhatsapp: '41999990000',
       fulfillment: 'delivery',
       address: 'Rua das Flores, 10',
-      items: [{ slug: 'coelhinho-de-pano', quantity: 1 }],
+      items: [{ slug: 'bolo-de-pote', quantity: 1 }],
     };
-    const first = (await placeOrder('luluca', lulucaOrder)).json();
-    const second = (await placeOrder('luluca', lulucaOrder)).json();
+    const first = (await placeOrder('cozinhadacida', cidaOrder)).json();
+    const second = (await placeOrder('cozinhadacida', cidaOrder)).json();
     expect(second.number).toBe(first.number + 1);
   });
 
   it('merges repeated products', async () => {
-    const res = await placeOrder('pauloplantas', {
+    const res = await placeOrder('neidebeleza', {
       ...validOrder,
       items: [
-        { slug: 'jiboia', quantity: 1 },
-        { slug: 'jiboia', quantity: 2 },
+        { slug: 'kit-batons', quantity: 1 },
+        { slug: 'kit-batons', quantity: 2 },
       ],
     });
-    expect(res.json().totalCents).toBe(3 * 2800);
+    expect(res.json().totalCents).toBe(3 * 4990);
   });
 
   it('rejects products that are not in the store', async () => {
-    const res = await placeOrder('pauloplantas', {
+    const res = await placeOrder('neidebeleza', {
       ...validOrder,
       items: [
-        { slug: 'samambaia', quantity: 1 },
-        { slug: 'colar-aurora', quantity: 1 },
+        { slug: 'kit-batons', quantity: 1 },
+        { slug: 'bolo-de-pote', quantity: 1 },
       ],
     });
     expect(res.statusCode).toBe(400);
-    expect(res.json()).toMatchObject({ unavailableSlugs: ['colar-aurora'] });
+    expect(res.json()).toMatchObject({ unavailableSlugs: ['bolo-de-pote'] });
   });
 
   it('requires an address for delivery', async () => {
-    const res = await placeOrder('pauloplantas', {
+    const res = await placeOrder('neidebeleza', {
       ...validOrder,
       fulfillment: 'delivery',
     });
@@ -96,7 +96,7 @@ describe('POST /storefront/:handle/orders', () => {
       withoutWhatsapp,
       { ...validOrder, customerWhatsapp: '4133334444' },
     ]) {
-      const res = await placeOrder('pauloplantas', payload);
+      const res = await placeOrder('neidebeleza', payload);
       expect(res.statusCode).toBe(400);
       expect(res.json().message).toContain(
         'Confira seu WhatsApp: use o DDD e o número do celular',
@@ -105,7 +105,7 @@ describe('POST /storefront/:handle/orders', () => {
   });
 
   it('rejects an empty cart', async () => {
-    const res = await placeOrder('pauloplantas', { ...validOrder, items: [] });
+    const res = await placeOrder('neidebeleza', { ...validOrder, items: [] });
     expect(res.statusCode).toBe(400);
     expect(res.json().message).toContain('Sua sacola está vazia');
   });
