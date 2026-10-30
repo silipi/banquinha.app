@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useId, useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { storesCheckHandle } from '@/lib/api';
+import { panelApi } from '@/lib/panel';
 import { brandDomain } from '@/lib/site';
 import { formatStoreHandleInput } from '@/lib/store-handle-input';
 import { cn } from '@/lib/utils';
@@ -19,9 +20,11 @@ export function ClaimHandle({ className }: { className?: string }) {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setPending(true);
-    const { data } = await storesCheckHandle({ query: { handle } }).catch(
-      () => ({ data: undefined }),
-    );
+    // Same-origin through the /api proxy: the API's CORS only allows the production origin.
+    const { data } = await storesCheckHandle({
+      client: panelApi,
+      query: { handle },
+    }).catch(() => ({ data: undefined }));
     setPending(false);
 
     if (!data) {
