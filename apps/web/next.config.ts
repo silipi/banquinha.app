@@ -11,6 +11,10 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
 // Merchant area origin (minha.banquinha.app). Unset before the custom domain: then the
 // area is reached at /painel on the site's own host.
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+// Platform admin origin (admin.banquinha.app). When set, /admin on any other host redirects
+// there, so the admin's cookie only ever exists on its own host. Unset in previews, where
+// the staging admin is at /admin behind Vercel Authentication.
+const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL;
 // Public origin of the R2 bucket with uploaded images. Unset in development, where the API
 // keeps uploads on disk and serves them under /api/uploads (a local path, allowed by default).
 const imagesUrl = process.env.R2_PUBLIC_URL?.replace(/\/+$/, '');
@@ -36,6 +40,12 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'minha\\..+' }],
           destination: '/painel/:path',
         },
+        // admin.<domain>/x is served by src/app/admin/x, the same way.
+        {
+          source: '/:path((?!api/|_next/|admin/|favicon\\.ico).*)',
+          has: [{ type: 'host', value: 'admin\\..+' }],
+          destination: '/admin/:path',
+        },
       ],
       afterFiles: [],
       fallback: [],
@@ -44,12 +54,38 @@ const nextConfig: NextConfig = {
   async redirects() {
     // The landing's "create store" buttons land on the merchant area's sign-up.
     return [
+      ...(adminUrl
+        ? [
+            {
+              source: '/admin/:path*',
+              missing: [{ type: 'host' as const, value: 'admin\\..+' }],
+              destination: `${adminUrl}/:path*`,
+              permanent: false,
+            },
+          ]
+        : []),
       {
         source: '/cadastro',
         // On the merchant host itself, /cadastro is the sign-up page.
         missing: [{ type: 'host', value: 'minha\\..+' }],
         destination: appUrl ? `${appUrl}/cadastro` : '/painel/cadastro',
         permanent: false,
+      },
+    ];
+  },
+  async headers() {
+    // The admin is never indexed nor framed, whatever host serves it.
+    const adminHeaders = [
+      { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+      { key: 'X-Frame-Options', value: 'DENY' },
+      { key: 'Referrer-Policy', value: 'no-referrer' },
+    ];
+    return [
+      { source: '/admin/:path*', headers: adminHeaders },
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'admin\\..+' }],
+        headers: adminHeaders,
       },
     ];
   },

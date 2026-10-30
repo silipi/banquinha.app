@@ -6,11 +6,15 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { FastifyRequest } from 'fastify';
+import { IS_ADMIN_ROUTE } from '../admin/admin-route.decorator.js';
 import { IS_PUBLIC } from './public.decorator.js';
 import { SESSION_COOKIE } from './session-cookie.js';
 import { SessionsService } from './sessions.service.js';
 
-/** Global guard: every route needs a merchant session unless marked @Public(). */
+/**
+ * Global guard: every route needs a merchant session unless marked @Public(). Platform admin
+ * routes are AdminGuard's: they take an admin session, never a merchant one.
+ */
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
@@ -19,11 +23,13 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (isPublic) return true;
+    const targets = [context.getHandler(), context.getClass()];
+    if (this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, targets)) {
+      return true;
+    }
+    if (this.reflector.getAllAndOverride<boolean>(IS_ADMIN_ROUTE, targets)) {
+      return true;
+    }
 
     const request = context
       .switchToHttp()

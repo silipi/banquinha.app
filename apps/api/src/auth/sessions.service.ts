@@ -3,6 +3,7 @@ import { and, eq, gt } from 'drizzle-orm';
 import type { Db } from '../database/database.js';
 import { DB } from '../database/database.module.js';
 import { sessions, users } from '../database/schema/index.js';
+import { effectivePlan } from '../plans/plans.js';
 import type { AuthUser } from './current-user.decorator.js';
 import {
   SESSION_TTL_MS,
@@ -25,6 +26,10 @@ export class SessionsService {
     return token;
   }
 
+  /**
+   * The session's merchant, with `plan` already resolved to the plan whose limits apply
+   * (see effectivePlan), so services can read `user.plan` directly.
+   */
   async findUser(token: string): Promise<AuthUser | null> {
     const [row] = await this.db
       .select({ user: users })
@@ -37,7 +42,7 @@ export class SessionsService {
         ),
       )
       .limit(1);
-    return row?.user ?? null;
+    return row ? { ...row.user, plan: effectivePlan(row.user) } : null;
   }
 
   async delete(token: string): Promise<void> {

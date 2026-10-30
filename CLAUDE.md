@@ -40,6 +40,7 @@ Tooling: **pnpm** workspaces + **Turborepo**. Everything is ESM (`"type": "modul
 
 - `banquinha.app/<handle>`: storefronts, served by the root dynamic route `apps/web/src/app/[handle]`. Static routes win over it, and the API reserves every root path in `PLATFORM_ROOT_PATHS` (`apps/api/src/stores/store-handle.ts`). **When adding a route at the root of the web app, add it there too** (a unit test covers the list).
 - `minha.banquinha.app`: merchant area, served by `apps/web/src/app/painel` through a host rewrite in `next.config.ts` (`minha.localhost:3000` in dev; without the `minha.` host, reach it at `/painel`). `banquinha.app/cadastro` redirects there.
+- `admin.banquinha.app`: platform admin, served by `apps/web/src/app/admin` through the same kind of host rewrite (`/admin` without the `admin.` host). See "Admin" under API below.
 - `/api/*` on the web app is proxied to the API, so the merchant area calls it same-origin and the session cookie is first-party. The API keeps its Cloud Run `run.app` URL (no custom domain, see `docs/deploy.md`).
 
 ## Architecture rules
@@ -116,6 +117,7 @@ Web on Vercel, API on Cloud Run, Postgres on Neon. Pipeline, GitHub settings and
 - **Orders** (`src/orders`): the merchant's view of storefront orders under `/stores/:storeId/orders` (paged by `before=<number>`, filter by status, `PATCH` the status). Storefront orders are refused for a fulfillment method the store turned off (`offeredFulfillment()`); `online` is only for orders made of services, which may also carry a preferred date and period. Orders carry the customer's WhatsApp, and the order detail returns `customerLinks`: `wa.me` links with a ready pt-BR message per step, written in `src/orders/customer-messages.ts`.
 - **Store accent color:** stored in `theme_overrides.colors` together with an `accentForeground` picked for contrast (`src/themes/contrast.ts`); `null` goes back to the theme's color.
 - `POST /stores` ends the onboarding: it creates the store and its first products in one transaction, enforcing the plan limits.
+- **Admin** (`src/admin`): the owner's internal panel, one admin whose credentials come from env (`ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`, `ADMIN_TOTP_SECRET`), never from `users`. Mark admin controllers with `@AdminRoute()`: `AdminGuard` then requires an admin session and the merchant `AuthGuard` skips them. Record every admin change with `AuditLogService.record()` in the same transaction. Plans: `users.plan` is what the merchant pays for, `users.plan_override*` a plan given by the admin; `SessionsService.findUser()` resolves `user.plan` to `effectivePlan()`, and storefront code must use `effectivePlan()` too. Suspended stores (`stores.suspended_at`) are offline: storefront lookups go through `onlineStore()`. Setup: `docs/deploy.md` ("Platform admin").
 - E2E tests run against a real Postgres: `test/support/global-setup.ts` creates `<db>_test`, migrates and seeds it. `pnpm db:up` must be running.
 
 ## Roadmap

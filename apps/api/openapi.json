@@ -1292,6 +1292,474 @@
           "Sitemap"
         ]
       }
+    },
+    "/admin/auth/login": {
+      "post": {
+        "operationId": "adminAuthLogin",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMeDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Username, password and TOTP code. 401 on any mistake, 429 after too many.",
+        "tags": [
+          "AdminAuth"
+        ]
+      }
+    },
+    "/admin/auth/logout": {
+      "post": {
+        "operationId": "adminAuthLogout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AdminAuth"
+        ]
+      }
+    },
+    "/admin/auth/me": {
+      "get": {
+        "operationId": "adminAuthMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMeDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "The current session; 401 when signed out.",
+        "tags": [
+          "AdminAuth"
+        ]
+      }
+    },
+    "/admin/overview": {
+      "get": {
+        "operationId": "adminOverview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminOverviewDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/audit-log": {
+      "get": {
+        "operationId": "adminAuditLog",
+        "parameters": [
+          {
+            "name": "before",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLogDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Every admin sign-in and change, newest first.",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/stores": {
+      "get": {
+        "operationId": "adminStoresList",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Searches handle, name, city and owner email.",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "live",
+                "suspended",
+                "examples"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 1000,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStoreListDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Newest first, 50 per page.",
+        "tags": [
+          "AdminStores"
+        ]
+      }
+    },
+    "/admin/stores/{id}": {
+      "get": {
+        "operationId": "adminStoresGet",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStoreDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "AdminStores"
+        ]
+      }
+    },
+    "/admin/stores/{id}/suspension": {
+      "put": {
+        "operationId": "adminStoresSuspend",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuspendStoreDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStoreDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Takes the storefront offline: 404 to visitors, orders refused, out of the sitemap.",
+        "tags": [
+          "AdminStores"
+        ]
+      },
+      "delete": {
+        "operationId": "adminStoresUnsuspend",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStoreDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "AdminStores"
+        ]
+      }
+    },
+    "/admin/stores/{id}/deletion": {
+      "post": {
+        "operationId": "adminStoresDelete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteStoreDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedStoreDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Deletes the store with its products, photos and orders. 400 when the typed handle does\nnot match; in production 403 without a fresh authenticator code.",
+        "tags": [
+          "AdminStores"
+        ]
+      }
+    },
+    "/admin/accounts": {
+      "get": {
+        "operationId": "adminAccountsList",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Searches email, name and WhatsApp.",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "name": "comped",
+            "required": false,
+            "in": "query",
+            "description": "Only accounts with a plan override (in force or expired).",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 1000,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAccountListDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Newest first, 50 per page.",
+        "tags": [
+          "AdminAccounts"
+        ]
+      }
+    },
+    "/admin/accounts/{id}": {
+      "get": {
+        "operationId": "adminAccountsGet",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAccountDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "AdminAccounts"
+        ]
+      }
+    },
+    "/admin/accounts/{id}/plan-override": {
+      "put": {
+        "operationId": "adminAccountsSetPlanOverride",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPlanOverrideDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAccountDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Gives a plan for free (friends, partners), optionally until a date, with the reason.",
+        "tags": [
+          "AdminAccounts"
+        ]
+      },
+      "delete": {
+        "operationId": "adminAccountsRemovePlanOverride",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAccountDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "AdminAccounts"
+        ]
+      }
     }
   },
   "info": {
@@ -1377,7 +1845,8 @@
           "id": {
             "type": "string",
             "enum": [
-              "free"
+              "free",
+              "pro"
             ]
           },
           "name": {
@@ -1829,6 +2298,10 @@
           "newOrderCount": {
             "type": "number",
             "description": "Orders still marked as new."
+          },
+          "suspended": {
+            "type": "boolean",
+            "description": "Set when the platform took the storefront offline; the panel shows a notice."
           }
         },
         "required": [
@@ -1853,7 +2326,8 @@
           "onlineEnabled",
           "serviceArea",
           "orderCount",
-          "newOrderCount"
+          "newOrderCount",
+          "suspended"
         ]
       },
       "UploadImageDto": {
@@ -1959,7 +2433,8 @@
             "type": "string",
             "description": "Lowest plan that can use it.",
             "enum": [
-              "free"
+              "free",
+              "pro"
             ]
           },
           "tokens": {
@@ -3171,6 +3646,1059 @@
           "handle",
           "updatedAt",
           "products"
+        ]
+      },
+      "AdminLoginDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "code": {
+            "type": "string",
+            "description": "The 6-digit code from the authenticator app.",
+            "pattern": "^\\d{6}$"
+          }
+        },
+        "required": [
+          "username",
+          "password",
+          "code"
+        ]
+      },
+      "AdminMeDto": {
+        "type": "object",
+        "properties": {
+          "environment": {
+            "enum": [
+              "development",
+              "staging",
+              "production"
+            ],
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "When the session ends at the latest (ISO)."
+          }
+        },
+        "required": [
+          "environment",
+          "expiresAt"
+        ]
+      },
+      "OverviewTotalsDto": {
+        "type": "object",
+        "properties": {
+          "accounts": {
+            "type": "number"
+          },
+          "stores": {
+            "type": "number",
+            "description": "Merchant stores (example stores excluded)."
+          },
+          "suspendedStores": {
+            "type": "number"
+          },
+          "products": {
+            "type": "number"
+          },
+          "services": {
+            "type": "number"
+          },
+          "photos": {
+            "type": "number"
+          },
+          "orders": {
+            "type": "number"
+          },
+          "ordersLast30Days": {
+            "type": "number"
+          },
+          "activeStoresLast30Days": {
+            "type": "number",
+            "description": "Stores with at least one order in the last 30 days."
+          },
+          "compedAccounts": {
+            "type": "number",
+            "description": "Accounts with a plan override in force."
+          },
+          "orderValueCents": {
+            "type": "number",
+            "description": "Sum of the firm part of every order, in cents."
+          }
+        },
+        "required": [
+          "accounts",
+          "stores",
+          "suspendedStores",
+          "products",
+          "services",
+          "photos",
+          "orders",
+          "ordersLast30Days",
+          "activeStoresLast30Days",
+          "compedAccounts",
+          "orderValueCents"
+        ]
+      },
+      "AveragesDto": {
+        "type": "object",
+        "properties": {
+          "productsPerStore": {
+            "type": "number"
+          },
+          "photosPerProduct": {
+            "type": "number"
+          },
+          "ordersPerActiveStore": {
+            "type": "number"
+          },
+          "orderValueCents": {
+            "type": "number",
+            "description": "Mean firm total of the orders, in cents."
+          }
+        },
+        "required": [
+          "productsPerStore",
+          "photosPerProduct",
+          "ordersPerActiveStore",
+          "orderValueCents"
+        ]
+      },
+      "WeekDto": {
+        "type": "object",
+        "properties": {
+          "week": {
+            "type": "string",
+            "description": "Monday of the week (YYYY-MM-DD, São Paulo time)."
+          },
+          "signups": {
+            "type": "number"
+          },
+          "signupsWithStore": {
+            "type": "number",
+            "description": "Of the accounts created that week, how many have created a store by now."
+          },
+          "storesCreated": {
+            "type": "number"
+          },
+          "orders": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "week",
+          "signups",
+          "signupsWithStore",
+          "storesCreated",
+          "orders"
+        ]
+      },
+      "FunnelStepDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "count"
+        ]
+      },
+      "CountDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Machine value (plan id, city, item kind…)."
+          },
+          "label": {
+            "type": "string",
+            "description": "pt-BR label."
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "count"
+        ]
+      },
+      "AdminOverviewDto": {
+        "type": "object",
+        "properties": {
+          "environment": {
+            "type": "string",
+            "enum": [
+              "development",
+              "staging",
+              "production"
+            ]
+          },
+          "generatedAt": {
+            "type": "string"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/OverviewTotalsDto"
+          },
+          "averages": {
+            "$ref": "#/components/schemas/AveragesDto"
+          },
+          "weeks": {
+            "description": "Last 12 weeks, oldest first.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WeekDto"
+            }
+          },
+          "funnel": {
+            "description": "Accounts at each step, from sign-up to the first order.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FunnelStepDto"
+            }
+          },
+          "plans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDto"
+            }
+          },
+          "signupMethods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDto"
+            }
+          },
+          "itemKinds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDto"
+            }
+          },
+          "priceTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDto"
+            }
+          },
+          "cities": {
+            "description": "Top cities by number of stores.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDto"
+            }
+          },
+          "themes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDto"
+            }
+          },
+          "fulfillment": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDto"
+            }
+          },
+          "orderStatuses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDto"
+            }
+          },
+          "productsPerStore": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDto"
+            }
+          },
+          "photosPerProduct": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDto"
+            }
+          },
+          "ordersPerStore": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDto"
+            }
+          }
+        },
+        "required": [
+          "environment",
+          "generatedAt",
+          "totals",
+          "averages",
+          "weeks",
+          "funnel",
+          "plans",
+          "signupMethods",
+          "itemKinds",
+          "priceTypes",
+          "cities",
+          "themes",
+          "fulfillment",
+          "orderStatuses",
+          "productsPerStore",
+          "photosPerProduct",
+          "ordersPerStore"
+        ]
+      },
+      "AuditEntryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "targetType": {
+            "type": "string",
+            "nullable": true
+          },
+          "targetId": {
+            "type": "string",
+            "nullable": true
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "userAgent": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "action",
+          "summary",
+          "targetType",
+          "targetId",
+          "details",
+          "userAgent",
+          "createdAt"
+        ]
+      },
+      "AuditLogDto": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEntryDto"
+            }
+          },
+          "nextBefore": {
+            "type": "string",
+            "nullable": true,
+            "description": "Pass as `before` for the next page; null on the last one."
+          }
+        },
+        "required": [
+          "entries",
+          "nextBefore"
+        ]
+      },
+      "AdminOwnerDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "whatsapp": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "name",
+          "whatsapp"
+        ]
+      },
+      "AdminStoreRowDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "handle": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "owner": {
+            "nullable": true,
+            "description": "Null for the example stores.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminOwnerDto"
+              }
+            ]
+          },
+          "plan": {
+            "type": "string",
+            "enum": [
+              "free",
+              "pro"
+            ]
+          },
+          "productCount": {
+            "type": "number"
+          },
+          "photoCount": {
+            "type": "number"
+          },
+          "orderCount": {
+            "type": "number"
+          },
+          "lastOrderAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "suspendedAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "handle",
+          "name",
+          "city",
+          "owner",
+          "plan",
+          "productCount",
+          "photoCount",
+          "orderCount",
+          "lastOrderAt",
+          "createdAt",
+          "suspendedAt"
+        ]
+      },
+      "AdminStoreListDto": {
+        "type": "object",
+        "properties": {
+          "stores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminStoreRowDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "stores",
+          "total",
+          "page",
+          "pageSize"
+        ]
+      },
+      "PlanSummaryDto": {
+        "type": "object",
+        "properties": {
+          "effective": {
+            "type": "string",
+            "description": "The plan whose limits apply.",
+            "enum": [
+              "free",
+              "pro"
+            ]
+          },
+          "paid": {
+            "type": "string",
+            "description": "The plan paid for (billing).",
+            "enum": [
+              "free",
+              "pro"
+            ]
+          },
+          "override": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "free",
+              "pro"
+            ]
+          },
+          "overrideExpiresAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "ISO; null when the override never ends."
+          },
+          "overrideReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "overrideActive": {
+            "type": "boolean",
+            "description": "False once the expiry passed (the override stays on record until removed)."
+          }
+        },
+        "required": [
+          "effective",
+          "paid",
+          "override",
+          "overrideExpiresAt",
+          "overrideReason",
+          "overrideActive"
+        ]
+      },
+      "AdminProductRowDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "product",
+              "service"
+            ]
+          },
+          "priceType": {
+            "type": "string",
+            "enum": [
+              "from",
+              "fixed",
+              "hourly",
+              "daily",
+              "quote"
+            ]
+          },
+          "priceCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "photoCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "kind",
+          "priceType",
+          "priceCents",
+          "active",
+          "photoCount"
+        ]
+      },
+      "AdminOrderRowDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "number": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "new",
+              "confirmed",
+              "completed",
+              "canceled"
+            ]
+          },
+          "fulfillment": {
+            "type": "string",
+            "enum": [
+              "pickup",
+              "delivery",
+              "online"
+            ]
+          },
+          "totalCents": {
+            "type": "number"
+          },
+          "priceToConfirm": {
+            "type": "boolean"
+          },
+          "itemCount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "status",
+          "fulfillment",
+          "totalCents",
+          "priceToConfirm",
+          "itemCount",
+          "createdAt"
+        ]
+      },
+      "AdminStoreDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "handle": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "owner": {
+            "nullable": true,
+            "description": "Null for the example stores.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminOwnerDto"
+              }
+            ]
+          },
+          "plan": {
+            "enum": [
+              "free",
+              "pro"
+            ],
+            "type": "string"
+          },
+          "productCount": {
+            "type": "number"
+          },
+          "photoCount": {
+            "type": "number"
+          },
+          "orderCount": {
+            "type": "number"
+          },
+          "lastOrderAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "suspendedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "whatsapp": {
+            "type": "string"
+          },
+          "instagram": {
+            "type": "string",
+            "nullable": true
+          },
+          "serviceArea": {
+            "type": "string",
+            "nullable": true
+          },
+          "themeName": {
+            "type": "string"
+          },
+          "logoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "bannerUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "fieldCount": {
+            "type": "number"
+          },
+          "suspensionReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "planDetails": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PlanSummaryDto"
+              }
+            ]
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminProductRowDto"
+            }
+          },
+          "recentOrders": {
+            "description": "The 20 most recent.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminOrderRowDto"
+            }
+          },
+          "ordersByStatus": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDto"
+            }
+          },
+          "audit": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEntryDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "handle",
+          "name",
+          "city",
+          "owner",
+          "plan",
+          "productCount",
+          "photoCount",
+          "orderCount",
+          "lastOrderAt",
+          "createdAt",
+          "suspendedAt",
+          "bio",
+          "whatsapp",
+          "instagram",
+          "serviceArea",
+          "themeName",
+          "logoUrl",
+          "bannerUrl",
+          "fieldCount",
+          "suspensionReason",
+          "planDetails",
+          "products",
+          "recentOrders",
+          "ordersByStatus",
+          "audit"
+        ]
+      },
+      "SuspendStoreDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "DeleteStoreDto": {
+        "type": "object",
+        "properties": {
+          "handle": {
+            "type": "string",
+            "description": "The store's handle, typed again as confirmation.",
+            "maxLength": 100
+          },
+          "code": {
+            "type": "string",
+            "description": "Required in production: a fresh code from the authenticator app.",
+            "pattern": "^\\d{6}$"
+          }
+        },
+        "required": [
+          "handle"
+        ]
+      },
+      "DeletedStoreDto": {
+        "type": "object",
+        "properties": {
+          "handle": {
+            "type": "string"
+          },
+          "productCount": {
+            "type": "number"
+          },
+          "orderCount": {
+            "type": "number"
+          },
+          "photoCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "handle",
+          "productCount",
+          "orderCount",
+          "photoCount"
+        ]
+      },
+      "AdminAccountRowDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "whatsapp": {
+            "type": "string",
+            "nullable": true
+          },
+          "signInMethods": {
+            "type": "array",
+            "description": "How the account signs in.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "password",
+                "google"
+              ]
+            }
+          },
+          "plan": {
+            "$ref": "#/components/schemas/PlanSummaryDto"
+          },
+          "storeCount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "lastSignInAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "Start of the most recent session still on record."
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "name",
+          "whatsapp",
+          "signInMethods",
+          "plan",
+          "storeCount",
+          "createdAt",
+          "lastSignInAt"
+        ]
+      },
+      "AdminAccountListDto": {
+        "type": "object",
+        "properties": {
+          "accounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminAccountRowDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "accounts",
+          "total",
+          "page",
+          "pageSize"
+        ]
+      },
+      "AdminAccountStoreDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "handle": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "suspendedAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "handle",
+          "name",
+          "suspendedAt"
+        ]
+      },
+      "AdminAccountDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "whatsapp": {
+            "type": "string",
+            "nullable": true
+          },
+          "signInMethods": {
+            "type": "array",
+            "description": "How the account signs in.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "password",
+                "google"
+              ]
+            }
+          },
+          "plan": {
+            "$ref": "#/components/schemas/PlanSummaryDto"
+          },
+          "storeCount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "lastSignInAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "Start of the most recent session still on record."
+          },
+          "stores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminAccountStoreDto"
+            }
+          },
+          "audit": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEntryDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "name",
+          "whatsapp",
+          "signInMethods",
+          "plan",
+          "storeCount",
+          "createdAt",
+          "lastSignInAt",
+          "stores",
+          "audit"
+        ]
+      },
+      "SetPlanOverrideDto": {
+        "type": "object",
+        "properties": {
+          "plan": {
+            "type": "string",
+            "enum": [
+              "free",
+              "pro"
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "ISO date or date-time; omit or null for no end."
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "plan",
+          "reason"
         ]
       }
     }

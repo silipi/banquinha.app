@@ -10,6 +10,10 @@ const optional = <T extends z.ZodType>(schema: T) =>
 
 const envSchema = z.object({
   DATABASE_URL: z.url(),
+  /** Which deployment this is; the admin panel shows it and adjusts its safeguards. */
+  APP_ENV: z
+    .enum(['development', 'staging', 'production'])
+    .default('development'),
   API_PORT: z.coerce.number().default(3333),
   WEB_ORIGIN: z.url().default('http://localhost:3000'),
   /** Orders accepted per client IP per minute. */
@@ -46,6 +50,19 @@ const envSchema = z.object({
   POSTHOG_KEY: optional(z.string()),
   /** PostHog ingestion host; the SDK defaults to the US cloud. */
   POSTHOG_HOST: optional(z.url()),
+  /**
+   * Platform admin (src/admin). The panel is off unless all three are set. Generate them with
+   * `pnpm --filter @banquinha/api admin:credentials`.
+   */
+  ADMIN_USERNAME: optional(z.string().min(12)),
+  /** scrypt hash of the admin password (see auth/password.ts). */
+  ADMIN_PASSWORD_HASH: optional(z.string().startsWith('scrypt$')),
+  /** Base32 TOTP secret (RFC 6238) shared with the admin's authenticator app. */
+  ADMIN_TOTP_SECRET: optional(
+    z
+      .string()
+      .regex(/^[A-Z2-7]{32,}$/, 'Base32, at least 32 characters (160 bits)'),
+  ),
   /** Local folder for uploads when R2 is not configured. */
   UPLOADS_DIR: z.string().default('.uploads'),
 });
@@ -85,4 +102,27 @@ export function r2Config(env: Env): R2Config | null {
     );
   }
   return values as R2Config;
+}
+
+export interface AdminConfig {
+  username: string;
+  passwordHash: string;
+  totpSecret: string;
+}
+
+/** The admin credentials when all of them are set; throws when only some are. */
+export function adminConfig(env: Env): AdminConfig | null {
+  const values = {
+    username: env.ADMIN_USERNAME,
+    passwordHash: env.ADMIN_PASSWORD_HASH,
+    totpSecret: env.ADMIN_TOTP_SECRET,
+  };
+  const set = Object.values(values).filter(Boolean).length;
+  if (set === 0) return null;
+  if (set < Object.keys(values).length) {
+    throw new Error(
+      'Set all of ADMIN_USERNAME, ADMIN_PASSWORD_HASH and ADMIN_TOTP_SECRET, or none',
+    );
+  }
+  return values as AdminConfig;
 }

@@ -13,6 +13,15 @@ if (env.POSTHOG_KEY) {
   app.useGlobalInterceptors(new ErrorReportingInterceptor(posthog));
 }
 app.enableShutdownHooks();
-SwaggerModule.setup('docs', app, () => buildOpenApiDocument(app));
+SwaggerModule.setup('docs', app, () => {
+  const document = buildOpenApiDocument(app);
+  // The public docs of production do not map out the admin panel (the client still has it).
+  if (env.APP_ENV === 'production') {
+    for (const path of Object.keys(document.paths)) {
+      if (path.startsWith('/admin/')) delete document.paths[path];
+    }
+  }
+  return document;
+});
 
 await app.listen(env.API_PORT, '0.0.0.0');
