@@ -1,6 +1,30 @@
 # banquinha.app (monorepo)
 
-Product context and decision history (pt-BR): `../CLAUDE.md`. This file covers **how the code is organized and how to work in it**.
+Product context and decisions come first (in pt-BR, for the owner); the rest covers **how the code is organized and how to work in it**.
+
+## Produto
+
+Plataforma brasileira para criar uma loja online simples em minutos e vender por um link único (bio do Instagram, WhatsApp, TikTok). Um "Shopify pequeno" adaptado ao Brasil; inspiração de UX: [tiny.store](https://tiny.store) (mobile-first, setup em 3 passos, vitrine com avatar + nome + bio + botões-pílula + grid de produtos).
+
+- **Público:** quem hoje vende ou presta serviço pelo Instagram/WhatsApp e não sabe programar. Foco em autônomos: marmiteira, manicure, revendedora, marido de aluguel, diarista, professor.
+- **Promessa:** loja pronta em menos de 10 minutos, gerenciada do celular.
+- **O que a plataforma oferece (ou vai oferecer):** vitrine personalizável (temas, cores, logo) em `banquinha.app/<loja>`; catálogo de produtos e serviços com fotos; carrinho e pedido; painel de pedidos e clientes; mais tarde estoque, analytics, notificações, assistente que guia a criação da loja e domínio próprio.
+- **Planos:** grátis com limite + pago (valores a definir).
+- **Idioma:** produto, copies e textos de UI em português do Brasil. Código, comentários, testes e docs técnicas em inglês. `ROADMAP.md` e este bloco ficam em pt-BR.
+
+## Decisões de produto
+
+- **Checkout:** no MVP o pedido vai para o WhatsApp do lojista, e o pós-venda segue por lá. Pix, cartão e boleto via Mercado Pago entram numa fase seguinte, com o dinheiro direto na conta do lojista.
+- **Sem app nativo** por enquanto: web mobile-first instalável (PWA).
+- **Toda regra de negócio na API** (NestJS, escolhido por convenção forte e porque o dono já conhece Nest, para manter sem IA). O Next.js é só frontend.
+- **Hospedagem em São Paulo** para a vitrine não atravessar continentes: Vercel, Cloud Run `southamerica-east1`, Neon `aws-sa-east-1`, Cloudflare R2. Postgres padrão para poder migrar. Home server (Coolify) e Fly.io foram descartados para produção.
+- **Domínio:** `banquinha.app` (DNS no Cloudflare). Área do lojista em `minha.banquinha.app` (`app.` soava genérico). Sem `api.banquinha.app`.
+- **Temas como dados:** quase tudo da loja vai ser customizável, e um dia lojistas pagantes vão criar os próprios temas (theme builder). Por isso temas são tokens no banco, nunca CSS fixo por tema.
+- **Produtos e serviços:** cada item é um ou outro, com preço fixo, por hora, por dia, "a partir de" ou sob orçamento. O cliente indica onde (endereço da loja, o dele ou online) e quando prefere; sem agenda por enquanto.
+- **Identidade visual:** fundo papel quente, tinta quase preta, acento laranja `#ff5a1f`, pastéis (sage, lilac, butter, sky); Bricolage Grotesque (títulos) + Geist.
+- **Lojas de exemplo:** Cozinha da Cida (`/cozinhadacida`, marmitas, Recife, tema `tempero`), Unhas da Jéssica (`/unhasdajessica`, manicure, Florianópolis, `docinho`), Neide Beleza & Casa (`/neidebeleza`, revendedora, Goiânia, `perfumaria`) e Zé Faz Tudo (`/zefaztudo`, marido de aluguel, Campinas, `oficina`). Fotos geradas com IA; prompts em `docs/history/example-stores-image-prompts.md`. Sem marcas reais (nada de Avon, Tupperware etc.).
+- **Não usar nem mencionar:** o nome antigo do projeto (nem variações próximas) e promoções antigas como "acesso vitalício grátis" para os primeiros da fila de espera. Não existe lista de espera a honrar.
+- **E-mail do dono** para contas e integrações: gabriel.silipi@gmail.com.
 
 ## Layout
 
@@ -16,6 +40,7 @@ Tooling: **pnpm** workspaces + **Turborepo**. Everything is ESM (`"type": "modul
 
 - `banquinha.app/<handle>`: storefronts, served by the root dynamic route `apps/web/src/app/[handle]`. Static routes win over it, and the API reserves every root path in `PLATFORM_ROOT_PATHS` (`apps/api/src/stores/store-handle.ts`). **When adding a route at the root of the web app, add it there too** (a unit test covers the list).
 - `minha.banquinha.app`: merchant area, served by `apps/web/src/app/painel` through a host rewrite in `next.config.ts` (`minha.localhost:3000` in dev; without the `minha.` host, reach it at `/painel`). `banquinha.app/cadastro` redirects there.
+- `admin.banquinha.app`: platform admin, served by `apps/web/src/app/admin` through the same kind of host rewrite (`/admin` without the `admin.` host). See "Admin" under API below.
 - `/api/*` on the web app is proxied to the API, so the merchant area calls it same-origin and the session cookie is first-party. The API keeps its Cloud Run `run.app` URL (no custom domain, see `docs/deploy.md`).
 
 ## Architecture rules
@@ -74,6 +99,9 @@ Env: copy `.env.example` to `.env` at the root. The API loads `../../.env` in de
 
 Web on Vercel, API on Cloud Run, Postgres on Neon. Pipeline, GitHub settings and one-time GCP setup: [`docs/deploy.md`](docs/deploy.md).
 
+- **GitHub Flow:** `main` is production. Branch from `main`, open a PR and squash-merge it to ship. Never push to `main` directly.
+- Every PR deploys its API to the shared staging service (`banquinha-api-staging`, Neon `staging`) and gets a Vercel preview that talks to it; the last push wins. Production code must not assume it runs on `banquinha.app`: previews use their own URL (`siteUrl`, `isProduction` in `apps/web/src/lib/site.ts`).
+
 ## API (apps/api)
 
 - Nest 12 on the Fastify adapter. `createApp()` in `src/app.ts` holds global setup (validation pipe) and is shared by `main.ts`, tests and `openapi.ts`.
@@ -89,6 +117,7 @@ Web on Vercel, API on Cloud Run, Postgres on Neon. Pipeline, GitHub settings and
 - **Orders** (`src/orders`): the merchant's view of storefront orders under `/stores/:storeId/orders` (paged by `before=<number>`, filter by status, `PATCH` the status). Storefront orders are refused for a fulfillment method the store turned off (`offeredFulfillment()`); `online` is only for orders made of services, which may also carry a preferred date and period. Orders carry the customer's WhatsApp, and the order detail returns `customerLinks`: `wa.me` links with a ready pt-BR message per step, written in `src/orders/customer-messages.ts`.
 - **Store accent color:** stored in `theme_overrides.colors` together with an `accentForeground` picked for contrast (`src/themes/contrast.ts`); `null` goes back to the theme's color.
 - `POST /stores` ends the onboarding: it creates the store and its first products in one transaction, enforcing the plan limits.
+- **Admin** (`src/admin`): the owner's internal panel, one admin whose credentials come from env (`ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`, `ADMIN_TOTP_SECRET`), never from `users`. Mark admin controllers with `@AdminRoute()`: `AdminGuard` then requires an admin session and the merchant `AuthGuard` skips them. Record every admin change with `AuditLogService.record()` in the same transaction. Plans: `users.plan` is what the merchant pays for, `users.plan_override*` a plan given by the admin; `SessionsService.findUser()` resolves `user.plan` to `effectivePlan()`, and storefront code must use `effectivePlan()` too. Suspended stores (`stores.suspended_at`) are offline: storefront lookups go through `onlineStore()`. Setup: `docs/deploy.md` ("Platform admin").
 - E2E tests run against a real Postgres: `test/support/global-setup.ts` creates `<db>_test`, migrates and seeds it. `pnpm db:up` must be running.
 
 ## Roadmap

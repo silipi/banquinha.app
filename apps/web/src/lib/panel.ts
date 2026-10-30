@@ -11,8 +11,8 @@ export function panelPath(path: string) {
     : `/painel${path}`;
 }
 
-// Browser calls from the merchant area go through the web app's /api proxy
-// (next.config.ts), so the session cookie stays first-party.
+// Every browser call to the API (merchant area and landing) goes through the web app's
+// /api proxy (next.config.ts), so the session cookie stays first-party and no CORS is needed.
 export const panelApi = createClient(createConfig({ baseUrl: '/api' }));
 
 /** The API's user-facing message from an error body, or the fallback. */

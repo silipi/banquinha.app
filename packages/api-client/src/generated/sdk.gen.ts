@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthConfigData, AuthConfigResponses, AuthGoogleData, AuthGoogleResponses, AuthLoginData, AuthLoginResponses, AuthLogoutData, AuthLogoutResponses, AuthRequestPasswordResetData, AuthRequestPasswordResetResponses, AuthResetPasswordData, AuthResetPasswordResponses, AuthSignupData, AuthSignupResponses, HealthCheckData, HealthCheckResponses, MeGetData, MeGetResponses, OrdersGetData, OrdersGetResponses, OrdersListData, OrdersListResponses, OrdersUpdateData, OrdersUpdateResponses, ProductsAddImageData, ProductsAddImageResponses, ProductsCreateData, ProductsCreateResponses, ProductsListData, ProductsListResponses, ProductsRemoveData, ProductsRemoveImageData, ProductsRemoveImageResponses, ProductsRemoveResponses, ProductsReorderData, ProductsReorderImagesData, ProductsReorderImagesResponses, ProductsReorderResponses, ProductsUpdateData, ProductsUpdateResponses, SitemapListStorefrontsData, SitemapListStorefrontsResponses, StoreFieldsCreateData, StoreFieldsCreateResponses, StoreFieldsListData, StoreFieldsListResponses, StoreFieldsRemoveData, StoreFieldsRemoveResponses, StoreFieldsReorderData, StoreFieldsReorderResponses, StoreFieldsUpdateData, StoreFieldsUpdateResponses, StorefrontCreateOrderData, StorefrontCreateOrderResponses, StorefrontGetProductData, StorefrontGetProductResponses, StorefrontGetStoreData, StorefrontGetStoreResponses, StoresCheckHandleData, StoresCheckHandleResponses, StoresCreateData, StoresCreateResponses, StoresGetData, StoresGetResponses, StoresRemoveImageData, StoresRemoveImageResponses, StoresUpdateData, StoresUpdateResponses, StoresUploadImageData, StoresUploadImageResponses, ThemesListData, ThemesListResponses } from './types.gen';
+import type { AdminAccountsGetData, AdminAccountsGetResponses, AdminAccountsListData, AdminAccountsListResponses, AdminAccountsRemovePlanOverrideData, AdminAccountsRemovePlanOverrideResponses, AdminAccountsSetPlanOverrideData, AdminAccountsSetPlanOverrideResponses, AdminAuditLogData, AdminAuditLogResponses, AdminAuthLoginData, AdminAuthLoginResponses, AdminAuthLogoutData, AdminAuthLogoutResponses, AdminAuthMeData, AdminAuthMeResponses, AdminOverviewData, AdminOverviewResponses, AdminStoresDeleteData, AdminStoresDeleteResponses, AdminStoresGetData, AdminStoresGetResponses, AdminStoresListData, AdminStoresListResponses, AdminStoresSuspendData, AdminStoresSuspendResponses, AdminStoresUnsuspendData, AdminStoresUnsuspendResponses, AuthConfigData, AuthConfigResponses, AuthGoogleData, AuthGoogleResponses, AuthLoginData, AuthLoginResponses, AuthLogoutData, AuthLogoutResponses, AuthRequestPasswordResetData, AuthRequestPasswordResetResponses, AuthResetPasswordData, AuthResetPasswordResponses, AuthSignupData, AuthSignupResponses, HealthCheckData, HealthCheckResponses, MeGetData, MeGetResponses, OrdersGetData, OrdersGetResponses, OrdersListData, OrdersListResponses, OrdersUpdateData, OrdersUpdateResponses, ProductsAddImageData, ProductsAddImageResponses, ProductsCreateData, ProductsCreateResponses, ProductsListData, ProductsListResponses, ProductsRemoveData, ProductsRemoveImageData, ProductsRemoveImageResponses, ProductsRemoveResponses, ProductsReorderData, ProductsReorderImagesData, ProductsReorderImagesResponses, ProductsReorderResponses, ProductsUpdateData, ProductsUpdateResponses, SitemapListStorefrontsData, SitemapListStorefrontsResponses, StoreFieldsCreateData, StoreFieldsCreateResponses, StoreFieldsListData, StoreFieldsListResponses, StoreFieldsRemoveData, StoreFieldsRemoveResponses, StoreFieldsReorderData, StoreFieldsReorderResponses, StoreFieldsUpdateData, StoreFieldsUpdateResponses, StorefrontCreateOrderData, StorefrontCreateOrderResponses, StorefrontGetProductData, StorefrontGetProductResponses, StorefrontGetStoreData, StorefrontGetStoreResponses, StoresCheckHandleData, StoresCheckHandleResponses, StoresCreateData, StoresCreateResponses, StoresGetData, StoresGetResponses, StoresRemoveImageData, StoresRemoveImageResponses, StoresUpdateData, StoresUpdateResponses, StoresUploadImageData, StoresUploadImageResponses, ThemesListData, ThemesListResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -313,3 +313,84 @@ export const storefrontCreateOrder = <ThrowOnError extends boolean = false>(opti
  * Every public store and product URL, for the web app's sitemap.xml.
  */
 export const sitemapListStorefronts = <ThrowOnError extends boolean = false>(options?: Options<SitemapListStorefrontsData, ThrowOnError>): RequestResult<SitemapListStorefrontsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<SitemapListStorefrontsResponses, unknown, ThrowOnError>({ url: '/sitemap/storefronts', ...options });
+
+/**
+ * Username, password and TOTP code. 401 on any mistake, 429 after too many.
+ */
+export const adminAuthLogin = <ThrowOnError extends boolean = false>(options: Options<AdminAuthLoginData, ThrowOnError>): RequestResult<AdminAuthLoginResponses, unknown, ThrowOnError> => (options.client ?? client).post<AdminAuthLoginResponses, unknown, ThrowOnError>({
+    url: '/admin/auth/login',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const adminAuthLogout = <ThrowOnError extends boolean = false>(options?: Options<AdminAuthLogoutData, ThrowOnError>): RequestResult<AdminAuthLogoutResponses, unknown, ThrowOnError> => (options?.client ?? client).post<AdminAuthLogoutResponses, unknown, ThrowOnError>({ url: '/admin/auth/logout', ...options });
+
+/**
+ * The current session; 401 when signed out.
+ */
+export const adminAuthMe = <ThrowOnError extends boolean = false>(options?: Options<AdminAuthMeData, ThrowOnError>): RequestResult<AdminAuthMeResponses, unknown, ThrowOnError> => (options?.client ?? client).get<AdminAuthMeResponses, unknown, ThrowOnError>({ url: '/admin/auth/me', ...options });
+
+export const adminOverview = <ThrowOnError extends boolean = false>(options?: Options<AdminOverviewData, ThrowOnError>): RequestResult<AdminOverviewResponses, unknown, ThrowOnError> => (options?.client ?? client).get<AdminOverviewResponses, unknown, ThrowOnError>({ url: '/admin/overview', ...options });
+
+/**
+ * Every admin sign-in and change, newest first.
+ */
+export const adminAuditLog = <ThrowOnError extends boolean = false>(options?: Options<AdminAuditLogData, ThrowOnError>): RequestResult<AdminAuditLogResponses, unknown, ThrowOnError> => (options?.client ?? client).get<AdminAuditLogResponses, unknown, ThrowOnError>({ url: '/admin/audit-log', ...options });
+
+/**
+ * Newest first, 50 per page.
+ */
+export const adminStoresList = <ThrowOnError extends boolean = false>(options?: Options<AdminStoresListData, ThrowOnError>): RequestResult<AdminStoresListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<AdminStoresListResponses, unknown, ThrowOnError>({ url: '/admin/stores', ...options });
+
+export const adminStoresGet = <ThrowOnError extends boolean = false>(options: Options<AdminStoresGetData, ThrowOnError>): RequestResult<AdminStoresGetResponses, unknown, ThrowOnError> => (options.client ?? client).get<AdminStoresGetResponses, unknown, ThrowOnError>({ url: '/admin/stores/{id}', ...options });
+
+export const adminStoresUnsuspend = <ThrowOnError extends boolean = false>(options: Options<AdminStoresUnsuspendData, ThrowOnError>): RequestResult<AdminStoresUnsuspendResponses, unknown, ThrowOnError> => (options.client ?? client).delete<AdminStoresUnsuspendResponses, unknown, ThrowOnError>({ url: '/admin/stores/{id}/suspension', ...options });
+
+/**
+ * Takes the storefront offline: 404 to visitors, orders refused, out of the sitemap.
+ */
+export const adminStoresSuspend = <ThrowOnError extends boolean = false>(options: Options<AdminStoresSuspendData, ThrowOnError>): RequestResult<AdminStoresSuspendResponses, unknown, ThrowOnError> => (options.client ?? client).put<AdminStoresSuspendResponses, unknown, ThrowOnError>({
+    url: '/admin/stores/{id}/suspension',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Deletes the store with its products, photos and orders. 400 when the typed handle does
+ * not match; in production 403 without a fresh authenticator code.
+ */
+export const adminStoresDelete = <ThrowOnError extends boolean = false>(options: Options<AdminStoresDeleteData, ThrowOnError>): RequestResult<AdminStoresDeleteResponses, unknown, ThrowOnError> => (options.client ?? client).post<AdminStoresDeleteResponses, unknown, ThrowOnError>({
+    url: '/admin/stores/{id}/deletion',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Newest first, 50 per page.
+ */
+export const adminAccountsList = <ThrowOnError extends boolean = false>(options?: Options<AdminAccountsListData, ThrowOnError>): RequestResult<AdminAccountsListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<AdminAccountsListResponses, unknown, ThrowOnError>({ url: '/admin/accounts', ...options });
+
+export const adminAccountsGet = <ThrowOnError extends boolean = false>(options: Options<AdminAccountsGetData, ThrowOnError>): RequestResult<AdminAccountsGetResponses, unknown, ThrowOnError> => (options.client ?? client).get<AdminAccountsGetResponses, unknown, ThrowOnError>({ url: '/admin/accounts/{id}', ...options });
+
+export const adminAccountsRemovePlanOverride = <ThrowOnError extends boolean = false>(options: Options<AdminAccountsRemovePlanOverrideData, ThrowOnError>): RequestResult<AdminAccountsRemovePlanOverrideResponses, unknown, ThrowOnError> => (options.client ?? client).delete<AdminAccountsRemovePlanOverrideResponses, unknown, ThrowOnError>({ url: '/admin/accounts/{id}/plan-override', ...options });
+
+/**
+ * Gives a plan for free (friends, partners), optionally until a date, with the reason.
+ */
+export const adminAccountsSetPlanOverride = <ThrowOnError extends boolean = false>(options: Options<AdminAccountsSetPlanOverrideData, ThrowOnError>): RequestResult<AdminAccountsSetPlanOverrideResponses, unknown, ThrowOnError> => (options.client ?? client).put<AdminAccountsSetPlanOverrideResponses, unknown, ThrowOnError>({
+    url: '/admin/accounts/{id}/plan-override',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});

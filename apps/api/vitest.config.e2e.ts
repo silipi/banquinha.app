@@ -1,6 +1,7 @@
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { defineConfig } from 'vitest/config';
+import { TEST_ADMIN_ENV } from './test/support/admin.js';
 import { testDatabaseUrl } from './test/support/test-database.js';
 
 export default defineConfig({
@@ -14,6 +15,7 @@ export default defineConfig({
       DATABASE_URL: testDatabaseUrl(),
       ORDER_RATE_LIMIT: '1000',
       UPLOADS_DIR: join(tmpdir(), 'banquinha-test-uploads'),
+      ...TEST_ADMIN_ENV,
     },
   },
 });

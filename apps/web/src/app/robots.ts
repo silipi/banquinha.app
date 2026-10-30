@@ -1,7 +1,11 @@
 import type { MetadataRoute } from 'next';
-import { absoluteUrl } from '@/lib/site';
+import { absoluteUrl, isProduction } from '@/lib/site';
 
 export default function robots(): MetadataRoute.Robots {
+  // Previews talk to the staging API: keep them out of search results.
+  if (!isProduction) {
+    return { rules: { userAgent: '*', disallow: '/' } };
+  }
   return {
     rules: {
       userAgent: '*',

@@ -4,32 +4,83 @@
 | -------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | Web      | Vercel (root `apps/web`, functions in `gru1`)            | Vercel Git integration; `apps/web/vercel.json` skips builds when the web is unchanged |
 | API      | Google Cloud Run, `southamerica-east1`                   | `deploy-api` job in `.github/workflows/ci.yml`                                        |
-| Postgres | Neon, `aws-sa-east-1` (branches `production`, `preview`) | Migrations run in CI before each API deploy                                           |
+| Postgres | Neon, `aws-sa-east-1` (branches `production`, `staging`) | Migrations run in CI before each API deploy                                           |
 
-## API pipeline (push to `main`)
+## Environments and release flow
+
+GitHub Flow: `main` is always what runs in production. Work happens on a branch cut from
+`main`, opened as a pull request, and ships when the PR is squash-merged.
+
+| Environment | Git                        | Web (Vercel)                                         | API (Cloud Run)         | Database          | Images (R2)                |
+| ----------- | -------------------------- | ---------------------------------------------------- | ----------------------- | ----------------- | -------------------------- |
+| Production  | `main`                     | `banquinha.app`, `minha.banquinha.app`               | `banquinha-api`         | Neon `production` | `banquinha-images`         |
+| Staging     | any branch with an open PR | Preview URL per branch, behind Vercel Authentication | `banquinha-api-staging` | Neon `staging`    | `banquinha-images-staging` |
+
+- Every PR push deploys its API to the single staging service and migrates the staging
+  database. With two PRs open, the last push wins: the previews of the other PR talk to an
+  API built from a different branch.
+- Previews leave `NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_APP_URL` unset: canonical URLs use
+  the deployment's own URL, and the merchant area is at `/painel`. `robots.txt` blocks
+  everything outside production.
+- PRs from forks never deploy (they get no secrets).
+- To ship several features together, keep their PRs open and merge them the same day.
+- Rollback: revert the PR on `main`, or promote an earlier deployment in Vercel (web only;
+  the API redeploys from `main`).
+
+### Resetting the staging database
+
+Migrations from abandoned branches stay in staging. To start over, open the Neon SQL editor
+on the **staging** branch and run:
+
+```sql
+DROP SCHEMA public CASCADE;
+DROP SCHEMA IF EXISTS drizzle CASCADE;
+CREATE SCHEMA public;
+```
+
+Then re-run the `deploy-api` job of any open PR (or push to it): it migrates and seeds the
+example stores. Never use Neon's "Reset from parent" on staging: it copies production data,
+merchants' and customers' personal data included.
+
+## API pipeline
 
 1. `check` passes.
-2. `pnpm db:migrate` against the production branch (direct connection string).
+2. `pnpm db:migrate` against the target database (direct connection string).
 3. `pnpm db:seed` upserts the example stores and replaces their products. It only touches
    ownerless stores with the example handles, which merchants cannot register.
 4. Docker image built from `apps/api/Dockerfile`, pushed to Artifact Registry (`banquinha/api:<sha>`).
-5. `gcloud run deploy banquinha-api` with secrets from Secret Manager.
+5. `gcloud run deploy` with secrets from Secret Manager: `banquinha-api` on a push to `main`,
+   `banquinha-api-staging` (secrets suffixed `-staging`) on a pull request.
 
 Migrations run before the new revision serves traffic, so every migration must work with the
 previous API version too (add columns before using them, drop them a release later).
 
 ## GitHub configuration
 
+Staging uses suffixed repository variables and secrets rather than GitHub Environments,
+which private repositories only get on paid plans.
+
 Repository **variables** (Settings → Secrets and variables → Actions → Variables):
 
-| Name               | Value                                                                              |
-| ------------------ | ---------------------------------------------------------------------------------- |
-| `GCP_PROJECT_ID`   | GCP project ID                                                                     |
-| `GCP_WIF_PROVIDER` | `projects/<number>/locations/global/workloadIdentityPools/github/providers/github` |
-| `GCP_DEPLOYER_SA`  | `github-deployer@<project>.iam.gserviceaccount.com`                                |
-| `WEB_ORIGIN`       | Public URL of the web app (CORS)                                                   |
+| Name                    | Value                                                                              |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| `GCP_PROJECT_ID`        | GCP project ID                                                                     |
+| `GCP_WIF_PROVIDER`      | `projects/<number>/locations/global/workloadIdentityPools/github/providers/github` |
+| `GCP_DEPLOYER_SA`       | `github-deployer@<project>.iam.gserviceaccount.com`                                |
+| `WEB_ORIGIN`            | Public URL of the web app (CORS)                                                   |
+| `R2_PUBLIC_URL_STAGING` | Public URL of the staging bucket, no trailing slash                                |
 
-Repository **secret**: `DATABASE_URL_DIRECT`, the Neon production direct (non-pooler) URL.
+Repository **secrets**:
+
+| Name                          | Value                                             |
+| ----------------------------- | ------------------------------------------------- |
+| `DATABASE_URL_DIRECT`         | Neon `production` branch, direct (non-pooler) URL |
+| `DATABASE_URL_DIRECT_STAGING` | Neon `staging` branch, direct (non-pooler) URL    |
+
+Protect `main` with a branch ruleset (Settings → Rules → Rulesets → New branch ruleset,
+target the default branch): require a pull request, require the `check` status check and
+block force pushes. Rulesets on private repositories need GitHub Pro; on Free, keep the
+habit of never pushing to `main` directly.
 
 ## One-time GCP setup
 
@@ -102,18 +153,54 @@ seconds and rerun that command.
 The web app needs the same `INTERNAL_API_KEY`:
 `gcloud secrets versions access latest --secret=internal-api-key`.
 
+### Staging secrets
+
+The staging service runs as the same `banquinha-api` service account; only its secrets
+differ. In Cloud Shell, with the variables from the block above:
+
+```bash
+openssl rand -hex 32 | tr -d '\n' | gcloud secrets create internal-api-key-staging --data-file=-
+for SECRET in internal-api-key-staging database-url-staging r2-access-key-id-staging r2-secret-access-key-staging; do
+  gcloud secrets describe "$SECRET" >/dev/null 2>&1 || gcloud secrets create "$SECRET" --replication-policy=automatic
+  gcloud secrets add-iam-policy-binding "$SECRET" \
+    --member="serviceAccount:$RUNTIME_SA" --role=roles/secretmanager.secretAccessor
+done
+```
+
+Then add a version to each of the three empty secrets, one at a time, the same way as
+`database-url`: run `read -rs VALUE` alone, paste the value, then
+`printf '%s' "$VALUE" | gcloud secrets versions add <secret> --data-file=- && unset VALUE`.
+
+| Secret                         | Value                                     |
+| ------------------------------ | ----------------------------------------- |
+| `database-url-staging`         | Neon `staging` branch, **pooled** URL     |
+| `r2-access-key-id-staging`     | Access key id of the staging R2 token     |
+| `r2-secret-access-key-staging` | Secret access key of the staging R2 token |
+
+The first PR push creates the `banquinha-api-staging` service. Its URL
+(`https://banquinha-api-staging-<number>.southamerica-east1.run.app`) shows in the job log
+and in the Cloud Run console.
+
 ## Vercel environment variables
 
-| Name                   | Value                                                                              | Environments        |
-| ---------------------- | ---------------------------------------------------------------------------------- | ------------------- |
-| `NEXT_PUBLIC_API_URL`  | `https://banquinha-api-877698749664.southamerica-east1.run.app`                    | Production, Preview |
-| `NEXT_PUBLIC_SITE_URL` | Public site URL, no trailing slash                                                 | Production, Preview |
-| `INTERNAL_API_KEY`     | `gcloud secrets versions access latest --secret=internal-api-key` (mark Sensitive) | Production, Preview |
+| Name                       | Production                                                      | Preview                                                            |
+| -------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `NEXT_PUBLIC_API_URL`      | `https://banquinha-api-877698749664.southamerica-east1.run.app` | URL of `banquinha-api-staging`                                     |
+| `INTERNAL_API_KEY`         | Secret `internal-api-key` (Sensitive)                           | Secret `internal-api-key-staging` (Sensitive)                      |
+| `R2_PUBLIC_URL`            | `https://img.banquinha.app`                                     | Public URL of the staging bucket                                   |
+| `NEXT_PUBLIC_SITE_URL`     | `https://banquinha.app`                                         | Unset: the deployment's own URL is used (`NEXT_PUBLIC_VERCEL_URL`) |
+| `NEXT_PUBLIC_APP_URL`      | `https://minha.banquinha.app`                                   | Unset: the merchant area is at `/painel`                           |
+| `NEXT_PUBLIC_POSTHOG_KEY`  | Project key                                                     | Unset                                                              |
+| `NEXT_PUBLIC_POSTHOG_HOST` | PostHog host                                                    | Unset                                                              |
 
-Once `minha.banquinha.app` points to Vercel, add `NEXT_PUBLIC_APP_URL=https://minha.banquinha.app`.
-Until then the merchant area is at `/painel` on the site.
+Read a secret value with `gcloud secrets versions access latest --secret=<name>`.
 
 `NEXT_PUBLIC_*` values are inlined at build time: redeploy after changing them.
+
+Previews are private: Settings → Deployment Protection → Vercel Authentication, on with
+**Standard Protection** (every preview plus the generated production URLs; the custom
+production domains stay public). To open a preview on a phone, sign in to Vercel there once,
+or create a Shareable Link from the deployment's Share menu.
 
 ## Domains
 
@@ -189,7 +276,9 @@ Without R2 the API refuses uploads in production ("envio de imagens indisponíve
    domain is on Cloudflare, or enable the `r2.dev` URL meanwhile (rate limited and uncached, fine
    for the beta). Stored image URLs are absolute, so moving from `r2.dev` to the custom domain
    later needs a one-off `UPDATE` replacing the prefix in `stores` and `product_images`.
-3. R2 → Manage API tokens → create a token with **Object Read & Write** on that bucket only.
+3. R2 object storage → Overview → **Account Details** → **API Tokens: Manage** → **Create
+   Account API token**, permission **Object Read & Write**, scoped to that bucket only. The
+   confirmation screen shows the Access Key ID and the Secret Access Key once: copy both.
 
 | Name                   | Where                                                                   |
 | ---------------------- | ----------------------------------------------------------------------- |
@@ -202,6 +291,76 @@ Without R2 the API refuses uploads in production ("envio de imagens indisponíve
 Then add them to `gcloud run deploy` in `ci.yml` and grant `banquinha-api` the
 `secretAccessor` role on both secrets, like `database-url`. The web app reads `R2_PUBLIC_URL` at
 build time to allow those images in `next/image`, so redeploy it after setting the variable.
-Use a separate bucket (or at least the same one with separate keys) for Preview if preview
-uploads should not mix with production.
+Staging uses its own bucket, `banquinha-images-staging`: repeat steps 1–3 for it (public
+access through its `r2.dev` URL is enough) with a token scoped to that bucket only. Its keys
+go to the `-staging` secrets and its public URL to `R2_PUBLIC_URL_STAGING` (GitHub) and
+`R2_PUBLIC_URL` (Vercel, Preview).
 Function region: `gru1` (Settings → Functions).
+
+## Platform admin
+
+The owner's internal panel (`apps/api/src/admin`, `apps/web/src/app/admin`). Each environment
+has its own: production at `admin.banquinha.app`, staging at `/admin` on any preview (already
+behind Vercel Authentication), locally at `localhost:3000/admin`. Each one reads only its own
+database and has its own credentials, so a staging password never opens production. A badge
+shows which environment you are in (`APP_ENV`, set by `ci.yml`).
+
+There is a single admin, kept apart from merchant accounts: its own guard (`AdminGuard`),
+sessions table and cookie. Signing in takes a username, a password and a 6-digit code from an
+authenticator app (TOTP). Without the three variables below the whole `/admin` API answers 404.
+
+| Name                    | Where                                                                              |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| `ADMIN_USERNAME`        | API: secret `admin-username` (`admin-username-staging` for staging)                |
+| `ADMIN_PASSWORD_HASH`   | API: secret `admin-password-hash` (`-staging`): scrypt hash, never the password    |
+| `ADMIN_TOTP_SECRET`     | API: secret `admin-totp-secret` (`-staging`): base32, 160 bits                     |
+| `ADMIN_ENABLED`         | GitHub repository variable: `true` once the secrets of **both** environments exist |
+| `NEXT_PUBLIC_ADMIN_URL` | Vercel, Production only: `https://admin.banquinha.app`                             |
+
+### Setting it up
+
+1. Generate the values for one environment on your own machine (nothing is written to disk):
+   `pnpm --filter @banquinha/api admin:credentials`. It suggests a random username, asks for
+   a password of at least 16 characters (use a password manager) and prints the three values
+   plus an `otpauth://` URI. Add the URI (or the secret, as a time-based key) to your
+   authenticator app, and keep the password in the password manager. Run it again for the
+   other environment: different username, password and secret.
+2. In Cloud Shell, create the secrets and let the runtime read them:
+
+   ```bash
+   for SECRET in admin-username admin-password-hash admin-totp-secret \
+     admin-username-staging admin-password-hash-staging admin-totp-secret-staging; do
+     gcloud secrets create "$SECRET" --replication-policy=automatic
+     gcloud secrets add-iam-policy-binding "$SECRET" \
+       --member="serviceAccount:$RUNTIME_SA" --role=roles/secretmanager.secretAccessor
+   done
+   ```
+
+   Then add a version to each, one at a time, the same way as `database-url`: `read -rs VALUE`
+   alone, paste, then
+   `printf '%s' "$VALUE" | gcloud secrets versions add <secret> --data-file=- && unset VALUE`.
+   The hash contains `$` signs: paste it at the silent prompt, never inline in a command.
+
+3. GitHub repository variable `ADMIN_ENABLED=true`. From then on `ci.yml` passes the secrets
+   to both services. Deploying with the variable on and a secret missing fails the deploy.
+4. Production host: in Vercel add `admin.banquinha.app` to the project, create its CNAME in
+   Cloudflare (DNS only, like `minha`), set `NEXT_PUBLIC_ADMIN_URL=https://admin.banquinha.app`
+   (Production) and redeploy. `banquinha.app/admin` then redirects there, so the admin cookie
+   only ever exists on the admin host.
+
+To change the password or rotate the TOTP secret, run the generator again and add new versions
+of the secrets; the next deploy (or a new Cloud Run revision) picks them up.
+
+### Safeguards
+
+- 5 failed sign-ins within 15 minutes lock sign-in for 15 minutes (counted in the audit log,
+  shared by every instance). Each TOTP code works once.
+- Sessions last at most 12 hours and end after 1 hour idle. The cookie is httpOnly,
+  `SameSite=Strict`, host-only and limited to `/api/admin`.
+- Every sign-in attempt and every change goes to `admin_audit_log`, which has no foreign
+  keys: the record of a deleted store stays.
+- Deleting a store needs its handle typed again; in production also a fresh TOTP code.
+- Admin pages send `X-Robots-Tag: noindex` and `X-Frame-Options: DENY`, and PostHog never
+  loads on the admin host. Production's public `/docs` leaves the admin routes out.
+- There is no IP allowlist: browsers reach the API through Vercel's `/api` proxy, so the API
+  does not see the admin's IP. The TOTP code covers what an allowlist would.

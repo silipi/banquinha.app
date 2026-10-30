@@ -396,7 +396,7 @@ Informações extras em cada item (Ano, Km e Câmbio de um carro; Quartos e m² 
 
 Vercel (web), Google Cloud Run em `southamerica-east1` (API), Neon em `aws-sa-east-1` (Postgres) e R2, com os domínios `banquinha.app` e `minha.banquinha.app` (área do lojista; escolhido em 2026-10-28 no lugar de `app.`). A API fica no endereço do Cloud Run, sem domínio próprio.
 
-- [ ] Ambientes de produção e de preview com bancos separados
+- [ ] Ambientes de produção e de staging separados (GitHub Flow: cada PR sobe a API de staging e ganha um preview protegido na Vercel; código pronto, falta a configuração nos painéis, ver `docs/deploy.md`)
 - [x] Migrations rodam no deploy
 - [x] DNS e TLS para o site e o `minha.` (passo a passo em `docs/deploy.md`, seção Domains). `api.` fica de fora por enquanto: o navegador só fala com a API por `/api/*` no próprio site, e o Cloud Run não mapeia domínio próprio em `southamerica-east1` sem um load balancer pago
 - [x] Imagens em `img.banquinha.app` (domínio próprio no R2) em vez do `r2.dev`, com o `UPDATE` das URLs já gravadas; `r2.dev` desligado
@@ -447,6 +447,20 @@ Quem procura "formatar computador curitiba" ou "doces para festa londrina" no Go
 - [ ] JSON-LD na vitrine (`LocalBusiness`, com cidade, região de atendimento e contato) e nos itens (`Product` com `Offer`; `Service` para serviços), com os campos personalizados (P2-17) como `additionalProperty`
 - [ ] Validado no Teste de pesquisa aprimorada do Google (Rich Results Test)
 
+### P3-09 · Painel admin da plataforma 🚧
+
+Painel interno do dono em `admin.banquinha.app` (em preview e local, em `/admin`). Cada ambiente tem o próprio admin, com credenciais próprias e lendo só o próprio banco; um selo mostra se é produção ou staging. Um único admin, separado das contas de lojista: usuário, senha (hash scrypt) e código de 6 dígitos do app autenticador (TOTP), tudo no Secret Manager.
+
+- [x] Login com usuário + senha + TOTP; cada código vale uma vez; 5 erros em 15 minutos travam o login por 15 minutos
+- [x] Sessão própria (`admin_sessions`), cookie `SameSite=Strict` só em `/api/admin`, até 12h e encerrada após 1h parada
+- [x] Toda alteração e todo login (certo ou errado) no log de auditoria (`admin_audit_log`), que sobrevive à loja apagada
+- [x] Visão geral: cadastros, lojas e pedidos por semana, funil do cadastro ao 5º pedido, conclusão do onboarding por semana, planos, cidades, tipo de item e de preço, temas, itens e fotos por loja, pedidos por loja, status e entrega
+- [x] Lojas e contas com busca, detalhe, itens e pedidos recentes
+- [x] Cortesia de plano por conta (plano, prazo opcional e motivo), que vence sozinha; plano Pro criado com limites provisórios
+- [x] Suspender e reativar loja: a vitrine sai do ar, pedidos são recusados, some do sitemap e o lojista vê um aviso no painel
+- [x] Apagar loja de vez (itens, fotos no R2, campos e pedidos) digitando o endereço; em produção também pede um código novo do autenticador
+- [ ] Criar os segredos e ligar `ADMIN_ENABLED` (ver `docs/deploy.md`), apontar `admin.banquinha.app` para o Vercel e definir `NEXT_PUBLIC_ADMIN_URL`
+
 ---
 
 ## P4 · Pagamentos
@@ -486,6 +500,8 @@ Para serviços: o cliente paga um sinal pelo Pix para garantir o horário, o que
 ## P5 · Crescimento
 
 ### P5-01 · Plano pago e cobrança ⬜
+
+O plano Pro já existe (`PLANS` na API, limites provisórios) e pode ser dado de cortesia pelo admin (P3-09). `users.plan` fica para o plano pago; a cortesia mora em `users.plan_override*`, e vale o melhor dos dois (`effectivePlan()`).
 
 - [ ] Planos e limites definidos
 - [ ] Assinatura com upgrade e downgrade

@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
@@ -22,5 +23,7 @@ export default async function setup() {
   const db = drizzle(postgres(url, { onnotice: () => {} }), { schema });
   await migrate(db, { migrationsFolder: './drizzle' });
   await seedExampleStores(db);
+  // Admin sign-ins count earlier attempts and spent codes: every run starts clean.
+  await db.execute(sql`truncate admin_audit_log, admin_sessions`);
   await db.$client.end();
 }
