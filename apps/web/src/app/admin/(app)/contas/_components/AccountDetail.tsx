@@ -8,6 +8,7 @@ import {
   type SetPlanOverrideDto,
 } from '@banquinha/api-client';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { adminPath, formatDate, formatDateTime } from '@/lib/admin';
@@ -21,6 +22,7 @@ import {
   Section,
 } from '../../../_components/admin-ui';
 import { AuditList } from '../../_components/AuditList';
+import { DeleteAccountDialog } from './DeleteAccountDialog';
 import { PlanPill } from './PlanPill';
 
 const PLAN_OPTIONS: { value: SetPlanOverrideDto['plan']; label: string }[] = [
@@ -29,8 +31,10 @@ const PLAN_OPTIONS: { value: SetPlanOverrideDto['plan']; label: string }[] = [
 ];
 
 export function AccountDetail({ id }: { id: string }) {
+  const router = useRouter();
   const [account, setAccount] = useState<AdminAccountDto | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     adminAccountsGet({ client: panelApi, path: { id } }).then(
@@ -62,7 +66,21 @@ export function AccountDetail({ id }: { id: string }) {
           ← Contas
         </Link>
       </p>
-      <PageTitle aside={<PlanPill plan={account.plan} />}>
+      <PageTitle
+        aside={
+          <div className="flex flex-wrap items-center gap-2">
+            <PlanPill plan={account.plan} />
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-red-300 text-red-700 hover:bg-red-50"
+              onClick={() => setDeleting(true)}
+            >
+              Apagar conta
+            </Button>
+          </div>
+        }
+      >
         {account.email}
       </PageTitle>
 
@@ -109,6 +127,14 @@ export function AccountDetail({ id }: { id: string }) {
       <Section title="Histórico no admin" className="mt-6">
         <AuditList entries={account.audit} />
       </Section>
+
+      {deleting && (
+        <DeleteAccountDialog
+          account={account}
+          onClose={() => setDeleting(false)}
+          onDeleted={() => router.replace(adminPath('/contas'))}
+        />
+      )}
     </>
   );
 }

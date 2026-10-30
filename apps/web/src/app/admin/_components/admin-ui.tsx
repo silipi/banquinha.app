@@ -1,7 +1,7 @@
 'use client';
 
 import type { CountDto } from '@banquinha/api-client';
-import { LoaderCircle } from 'lucide-react';
+import { LoaderCircle, Trash2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import {
   ENVIRONMENT_LABELS,
@@ -171,11 +171,14 @@ export function ColumnChart({
   );
 }
 
+/** With `actions`, the last column (an ActionsCell per row) stays visible while scrolling. */
 export function Table({
   head,
+  actions = false,
   children,
 }: {
   head: string[];
+  actions?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -191,11 +194,45 @@ export function Table({
                 {label}
               </th>
             ))}
+            {actions && (
+              <th className="sticky right-0 bg-surface px-3 py-2 font-medium">
+                Ações
+              </th>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y">{children}</tbody>
       </table>
     </div>
+  );
+}
+
+export function ActionsCell({ children }: { children: ReactNode }) {
+  return (
+    <td className="sticky right-0 bg-surface px-3 py-1 whitespace-nowrap">
+      {children}
+    </td>
+  );
+}
+
+/** The delete button of a table row's actions column. */
+export function DeleteButton({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className="inline-flex size-8 items-center justify-center rounded-full text-red-700 hover:bg-red-50"
+    >
+      <Trash2 className="size-4" />
+    </button>
   );
 }
 

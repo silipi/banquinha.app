@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, asc, desc, eq, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import type { Db } from '../database/database.js';
 import { DB } from '../database/database.module.js';
 import {
@@ -21,7 +21,6 @@ import { ImagesService } from '../images/images.service.js';
 import { AdminAuthService } from './admin-auth.service.js';
 import { ADMIN_SETTINGS, type AdminSettings } from './admin-settings.js';
 import { effectivePlanSql } from './admin-stats.service.js';
-import { planSummary } from './admin-accounts.service.js';
 import { AuditLogService } from './audit-log.service.js';
 import type {
   AdminStoreDto,
@@ -31,6 +30,7 @@ import type {
   DeletedStoreDto,
   DeleteStoreDto,
 } from './dto/admin.dto.js';
+import { planSummary } from './plan-summary.js';
 
 const PAGE_SIZE = 50;
 const STORE_NOT_FOUND = 'Loja não encontrada';
@@ -313,8 +313,6 @@ export class AdminStoresService {
       .select({
         handle: stores.handle,
         name: stores.name,
-        logoUrl: stores.logoUrl,
-        bannerUrl: stores.bannerUrl,
         ownerEmail: users.email,
       })
       .from(stores)
@@ -332,25 +330,8 @@ export class AdminStoresService {
         ? await this.auth.confirmWithCode(input.code)
         : undefined;
 
-    const photoUrls = await this.db
-      .select({ url: productImages.url })
-      .from(productImages)
-      .innerJoin(products, eq(products.id, productImages.productId))
-      .where(eq(products.storeId, id));
-    const [orderCount] = await this.db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(orders)
-      .where(eq(orders.storeId, id));
-    const [productCount] = await this.db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(products)
-      .where(eq(products.storeId, id));
-    const deleted: DeletedStoreDto = {
-      handle: store.handle,
-      productCount: productCount?.count ?? 0,
-      orderCount: orderCount?.count ?? 0,
-      photoCount: photoUrls.length,
-    };
+    const { files, ...counts } = await this.contents([id]);
+    const deleted: DeletedStoreDto = { handle: store.handle, ...counts };
 
     await this.db.transaction(async (tx) => {
       // Foreign keys cascade to products, their images, custom fields, orders and their items.
@@ -374,14 +355,56 @@ export class AdminStoresService {
       );
     });
 
-    // Files go after the rows: a failed removal leaves an orphan file, never a broken store.
-    for (const url of [
-      store.logoUrl,
-      store.bannerUrl,
-      ...photoUrls.map((photo) => photo.url),
-    ]) {
-      await this.images.remove(url);
-    }
+    await this.removeFiles(files);
     return deleted;
+  }
+
+  /**
+   * What deleting these stores takes with it: the counts for the audit log and the image
+   * files (logos, banners, photos) to remove once the rows are gone.
+   */
+  async contents(storeIds: string[]): Promise<{
+    productCount: number;
+    orderCount: number;
+    photoCount: number;
+    files: string[];
+  }> {
+    if (storeIds.length === 0) {
+      return { productCount: 0, orderCount: 0, photoCount: 0, files: [] };
+    }
+    const [storeImages, photos, [orderCount], [productCount]] =
+      await Promise.all([
+        this.db
+          .select({ logoUrl: stores.logoUrl, bannerUrl: stores.bannerUrl })
+          .from(stores)
+          .where(inArray(stores.id, storeIds)),
+        this.db
+          .select({ url: productImages.url })
+          .from(productImages)
+          .innerJoin(products, eq(products.id, productImages.productId))
+          .where(inArray(products.storeId, storeIds)),
+        this.db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(orders)
+          .where(inArray(orders.storeId, storeIds)),
+        this.db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(products)
+          .where(inArray(products.storeId, storeIds)),
+      ]);
+    return {
+      productCount: productCount?.count ?? 0,
+      orderCount: orderCount?.count ?? 0,
+      photoCount: photos.length,
+      files: [
+        ...storeImages.flatMap((store) => [store.logoUrl, store.bannerUrl]),
+        ...photos.map((photo) => photo.url),
+      ].filter((url): url is string => Boolean(url)),
+    };
+  }
+
+  /** Runs after the rows are gone: a failed removal leaves an orphan file, never a broken store. */
+  async removeFiles(urls: string[]): Promise<void> {
+    for (const url of urls) await this.images.remove(url);
   }
 }

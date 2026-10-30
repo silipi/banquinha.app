@@ -1110,6 +1110,28 @@ export type SetPlanOverrideDto = {
     reason: string;
 };
 
+export type DeleteAccountDto = {
+    /**
+     * The account's email, typed again as confirmation.
+     */
+    email: string;
+    /**
+     * Required in production: a fresh code from the authenticator app.
+     */
+    code?: string;
+};
+
+export type DeletedAccountDto = {
+    email: string;
+    /**
+     * Handles of the stores deleted with the account.
+     */
+    storeHandles: Array<string>;
+    productCount: number;
+    orderCount: number;
+    photoCount: number;
+};
+
 export type HealthCheckData = {
     body?: never;
     path?: never;
@@ -1865,3 +1887,18 @@ export type AdminAccountsSetPlanOverrideResponses = {
 };
 
 export type AdminAccountsSetPlanOverrideResponse = AdminAccountsSetPlanOverrideResponses[keyof AdminAccountsSetPlanOverrideResponses];
+
+export type AdminAccountsDeleteData = {
+    body: DeleteAccountDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/admin/accounts/{id}/deletion';
+};
+
+export type AdminAccountsDeleteResponses = {
+    200: DeletedAccountDto;
+};
+
+export type AdminAccountsDeleteResponse = AdminAccountsDeleteResponses[keyof AdminAccountsDeleteResponses];

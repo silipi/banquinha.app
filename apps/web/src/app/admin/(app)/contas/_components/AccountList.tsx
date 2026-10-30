@@ -3,6 +3,7 @@
 import {
   adminAccountsList,
   type AdminAccountListDto,
+  type AdminAccountRowDto,
 } from '@banquinha/api-client';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -10,12 +11,15 @@ import { adminPath, formatDate } from '@/lib/admin';
 import { panelApi } from '@/lib/panel';
 import { cn } from '@/lib/utils';
 import {
+  ActionsCell,
+  DeleteButton,
   Loading,
   PageTitle,
   Pager,
   Pill,
   Table,
 } from '../../../_components/admin-ui';
+import { DeleteAccountDialog } from './DeleteAccountDialog';
 import { PlanPill } from './PlanPill';
 
 export function AccountList() {
@@ -23,6 +27,9 @@ export function AccountList() {
   const [comped, setComped] = useState(false);
   const [page, setPage] = useState(1);
   const [list, setList] = useState<AdminAccountListDto | null>(null);
+  const [deleting, setDeleting] = useState<AdminAccountRowDto | null>(null);
+  // Bumped after a deletion to fetch the page again.
+  const [version, setVersion] = useState(0);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -32,7 +39,7 @@ export function AccountList() {
       }).then(({ data }) => setList(data ?? null));
     }, 250);
     return () => clearTimeout(timer);
-  }, [q, comped, page]);
+  }, [q, comped, page, version]);
 
   return (
     <>
@@ -77,6 +84,7 @@ export function AccountList() {
               'Último login',
               'Criada',
             ]}
+            actions
           >
             {list.accounts.map((account) => (
               <tr key={account.id} className="hover:bg-muted/50">
@@ -115,6 +123,12 @@ export function AccountList() {
                 <td className="px-3 py-2 whitespace-nowrap">
                   {formatDate(account.createdAt)}
                 </td>
+                <ActionsCell>
+                  <DeleteButton
+                    label={`Apagar ${account.email}`}
+                    onClick={() => setDeleting(account)}
+                  />
+                </ActionsCell>
               </tr>
             ))}
           </Table>
@@ -125,6 +139,16 @@ export function AccountList() {
             onPage={setPage}
           />
         </>
+      )}
+      {deleting && (
+        <DeleteAccountDialog
+          account={deleting}
+          onClose={() => setDeleting(null)}
+          onDeleted={() => {
+            setDeleting(null);
+            setVersion((value) => value + 1);
+          }}
+        />
       )}
     </>
   );

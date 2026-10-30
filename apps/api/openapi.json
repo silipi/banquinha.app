@@ -1760,6 +1760,47 @@
           "AdminAccounts"
         ]
       }
+    },
+    "/admin/accounts/{id}/deletion": {
+      "post": {
+        "operationId": "adminAccountsDelete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedAccountDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Deletes the account with all its stores. 400 when the typed email does not match; in\nproduction 403 without a fresh authenticator code.",
+        "tags": [
+          "AdminAccounts"
+        ]
+      }
     }
   },
   "info": {
@@ -4699,6 +4740,55 @@
         "required": [
           "plan",
           "reason"
+        ]
+      },
+      "DeleteAccountDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "The account's email, typed again as confirmation.",
+            "maxLength": 320
+          },
+          "code": {
+            "type": "string",
+            "description": "Required in production: a fresh code from the authenticator app.",
+            "pattern": "^\\d{6}$"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "DeletedAccountDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "storeHandles": {
+            "description": "Handles of the stores deleted with the account.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "productCount": {
+            "type": "number"
+          },
+          "orderCount": {
+            "type": "number"
+          },
+          "photoCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "email",
+          "storeHandles",
+          "productCount",
+          "orderCount",
+          "photoCount"
         ]
       }
     }

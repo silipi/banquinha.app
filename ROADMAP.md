@@ -447,7 +447,7 @@ Quem procura "formatar computador curitiba" ou "doces para festa londrina" no Go
 - [ ] JSON-LD na vitrine (`LocalBusiness`, com cidade, região de atendimento e contato) e nos itens (`Product` com `Offer`; `Service` para serviços), com os campos personalizados (P2-17) como `additionalProperty`
 - [ ] Validado no Teste de pesquisa aprimorada do Google (Rich Results Test)
 
-### P3-09 · Painel admin da plataforma 🚧
+### P3-09 · Painel admin da plataforma ✅
 
 Painel interno do dono em `admin.banquinha.app` (em preview e local, em `/admin`). Cada ambiente tem o próprio admin, com credenciais próprias e lendo só o próprio banco; um selo mostra se é produção ou staging. Um único admin, separado das contas de lojista: usuário, senha (hash scrypt) e código de 6 dígitos do app autenticador (TOTP), tudo no Secret Manager.
 
@@ -459,7 +459,9 @@ Painel interno do dono em `admin.banquinha.app` (em preview e local, em `/admin`
 - [x] Cortesia de plano por conta (plano, prazo opcional e motivo), que vence sozinha; plano Pro criado com limites provisórios
 - [x] Suspender e reativar loja: a vitrine sai do ar, pedidos são recusados, some do sitemap e o lojista vê um aviso no painel
 - [x] Apagar loja de vez (itens, fotos no R2, campos e pedidos) digitando o endereço; em produção também pede um código novo do autenticador
-- [ ] Criar os segredos e ligar `ADMIN_ENABLED` (ver `docs/deploy.md`), apontar `admin.banquinha.app` para o Vercel e definir `NEXT_PUBLIC_ADMIN_URL`
+- [x] Apagar conta de vez com todas as lojas dela digitando o e-mail (mesma regra do código em produção); a pessoa sai do painel na hora
+- [x] Coluna de ações nas listas de lojas e contas, para apagar sem abrir o detalhe
+- [x] Criar os segredos e ligar `ADMIN_ENABLED` (ver `docs/deploy.md`), apontar `admin.banquinha.app` para o Vercel e definir `NEXT_PUBLIC_ADMIN_URL`
 
 ---
 

@@ -26,6 +26,8 @@ import {
   AdminStoreListQueryDto,
   AuditLogDto,
   AuditLogQueryDto,
+  DeleteAccountDto,
+  DeletedAccountDto,
   DeletedStoreDto,
   DeleteStoreDto,
   SetPlanOverrideDto,
@@ -136,5 +138,19 @@ export class AdminAccountsController {
     @Headers('user-agent') userAgent: string | undefined,
   ): Promise<AdminAccountDto> {
     return this.accounts.removePlanOverride(id, userAgent);
+  }
+
+  /**
+   * Deletes the account with all its stores. 400 when the typed email does not match; in
+   * production 403 without a fresh authenticator code.
+   */
+  @Post(':id/deletion')
+  @HttpCode(200)
+  delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: DeleteAccountDto,
+    @Headers('user-agent') userAgent: string | undefined,
+  ): Promise<DeletedAccountDto> {
+    return this.accounts.delete(id, body, userAgent);
   }
 }

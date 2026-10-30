@@ -408,4 +408,77 @@ describe('Admin', () => {
       expect(unknown.statusCode).toBe(400);
     });
   });
+
+  describe('accounts', () => {
+    const ownerOf = async (storeId: string) =>
+      (await admin('GET', `/admin/stores/${storeId}`)).json<{
+        owner: { id: string; email: string };
+      }>().owner;
+
+    it('deletes an account with its stores only when the email is typed again', async () => {
+      const { session: merchant, store } = await merchantWithStore(app);
+      const owner = await ownerOf(store.id);
+      const url = `/admin/accounts/${owner.id}/deletion`;
+      const wrong = await admin('POST', url, { email: 'outra@exemplo.com' });
+      expect(wrong.statusCode).toBe(400);
+
+      const res = await admin('POST', url, {
+        email: owner.email.toUpperCase(),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toEqual({
+        email: owner.email,
+        storeHandles: [store.handle],
+        productCount: 1,
+        orderCount: 0,
+        photoCount: 0,
+      });
+      expect(
+        (await admin('GET', `/admin/accounts/${owner.id}`)).statusCode,
+      ).toBe(404);
+      expect((await admin('GET', `/admin/stores/${store.id}`)).statusCode).toBe(
+        404,
+      );
+      const storefront = await app.inject({
+        method: 'GET',
+        url: `/storefront/${store.handle}`,
+      });
+      expect(storefront.statusCode).toBe(404);
+      const me = await app.inject({
+        method: 'GET',
+        url: '/me',
+        cookies: as(merchant),
+      });
+      expect(me.statusCode).toBe(401);
+
+      const log = await admin('GET', '/admin/audit-log');
+      expect(log.json().entries[0]).toMatchObject({
+        action: 'account_deleted',
+        targetId: owner.id,
+        details: { email: owner.email, storeIds: [store.id] },
+      });
+    });
+
+    it('needs a fresh authenticator code to delete in production', async () => {
+      settings.environment = 'production';
+      try {
+        const { store } = await merchantWithStore(app);
+        const owner = await ownerOf(store.id);
+        const url = `/admin/accounts/${owner.id}/deletion`;
+        const noCode = await admin('POST', url, { email: owner.email });
+        expect(noCode.statusCode).toBe(403);
+        expect(
+          (await admin('GET', `/admin/stores/${store.id}`)).statusCode,
+        ).toBe(200);
+
+        const res = await admin('POST', url, {
+          email: owner.email,
+          code: freshCode(),
+        });
+        expect(res.statusCode).toBe(200);
+      } finally {
+        settings.environment = 'development';
+      }
+    });
+  });
 });
