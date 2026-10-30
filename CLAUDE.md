@@ -98,6 +98,9 @@ Env: copy `.env.example` to `.env` at the root. The API loads `../../.env` in de
 
 Web on Vercel, API on Cloud Run, Postgres on Neon. Pipeline, GitHub settings and one-time GCP setup: [`docs/deploy.md`](docs/deploy.md).
 
+- **GitHub Flow:** `main` is production. Branch from `main`, open a PR and squash-merge it to ship. Never push to `main` directly.
+- Every PR deploys its API to the shared staging service (`banquinha-api-staging`, Neon `staging`) and gets a Vercel preview that talks to it; the last push wins. Production code must not assume it runs on `banquinha.app`: previews use their own URL (`siteUrl`, `isProduction` in `apps/web/src/lib/site.ts`).
+
 ## API (apps/api)
 
 - Nest 12 on the Fastify adapter. `createApp()` in `src/app.ts` holds global setup (validation pipe) and is shared by `main.ts`, tests and `openapi.ts`.

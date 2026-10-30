@@ -396,7 +396,7 @@ Informações extras em cada item (Ano, Km e Câmbio de um carro; Quartos e m² 
 
 Vercel (web), Google Cloud Run em `southamerica-east1` (API), Neon em `aws-sa-east-1` (Postgres) e R2, com os domínios `banquinha.app` e `minha.banquinha.app` (área do lojista; escolhido em 2026-10-28 no lugar de `app.`). A API fica no endereço do Cloud Run, sem domínio próprio.
 
-- [ ] Ambientes de produção e de preview com bancos separados
+- [ ] Ambientes de produção e de staging separados (GitHub Flow: cada PR sobe a API de staging e ganha um preview protegido na Vercel; código pronto, falta a configuração nos painéis, ver `docs/deploy.md`)
 - [x] Migrations rodam no deploy
 - [x] DNS e TLS para o site e o `minha.` (passo a passo em `docs/deploy.md`, seção Domains). `api.` fica de fora por enquanto: o navegador só fala com a API por `/api/*` no próprio site, e o Cloud Run não mapeia domínio próprio em `southamerica-east1` sem um load balancer pago
 - [x] Imagens em `img.banquinha.app` (domínio próprio no R2) em vez do `r2.dev`, com o `UPDATE` das URLs já gravadas; `r2.dev` desligado

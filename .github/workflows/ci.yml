@@ -34,19 +34,38 @@ jobs:
         run: pnpm generate && git diff --exit-code -- apps/api/openapi.json packages/api-client/src/generated
       - run: pnpm check
 
-  # Ships the API to Cloud Run after checks pass on main. GCP setup: docs/deploy.md.
+  # Ships the API to Cloud Run after checks pass. Pushes to main go to production; pull
+  # requests from this repository go to the shared staging service, which every Vercel
+  # preview talks to (last push wins). Setup: docs/deploy.md.
   deploy-api:
     needs: check
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
-    concurrency: deploy-api
+    # Never cancel: a cancelled run could stop halfway through a migration.
+    concurrency: deploy-api-${{ github.event_name == 'push' && 'production' || 'staging' }}
     permissions:
       contents: read
       id-token: write # Workload Identity Federation: GitHub OIDC token -> GCP, no stored key
     env:
       REGION: southamerica-east1
       IMAGE: southamerica-east1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/banquinha/api:${{ github.sha }}
+      DATABASE_URL: ${{ github.event_name == 'push' && secrets.DATABASE_URL_DIRECT || secrets.DATABASE_URL_DIRECT_STAGING }}
     steps:
+      - name: Select target
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = push ]; then
+            echo "SERVICE=banquinha-api" >> "$GITHUB_ENV"
+            echo "SECRET_SUFFIX=" >> "$GITHUB_ENV"
+            echo "ENV_VARS=WEB_ORIGIN=${{ vars.WEB_ORIGIN }},R2_ACCOUNT_ID=39897974cb09c05474b5515d228f9bfd,R2_BUCKET=banquinha-images,R2_PUBLIC_URL=https://img.banquinha.app,POSTHOG_KEY=${{ vars.POSTHOG_KEY }},POSTHOG_HOST=${{ vars.POSTHOG_HOST }}" >> "$GITHUB_ENV"
+          else
+            # No PostHog in staging. WEB_ORIGIN only matters for CORS, and previews reach the
+            # API same-origin through /api, so the default is fine.
+            echo "SERVICE=banquinha-api-staging" >> "$GITHUB_ENV"
+            echo "SECRET_SUFFIX=-staging" >> "$GITHUB_ENV"
+            echo "ENV_VARS=R2_ACCOUNT_ID=39897974cb09c05474b5515d228f9bfd,R2_BUCKET=banquinha-images-staging,R2_PUBLIC_URL=${{ vars.R2_PUBLIC_URL_STAGING }}" >> "$GITHUB_ENV"
+          fi
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
@@ -55,15 +74,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # Before the new revision goes live, so migrations must stay compatible with the running one.
-      - name: Migrate production database
+      - name: Migrate database
         run: pnpm db:migrate
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_DIRECT }}
       # Keeps the example stores (landing showcase) in sync with example-stores.ts.
       - name: Seed example stores
         run: pnpm db:seed
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_DIRECT }}
       - uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
@@ -77,7 +92,7 @@ jobs:
       # One instance at most: the order rate limit counter lives in memory (see ROADMAP P3-01).
       - name: Deploy to Cloud Run
         run: |
-          gcloud run deploy banquinha-api \
+          gcloud run deploy "$SERVICE" \
             --image "$IMAGE" \
             --region "$REGION" \
             --service-account "banquinha-api@${{ vars.GCP_PROJECT_ID }}.iam.gserviceaccount.com" \
@@ -88,5 +103,5 @@ jobs:
             --min-instances 0 \
             --max-instances 1 \
             --cpu-boost \
-            --set-env-vars "WEB_ORIGIN=${{ vars.WEB_ORIGIN }},R2_ACCOUNT_ID=39897974cb09c05474b5515d228f9bfd,R2_BUCKET=banquinha-images,R2_PUBLIC_URL=https://img.banquinha.app,POSTHOG_KEY=${{ vars.POSTHOG_KEY }},POSTHOG_HOST=${{ vars.POSTHOG_HOST }}" \
-            --set-secrets "DATABASE_URL=database-url:latest,INTERNAL_API_KEY=internal-api-key:latest,R2_ACCESS_KEY_ID=r2-access-key-id:latest,R2_SECRET_ACCESS_KEY=r2-secret-access-key:latest,RESEND_API_KEY=resend-api-key:latest"
+            --set-env-vars "$ENV_VARS" \
+            --set-secrets "DATABASE_URL=database-url$SECRET_SUFFIX:latest,INTERNAL_API_KEY=internal-api-key$SECRET_SUFFIX:latest,R2_ACCESS_KEY_ID=r2-access-key-id$SECRET_SUFFIX:latest,R2_SECRET_ACCESS_KEY=r2-secret-access-key$SECRET_SUFFIX:latest,RESEND_API_KEY=resend-api-key:latest"

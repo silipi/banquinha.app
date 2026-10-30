@@ -1,8 +1,17 @@
 import type { Metadata } from 'next';
 
-/** Public origin of the web app. Used for canonical URLs, sitemaps and share images. */
+/** True only for the production deployment on Vercel, not for previews or local dev. */
+export const isProduction = process.env.NEXT_PUBLIC_VERCEL_ENV === 'production';
+
+/**
+ * Public origin of the web app. Used for canonical URLs, sitemaps and share images.
+ * Previews leave NEXT_PUBLIC_SITE_URL unset and use their own deployment URL.
+ */
 export const siteUrl = new URL(
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
+  process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.NEXT_PUBLIC_VERCEL_URL
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+      : 'http://localhost:3000'),
 );
 
 export const siteName = 'banquinha.app';
