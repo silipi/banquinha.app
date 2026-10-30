@@ -13,7 +13,8 @@ export type AdminAction =
   | 'plan_override_removed'
   | 'store_suspended'
   | 'store_unsuspended'
-  | 'store_deleted';
+  | 'store_deleted'
+  | 'account_deleted';
 
 export interface AuditEntry {
   action: AdminAction;

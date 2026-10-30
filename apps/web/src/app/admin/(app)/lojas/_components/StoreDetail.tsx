@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  adminStoresDelete,
   adminStoresGet,
   adminStoresSuspend,
   adminStoresUnsuspend,
@@ -34,10 +33,11 @@ import {
   Stat,
   Table,
 } from '../../../_components/admin-ui';
-import { useAdmin } from '../../_components/admin-context';
 import { AuditList } from '../../_components/AuditList';
+import { DeleteStoreDialog } from './DeleteStoreDialog';
 
 export function StoreDetail({ id }: { id: string }) {
+  const router = useRouter();
   const [store, setStore] = useState<AdminStoreDto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dialog, setDialog] = useState<'suspend' | 'delete' | null>(null);
@@ -243,7 +243,11 @@ export function StoreDetail({ id }: { id: string }) {
         />
       )}
       {dialog === 'delete' && (
-        <DeleteDialog store={store} onClose={() => setDialog(null)} />
+        <DeleteStoreDialog
+          store={store}
+          onClose={() => setDialog(null)}
+          onDeleted={() => router.replace(adminPath('/lojas'))}
+        />
       )}
     </>
   );
@@ -289,7 +293,7 @@ function SuspendDialog({
         </Button>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-4 p-5">
         <p className="text-sm text-muted-foreground">
           A vitrine sai do ar (como se não existisse), novos pedidos são
           recusados e a loja some do sitemap. O lojista continua entrando no
@@ -301,85 +305,6 @@ function SuspendDialog({
           onChange={(event) => setReason(event.target.value)}
           maxLength={500}
         />
-        <FormError>{error}</FormError>
-      </div>
-    </Dialog>
-  );
-}
-
-function DeleteDialog({
-  store,
-  onClose,
-}: {
-  store: AdminStoreDto;
-  onClose: () => void;
-}) {
-  const router = useRouter();
-  const { environment } = useAdmin();
-  const production = environment === 'production';
-  const [handle, setHandle] = useState('');
-  const [code, setCode] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const ready =
-    handle.trim().toLowerCase() === store.handle &&
-    (!production || /^\d{6}$/.test(code));
-
-  async function submit() {
-    setBusy(true);
-    const { data, error: failed } = await adminStoresDelete({
-      client: panelApi,
-      path: { id: store.id },
-      body: { handle, code: production ? code : undefined },
-    });
-    setBusy(false);
-    if (!data) {
-      setError(apiErrorMessage(failed, 'Não foi possível apagar.'));
-      return;
-    }
-    await refreshStorefront(data.handle);
-    router.replace(adminPath('/lojas'));
-  }
-
-  return (
-    <Dialog
-      title={`Apagar /${store.handle}`}
-      onClose={onClose}
-      footer={
-        <Button
-          onClick={submit}
-          disabled={busy || !ready}
-          className="bg-red-600 text-white hover:bg-red-700"
-        >
-          Apagar para sempre
-        </Button>
-      }
-    >
-      <div className="space-y-4 text-sm">
-        <p className="rounded-2xl bg-red-50 px-4 py-3 text-red-800">
-          {production && <strong>Produção. </strong>}
-          Apaga a loja, {store.productCount} item(ns), {store.photoCount}{' '}
-          foto(s) e {store.orderCount} pedido(s). Não tem volta. A conta do dono
-          continua existindo e o endereço fica livre.
-        </p>
-        <Field
-          label={`Digite ${store.handle} para confirmar`}
-          value={handle}
-          onChange={(event) => setHandle(event.target.value)}
-          autoCapitalize="none"
-          autoComplete="off"
-          spellCheck={false}
-        />
-        {production && (
-          <Field
-            label="Código novo do app autenticador"
-            value={code}
-            onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={6}
-          />
-        )}
         <FormError>{error}</FormError>
       </div>
     </Dialog>

@@ -7,6 +7,7 @@ import { Pill } from '../../_components/admin-ui';
 const TONES: Record<string, 'muted' | 'brand' | 'danger' | 'sage' | 'lilac'> = {
   login_failed: 'danger',
   store_deleted: 'danger',
+  account_deleted: 'danger',
   store_suspended: 'brand',
   plan_override_set: 'lilac',
   login_succeeded: 'sage',

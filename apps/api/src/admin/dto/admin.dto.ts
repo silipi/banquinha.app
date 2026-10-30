@@ -334,6 +334,29 @@ export class AdminAccountDto extends AdminAccountRowDto {
   audit: AuditEntryDto[];
 }
 
+export class DeleteAccountDto {
+  /** The account's email, typed again as confirmation. */
+  @Transform(trim)
+  @IsString()
+  @MaxLength(320)
+  email: string;
+
+  /** Required in production: a fresh code from the authenticator app. */
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{6}$/, { message: 'O código tem 6 dígitos' })
+  code?: string;
+}
+
+export class DeletedAccountDto {
+  email: string;
+  /** Handles of the stores deleted with the account. */
+  storeHandles: string[];
+  productCount: number;
+  orderCount: number;
+  photoCount: number;
+}
+
 export class SetPlanOverrideDto {
   @IsIn(PLAN_IDS)
   plan: PlanId;

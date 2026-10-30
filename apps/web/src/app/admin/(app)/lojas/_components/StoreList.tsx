@@ -3,6 +3,7 @@
 import {
   adminStoresList,
   type AdminStoreListDto,
+  type AdminStoreRowDto,
   type AdminStoresListData,
 } from '@banquinha/api-client';
 import Link from 'next/link';
@@ -11,12 +12,15 @@ import { adminPath, formatDate, formatNumber } from '@/lib/admin';
 import { panelApi } from '@/lib/panel';
 import { cn } from '@/lib/utils';
 import {
+  ActionsCell,
+  DeleteButton,
   Loading,
   PageTitle,
   Pager,
   Pill,
   Table,
 } from '../../../_components/admin-ui';
+import { DeleteStoreDialog } from './DeleteStoreDialog';
 
 type Filter = NonNullable<NonNullable<AdminStoresListData['query']>['filter']>;
 
@@ -32,6 +36,9 @@ export function StoreList() {
   const [filter, setFilter] = useState<Filter>('all');
   const [page, setPage] = useState(1);
   const [list, setList] = useState<AdminStoreListDto | null>(null);
+  const [deleting, setDeleting] = useState<AdminStoreRowDto | null>(null);
+  // Bumped after a deletion to fetch the page again.
+  const [version, setVersion] = useState(0);
 
   useEffect(() => {
     // Waits for a pause in typing before searching.
@@ -42,7 +49,7 @@ export function StoreList() {
       }).then(({ data }) => setList(data ?? null));
     }, 250);
     return () => clearTimeout(timer);
-  }, [q, filter, page]);
+  }, [q, filter, page, version]);
 
   return (
     <>
@@ -94,6 +101,7 @@ export function StoreList() {
               'Último pedido',
               'Criada',
             ]}
+            actions
           >
             {list.stores.map((store) => (
               <tr key={store.id} className="hover:bg-muted/50">
@@ -142,6 +150,12 @@ export function StoreList() {
                 <td className="px-3 py-2 whitespace-nowrap">
                   {formatDate(store.createdAt)}
                 </td>
+                <ActionsCell>
+                  <DeleteButton
+                    label={`Apagar /${store.handle}`}
+                    onClick={() => setDeleting(store)}
+                  />
+                </ActionsCell>
               </tr>
             ))}
           </Table>
@@ -152,6 +166,16 @@ export function StoreList() {
             onPage={setPage}
           />
         </>
+      )}
+      {deleting && (
+        <DeleteStoreDialog
+          store={deleting}
+          onClose={() => setDeleting(null)}
+          onDeleted={() => {
+            setDeleting(null);
+            setVersion((value) => value + 1);
+          }}
+        />
       )}
     </>
   );

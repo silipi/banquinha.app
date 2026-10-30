@@ -8,39 +8,26 @@ import { and, asc, desc, eq, isNotNull, sql, type SQL } from 'drizzle-orm';
 import type { Db } from '../database/database.js';
 import { DB } from '../database/database.module.js';
 import { stores, users } from '../database/schema/index.js';
-import {
-  effectivePlan,
-  hasActiveOverride,
-  PLANS,
-  type PlanColumns,
-} from '../plans/plans.js';
+import { PLANS } from '../plans/plans.js';
+import { AdminAuthService } from './admin-auth.service.js';
+import { ADMIN_SETTINGS, type AdminSettings } from './admin-settings.js';
+import { AdminStoresService } from './admin-stores.service.js';
 import { AuditLogService } from './audit-log.service.js';
 import type {
   AdminAccountDto,
   AdminAccountListDto,
   AdminAccountListQueryDto,
   AdminAccountRowDto,
-  PlanSummaryDto,
+  DeleteAccountDto,
+  DeletedAccountDto,
   SetPlanOverrideDto,
 } from './dto/admin.dto.js';
+import { planSummary } from './plan-summary.js';
 
 const PAGE_SIZE = 50;
 const ACCOUNT_NOT_FOUND = 'Conta não encontrada';
 
 type UserRow = typeof users.$inferSelect;
-
-export function planSummary(
-  account: PlanColumns & { planOverrideReason: string | null },
-): PlanSummaryDto {
-  return {
-    effective: effectivePlan(account),
-    paid: account.plan,
-    override: account.planOverride,
-    overrideExpiresAt: account.planOverrideExpiresAt?.toISOString() ?? null,
-    overrideReason: account.planOverrideReason,
-    overrideActive: hasActiveOverride(account),
-  };
-}
 
 const formatDate = (date: Date) =>
   date.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
@@ -49,7 +36,10 @@ const formatDate = (date: Date) =>
 export class AdminAccountsService {
   constructor(
     @Inject(DB) private readonly db: Db,
+    @Inject(ADMIN_SETTINGS) private readonly settings: AdminSettings,
     private readonly audit: AuditLogService,
+    private readonly auth: AdminAuthService,
+    private readonly stores: AdminStoresService,
   ) {}
 
   async list(query: AdminAccountListQueryDto): Promise<AdminAccountListDto> {
@@ -198,6 +188,79 @@ export class AdminAccountsService {
       );
     });
     return this.get(id);
+  }
+
+  /**
+   * Deletes the account for good with everything it owns: its stores (products, photos,
+   * custom fields and orders), custom themes and sessions. The email must be typed again;
+   * production also needs a fresh authenticator code.
+   */
+  async delete(
+    id: string,
+    input: DeleteAccountDto,
+    userAgent?: string,
+  ): Promise<DeletedAccountDto> {
+    const [user] = await this.db
+      .select({ email: users.email, name: users.name })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+    if (!user) throw new NotFoundException(ACCOUNT_NOT_FOUND);
+    if (input.email.toLowerCase() !== user.email) {
+      throw new BadRequestException(
+        'O e-mail digitado não é o desta conta. Nada foi apagado.',
+      );
+    }
+    const totpStep =
+      this.settings.environment === 'production'
+        ? await this.auth.confirmWithCode(input.code)
+        : undefined;
+
+    const owned = await this.db
+      .select({ id: stores.id, handle: stores.handle })
+      .from(stores)
+      .where(eq(stores.ownerId, id))
+      .orderBy(asc(stores.createdAt));
+    const { files, ...counts } = await this.stores.contents(
+      owned.map((store) => store.id),
+    );
+    const deleted: DeletedAccountDto = {
+      email: user.email,
+      storeHandles: owned.map((store) => store.handle),
+      ...counts,
+    };
+
+    await this.db.transaction(async (tx) => {
+      // Stores only lose their owner when an account goes (set null), so they go first.
+      // Products, orders, themes, sessions and reset codes follow by cascade.
+      if (owned.length > 0) {
+        await tx.delete(stores).where(eq(stores.ownerId, id));
+      }
+      await tx.delete(users).where(eq(users.id, id));
+      const storeList = deleted.storeHandles.length
+        ? ` e ${deleted.storeHandles.map((handle) => `/${handle}`).join(', ')}`
+        : '';
+      await this.audit.record(
+        {
+          action: 'account_deleted',
+          summary: `Apagou a conta ${user.email}${storeList}`,
+          targetType: 'account',
+          targetId: id,
+          details: {
+            ...deleted,
+            name: user.name,
+            storeIds: owned.map((store) => store.id),
+            environment: this.settings.environment,
+            ...(totpStep === undefined ? {} : { totpStep }),
+          },
+          userAgent,
+        },
+        tx,
+      );
+    });
+
+    await this.stores.removeFiles(files);
+    return deleted;
   }
 
   private accountCounts() {
