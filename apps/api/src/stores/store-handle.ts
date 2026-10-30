@@ -15,6 +15,7 @@ const STORE_HANDLE_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
  * Keep in sync when adding a route at the root of the web app.
  */
 export const PLATFORM_ROOT_PATHS = [
+  'admin', // platform admin (admin.banquinha.app)
   'api', // proxied to the API (next.config.ts)
   'blog',
   'cadastro', // redirects to the merchant area
@@ -31,7 +32,6 @@ export const PLATFORM_ROOT_PATHS = [
 const RESERVED_HANDLES = new Set<string>([
   ...PLATFORM_ROOT_PATHS,
   // Platform hosts and areas
-  'admin',
   'app',
   'cdn',
   'dashboard',

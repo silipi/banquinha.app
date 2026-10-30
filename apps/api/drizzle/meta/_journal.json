@@ -85,6 +85,13 @@
       "when": 1793047343349,
       "tag": "0011_custom_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793369761197,
+      "tag": "0012_admin_panel",
+      "breakpoints": true
     }
   ]
 }

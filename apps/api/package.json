@@ -13,7 +13,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/migrate.ts",
     "openapi": "node dist/openapi.js",
-    "db:seed": "nest build && node --enable-source-maps dist/database/seed/run.js"
+    "db:seed": "nest build && node --enable-source-maps dist/database/seed/run.js",
+    "admin:credentials": "nest build && node dist/admin/credentials-cli.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1156.0",

@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, isNull } from 'drizzle-orm';
 import type { Db } from '../database/database.js';
 import { DB } from '../database/database.module.js';
 import {
@@ -8,7 +8,7 @@ import {
   storeFields,
   stores,
 } from '../database/schema/index.js';
-import { PLANS } from '../plans/plans.js';
+import { effectivePlan, PLANS, type PlanColumns } from '../plans/plans.js';
 import {
   currentFieldValues,
   formatCardValue,
@@ -43,18 +43,29 @@ type StoreWithTheme = typeof stores.$inferSelect & {
  */
 const withTheme = {
   theme: { columns: { tokens: true as const } },
-  owner: { columns: { plan: true as const } },
+  owner: {
+    columns: {
+      plan: true as const,
+      planOverride: true as const,
+      planOverrideExpiresAt: true as const,
+    },
+  },
   fields: {
     orderBy: [asc(storeFields.position), asc(storeFields.createdAt)],
   },
 };
 
+/** A store by handle, unless the platform suspended it: then it is as if it did not exist. */
+export const onlineStore = (handle: string) =>
+  and(eq(stores.handle, handle.toLowerCase()), isNull(stores.suspendedAt));
+
 /** The store's fields that show on the storefront: those within the plan's limit. */
 function visibleFields<F extends FieldDefinition>(store: {
-  owner: { plan: keyof typeof PLANS } | null;
+  owner: PlanColumns | null;
   fields: F[];
 }): F[] {
-  return store.fields.slice(0, PLANS[store.owner?.plan ?? 'free'].maxFields);
+  const plan = store.owner ? effectivePlan(store.owner) : 'free';
+  return store.fields.slice(0, PLANS[plan].maxFields);
 }
 
 function toStoreSummary(store: StoreWithTheme): StorefrontStoreSummaryDto {
@@ -74,7 +85,7 @@ export class StorefrontService {
 
   async getStore(handle: string): Promise<StorefrontStoreDto> {
     const store = await this.db.query.stores.findFirst({
-      where: eq(stores.handle, handle.toLowerCase()),
+      where: onlineStore(handle),
       with: {
         ...withTheme,
         products: {
@@ -119,7 +130,7 @@ export class StorefrontService {
     slug: string,
   ): Promise<StorefrontProductDto> {
     const store = await this.db.query.stores.findFirst({
-      where: eq(stores.handle, handle.toLowerCase()),
+      where: onlineStore(handle),
       with: withTheme,
     });
     if (!store) throw new NotFoundException(STORE_NOT_FOUND);
@@ -156,6 +167,7 @@ export class StorefrontService {
   async listForSitemap(): Promise<SitemapStoreDto[]> {
     const rows = await this.db.query.stores.findMany({
       columns: { handle: true, updatedAt: true },
+      where: isNull(stores.suspendedAt),
       orderBy: [asc(stores.handle)],
       with: {
         products: {

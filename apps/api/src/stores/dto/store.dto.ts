@@ -261,4 +261,6 @@ export class StoreDashboardDto extends StoreSummaryDto {
   orderCount: number;
   /** Orders still marked as new. */
   newOrderCount: number;
+  /** Set when the platform took the storefront offline; the panel shows a notice. */
+  suspended: boolean;
 }

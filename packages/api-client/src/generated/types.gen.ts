@@ -27,7 +27,7 @@ export type SignupDto = {
 };
 
 export type PlanDto = {
-    id: 'free';
+    id: 'free' | 'pro';
     name: string;
     maxStores: number;
     /**
@@ -215,6 +215,10 @@ export type StoreDashboardDto = {
      * Orders still marked as new.
      */
     newOrderCount: number;
+    /**
+     * Set when the platform took the storefront offline; the panel shows a notice.
+     */
+    suspended: boolean;
 };
 
 export type UploadImageDto = {
@@ -284,7 +288,7 @@ export type ThemeDto = {
     /**
      * Lowest plan that can use it.
      */
-    requiredPlan: 'free';
+    requiredPlan: 'free' | 'pro';
     tokens: ThemeTokensDto;
 };
 
@@ -776,6 +780,334 @@ export type SitemapStoreDto = {
      * Active products only.
      */
     products: Array<SitemapProductDto>;
+};
+
+export type AdminLoginDto = {
+    username: string;
+    password: string;
+    /**
+     * The 6-digit code from the authenticator app.
+     */
+    code: string;
+};
+
+export type AdminMeDto = {
+    environment: 'development' | 'staging' | 'production';
+    /**
+     * When the session ends at the latest (ISO).
+     */
+    expiresAt: string;
+};
+
+export type OverviewTotalsDto = {
+    accounts: number;
+    /**
+     * Merchant stores (example stores excluded).
+     */
+    stores: number;
+    suspendedStores: number;
+    products: number;
+    services: number;
+    photos: number;
+    orders: number;
+    ordersLast30Days: number;
+    /**
+     * Stores with at least one order in the last 30 days.
+     */
+    activeStoresLast30Days: number;
+    /**
+     * Accounts with a plan override in force.
+     */
+    compedAccounts: number;
+    /**
+     * Sum of the firm part of every order, in cents.
+     */
+    orderValueCents: number;
+};
+
+export type AveragesDto = {
+    productsPerStore: number;
+    photosPerProduct: number;
+    ordersPerActiveStore: number;
+    /**
+     * Mean firm total of the orders, in cents.
+     */
+    orderValueCents: number;
+};
+
+export type WeekDto = {
+    /**
+     * Monday of the week (YYYY-MM-DD, São Paulo time).
+     */
+    week: string;
+    signups: number;
+    /**
+     * Of the accounts created that week, how many have created a store by now.
+     */
+    signupsWithStore: number;
+    storesCreated: number;
+    orders: number;
+};
+
+export type FunnelStepDto = {
+    key: string;
+    label: string;
+    count: number;
+};
+
+export type CountDto = {
+    /**
+     * Machine value (plan id, city, item kind…).
+     */
+    key: string;
+    /**
+     * pt-BR label.
+     */
+    label: string;
+    count: number;
+};
+
+export type AdminOverviewDto = {
+    environment: 'development' | 'staging' | 'production';
+    generatedAt: string;
+    totals: OverviewTotalsDto;
+    averages: AveragesDto;
+    /**
+     * Last 12 weeks, oldest first.
+     */
+    weeks: Array<WeekDto>;
+    /**
+     * Accounts at each step, from sign-up to the first order.
+     */
+    funnel: Array<FunnelStepDto>;
+    plans: Array<CountDto>;
+    signupMethods: Array<CountDto>;
+    itemKinds: Array<CountDto>;
+    priceTypes: Array<CountDto>;
+    /**
+     * Top cities by number of stores.
+     */
+    cities: Array<CountDto>;
+    themes: Array<CountDto>;
+    fulfillment: Array<CountDto>;
+    orderStatuses: Array<CountDto>;
+    productsPerStore: Array<CountDto>;
+    photosPerProduct: Array<CountDto>;
+    ordersPerStore: Array<CountDto>;
+};
+
+export type AuditEntryDto = {
+    id: string;
+    action: string;
+    summary: string;
+    targetType: string | null;
+    targetId: string | null;
+    details: {
+        [key: string]: unknown;
+    } | null;
+    userAgent: string | null;
+    createdAt: string;
+};
+
+export type AuditLogDto = {
+    entries: Array<AuditEntryDto>;
+    /**
+     * Pass as `before` for the next page; null on the last one.
+     */
+    nextBefore: string | null;
+};
+
+export type AdminOwnerDto = {
+    id: string;
+    email: string;
+    name: string | null;
+    whatsapp: string | null;
+};
+
+export type AdminStoreRowDto = {
+    id: string;
+    handle: string;
+    name: string;
+    city: string | null;
+    /**
+     * Null for the example stores.
+     */
+    owner: AdminOwnerDto | null;
+    plan: 'free' | 'pro';
+    productCount: number;
+    photoCount: number;
+    orderCount: number;
+    lastOrderAt: string | null;
+    createdAt: string;
+    suspendedAt: string | null;
+};
+
+export type AdminStoreListDto = {
+    stores: Array<AdminStoreRowDto>;
+    total: number;
+    page: number;
+    pageSize: number;
+};
+
+export type PlanSummaryDto = {
+    /**
+     * The plan whose limits apply.
+     */
+    effective: 'free' | 'pro';
+    /**
+     * The plan paid for (billing).
+     */
+    paid: 'free' | 'pro';
+    override: 'free' | 'pro';
+    /**
+     * ISO; null when the override never ends.
+     */
+    overrideExpiresAt: string | null;
+    overrideReason: string | null;
+    /**
+     * False once the expiry passed (the override stays on record until removed).
+     */
+    overrideActive: boolean;
+};
+
+export type AdminProductRowDto = {
+    id: string;
+    slug: string;
+    name: string;
+    kind: 'product' | 'service';
+    priceType: 'from' | 'fixed' | 'hourly' | 'daily' | 'quote';
+    priceCents: number | null;
+    active: boolean;
+    photoCount: number;
+};
+
+export type AdminOrderRowDto = {
+    id: string;
+    number: number;
+    status: 'new' | 'confirmed' | 'completed' | 'canceled';
+    fulfillment: 'pickup' | 'delivery' | 'online';
+    totalCents: number;
+    priceToConfirm: boolean;
+    itemCount: number;
+    createdAt: string;
+};
+
+export type AdminStoreDto = {
+    id: string;
+    handle: string;
+    name: string;
+    city: string | null;
+    /**
+     * Null for the example stores.
+     */
+    owner: AdminOwnerDto | null;
+    plan: 'free' | 'pro';
+    productCount: number;
+    photoCount: number;
+    orderCount: number;
+    lastOrderAt: string | null;
+    createdAt: string;
+    suspendedAt: string | null;
+    bio: string | null;
+    whatsapp: string;
+    instagram: string | null;
+    serviceArea: string | null;
+    themeName: string;
+    logoUrl: string | null;
+    bannerUrl: string | null;
+    fieldCount: number;
+    suspensionReason: string | null;
+    planDetails: PlanSummaryDto | null;
+    products: Array<AdminProductRowDto>;
+    /**
+     * The 20 most recent.
+     */
+    recentOrders: Array<AdminOrderRowDto>;
+    ordersByStatus: Array<CountDto>;
+    audit: Array<AuditEntryDto>;
+};
+
+export type SuspendStoreDto = {
+    reason: string;
+};
+
+export type DeleteStoreDto = {
+    /**
+     * The store's handle, typed again as confirmation.
+     */
+    handle: string;
+    /**
+     * Required in production: a fresh code from the authenticator app.
+     */
+    code?: string;
+};
+
+export type DeletedStoreDto = {
+    handle: string;
+    productCount: number;
+    orderCount: number;
+    photoCount: number;
+};
+
+export type AdminAccountRowDto = {
+    id: string;
+    email: string;
+    name: string | null;
+    whatsapp: string | null;
+    /**
+     * How the account signs in.
+     */
+    signInMethods: Array<'password' | 'google'>;
+    plan: PlanSummaryDto;
+    storeCount: number;
+    createdAt: string;
+    /**
+     * Start of the most recent session still on record.
+     */
+    lastSignInAt: string | null;
+};
+
+export type AdminAccountListDto = {
+    accounts: Array<AdminAccountRowDto>;
+    total: number;
+    page: number;
+    pageSize: number;
+};
+
+export type AdminAccountStoreDto = {
+    id: string;
+    handle: string;
+    name: string;
+    suspendedAt: string | null;
+};
+
+export type AdminAccountDto = {
+    id: string;
+    email: string;
+    name: string | null;
+    whatsapp: string | null;
+    /**
+     * How the account signs in.
+     */
+    signInMethods: Array<'password' | 'google'>;
+    plan: PlanSummaryDto;
+    storeCount: number;
+    createdAt: string;
+    /**
+     * Start of the most recent session still on record.
+     */
+    lastSignInAt: string | null;
+    stores: Array<AdminAccountStoreDto>;
+    audit: Array<AuditEntryDto>;
+};
+
+export type SetPlanOverrideDto = {
+    plan: 'free' | 'pro';
+    /**
+     * ISO date or date-time; omit or null for no end.
+     */
+    expiresAt?: string | null;
+    reason: string;
 };
 
 export type HealthCheckData = {
@@ -1318,3 +1650,218 @@ export type SitemapListStorefrontsResponses = {
 };
 
 export type SitemapListStorefrontsResponse = SitemapListStorefrontsResponses[keyof SitemapListStorefrontsResponses];
+
+export type AdminAuthLoginData = {
+    body: AdminLoginDto;
+    path?: never;
+    query?: never;
+    url: '/admin/auth/login';
+};
+
+export type AdminAuthLoginResponses = {
+    200: AdminMeDto;
+};
+
+export type AdminAuthLoginResponse = AdminAuthLoginResponses[keyof AdminAuthLoginResponses];
+
+export type AdminAuthLogoutData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/admin/auth/logout';
+};
+
+export type AdminAuthLogoutResponses = {
+    204: void;
+};
+
+export type AdminAuthLogoutResponse = AdminAuthLogoutResponses[keyof AdminAuthLogoutResponses];
+
+export type AdminAuthMeData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/admin/auth/me';
+};
+
+export type AdminAuthMeResponses = {
+    200: AdminMeDto;
+};
+
+export type AdminAuthMeResponse = AdminAuthMeResponses[keyof AdminAuthMeResponses];
+
+export type AdminOverviewData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/admin/overview';
+};
+
+export type AdminOverviewResponses = {
+    200: AdminOverviewDto;
+};
+
+export type AdminOverviewResponse = AdminOverviewResponses[keyof AdminOverviewResponses];
+
+export type AdminAuditLogData = {
+    body?: never;
+    path?: never;
+    query?: {
+        before?: string;
+    };
+    url: '/admin/audit-log';
+};
+
+export type AdminAuditLogResponses = {
+    200: AuditLogDto;
+};
+
+export type AdminAuditLogResponse = AdminAuditLogResponses[keyof AdminAuditLogResponses];
+
+export type AdminStoresListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Searches handle, name, city and owner email.
+         */
+        q?: string;
+        filter?: 'all' | 'live' | 'suspended' | 'examples';
+        page?: number;
+    };
+    url: '/admin/stores';
+};
+
+export type AdminStoresListResponses = {
+    200: AdminStoreListDto;
+};
+
+export type AdminStoresListResponse = AdminStoresListResponses[keyof AdminStoresListResponses];
+
+export type AdminStoresGetData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/admin/stores/{id}';
+};
+
+export type AdminStoresGetResponses = {
+    200: AdminStoreDto;
+};
+
+export type AdminStoresGetResponse = AdminStoresGetResponses[keyof AdminStoresGetResponses];
+
+export type AdminStoresUnsuspendData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/admin/stores/{id}/suspension';
+};
+
+export type AdminStoresUnsuspendResponses = {
+    200: AdminStoreDto;
+};
+
+export type AdminStoresUnsuspendResponse = AdminStoresUnsuspendResponses[keyof AdminStoresUnsuspendResponses];
+
+export type AdminStoresSuspendData = {
+    body: SuspendStoreDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/admin/stores/{id}/suspension';
+};
+
+export type AdminStoresSuspendResponses = {
+    200: AdminStoreDto;
+};
+
+export type AdminStoresSuspendResponse = AdminStoresSuspendResponses[keyof AdminStoresSuspendResponses];
+
+export type AdminStoresDeleteData = {
+    body: DeleteStoreDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/admin/stores/{id}/deletion';
+};
+
+export type AdminStoresDeleteResponses = {
+    200: DeletedStoreDto;
+};
+
+export type AdminStoresDeleteResponse = AdminStoresDeleteResponses[keyof AdminStoresDeleteResponses];
+
+export type AdminAccountsListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Searches email, name and WhatsApp.
+         */
+        q?: string;
+        /**
+         * Only accounts with a plan override (in force or expired).
+         */
+        comped?: boolean;
+        page?: number;
+    };
+    url: '/admin/accounts';
+};
+
+export type AdminAccountsListResponses = {
+    200: AdminAccountListDto;
+};
+
+export type AdminAccountsListResponse = AdminAccountsListResponses[keyof AdminAccountsListResponses];
+
+export type AdminAccountsGetData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/admin/accounts/{id}';
+};
+
+export type AdminAccountsGetResponses = {
+    200: AdminAccountDto;
+};
+
+export type AdminAccountsGetResponse = AdminAccountsGetResponses[keyof AdminAccountsGetResponses];
+
+export type AdminAccountsRemovePlanOverrideData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/admin/accounts/{id}/plan-override';
+};
+
+export type AdminAccountsRemovePlanOverrideResponses = {
+    200: AdminAccountDto;
+};
+
+export type AdminAccountsRemovePlanOverrideResponse = AdminAccountsRemovePlanOverrideResponses[keyof AdminAccountsRemovePlanOverrideResponses];
+
+export type AdminAccountsSetPlanOverrideData = {
+    body: SetPlanOverrideDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/admin/accounts/{id}/plan-override';
+};
+
+export type AdminAccountsSetPlanOverrideResponses = {
+    200: AdminAccountDto;
+};
+
+export type AdminAccountsSetPlanOverrideResponse = AdminAccountsSetPlanOverrideResponses[keyof AdminAccountsSetPlanOverrideResponses];

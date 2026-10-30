@@ -43,6 +43,16 @@ export default function DashboardPage() {
         </p>
       </header>
 
+      {store.suspended && (
+        <p
+          role="alert"
+          className="rounded-3xl bg-red-50 px-5 py-4 text-sm text-red-800"
+        >
+          Sua loja está fora do ar no momento e não recebe pedidos. Para saber
+          mais, fale com a gente em oi@banquinha.app.
+        </p>
+      )}
+
       <FirstOrderCelebration
         key={store.id}
         storeId={store.id}

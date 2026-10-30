@@ -254,6 +254,7 @@ export class StoresService {
       maxProducts: PLANS[user.plan].maxProducts,
       orderCount: orderCounts.total,
       newOrderCount: orderCounts.fresh,
+      suspended: store.suspendedAt !== null,
       setup: [
         { id: 'logo', done: Boolean(store.logoUrl) },
         { id: 'banner', done: Boolean(store.bannerUrl) },

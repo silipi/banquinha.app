@@ -22,6 +22,8 @@ const TRACKED_ROOTS = new Set([
 ]);
 
 export function isTrackedUrl(url: URL) {
+  // The platform admin shows merchants' data: never recorded.
+  if (url.hostname.startsWith('admin.')) return false;
   if (url.hostname.startsWith('minha.')) return true;
   return TRACKED_ROOTS.has(url.pathname.split('/')[1] ?? '');
 }

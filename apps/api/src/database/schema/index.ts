@@ -27,7 +27,7 @@ const timestamps = {
 };
 
 /** Limits per plan live in src/plans/plans.ts. */
-export const plan = pgEnum('plan', ['free']);
+export const plan = pgEnum('plan', ['free', 'pro']);
 
 // Merchants. They sign in with email and password, or with Google.
 export const users = pgTable('users', {
@@ -41,7 +41,16 @@ export const users = pgTable('users', {
   passwordHash: text('password_hash'),
   /** Google account id (`sub` claim), set on the first Google sign-in. */
   googleSub: text('google_sub').unique(),
+  /** The plan the account pays for (billing, ROADMAP P5-01). Read effectivePlan() instead. */
   plan: plan('plan').notNull().default('free'),
+  /** A plan given by the platform for free (friends, partners), set from the admin panel. */
+  planOverride: plan('plan_override'),
+  /** When the override ends; null means it never does. */
+  planOverrideExpiresAt: timestamp('plan_override_expires_at', {
+    withTimezone: true,
+  }),
+  /** Why it was given, for the admin's own records. */
+  planOverrideReason: text('plan_override_reason'),
   ...timestamps,
 });
 
@@ -149,6 +158,9 @@ export const stores = pgTable('stores', {
   onlineEnabled: boolean('online_enabled').notNull().default(false),
   /** Where the store works, as free text ("Curitiba e região metropolitana"). */
   serviceArea: text('service_area'),
+  /** Set by the platform admin: the storefront goes offline and refuses orders. */
+  suspendedAt: timestamp('suspended_at', { withTimezone: true }),
+  suspensionReason: text('suspension_reason'),
   ...timestamps,
 });
 
@@ -303,6 +315,46 @@ export const orderItems = pgTable(
     quantity: integer('quantity').notNull(),
   },
   (table) => [index('order_items_order_idx').on(table.orderId)],
+);
+
+// Platform admin (src/admin). A single admin whose credentials live in env, never in `users`.
+export const adminSessions = pgTable('admin_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  /** SHA-256 of the cookie token; the token itself is never stored. */
+  tokenHash: text('token_hash').notNull().unique(),
+  /** Hard limit, whatever the activity. */
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  /** Sessions idle for too long end before expiresAt. */
+  lastSeenAt: timestamp('last_seen_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  userAgent: text('user_agent'),
+  createdAt: timestamps.createdAt,
+});
+
+/**
+ * Every admin sign-in attempt and change. No foreign keys, so entries outlive what they
+ * describe (a deleted store keeps its deletion record).
+ */
+export const adminAuditLog = pgTable(
+  'admin_audit_log',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    /** See AdminAction in src/admin/audit-log.service.ts. */
+    action: text('action').notNull(),
+    targetType: text('target_type'),
+    targetId: text('target_id'),
+    /** One readable line ("Plano Pro para maria@exemplo.com até 31/12"). */
+    summary: text('summary').notNull(),
+    details: jsonb('details').$type<Record<string, unknown>>(),
+    userAgent: text('user_agent'),
+    createdAt: timestamps.createdAt,
+  },
+  (table) => [
+    index('admin_audit_log_created_idx').on(table.createdAt),
+    index('admin_audit_log_action_idx').on(table.action, table.createdAt),
+    index('admin_audit_log_target_idx').on(table.targetId),
+  ],
 );
 
 export const storesRelations = relations(stores, ({ one, many }) => ({

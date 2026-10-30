@@ -58,13 +58,17 @@ jobs:
           if [ "$GITHUB_EVENT_NAME" = push ]; then
             echo "SERVICE=banquinha-api" >> "$GITHUB_ENV"
             echo "SECRET_SUFFIX=" >> "$GITHUB_ENV"
-            echo "ENV_VARS=WEB_ORIGIN=${{ vars.WEB_ORIGIN }},R2_ACCOUNT_ID=39897974cb09c05474b5515d228f9bfd,R2_BUCKET=banquinha-images,R2_PUBLIC_URL=https://img.banquinha.app,POSTHOG_KEY=${{ vars.POSTHOG_KEY }},POSTHOG_HOST=${{ vars.POSTHOG_HOST }}" >> "$GITHUB_ENV"
+            echo "ENV_VARS=APP_ENV=production,WEB_ORIGIN=${{ vars.WEB_ORIGIN }},R2_ACCOUNT_ID=39897974cb09c05474b5515d228f9bfd,R2_BUCKET=banquinha-images,R2_PUBLIC_URL=https://img.banquinha.app,POSTHOG_KEY=${{ vars.POSTHOG_KEY }},POSTHOG_HOST=${{ vars.POSTHOG_HOST }}" >> "$GITHUB_ENV"
           else
             # No PostHog in staging. WEB_ORIGIN only matters for CORS, and previews reach the
             # API same-origin through /api, so the default is fine.
             echo "SERVICE=banquinha-api-staging" >> "$GITHUB_ENV"
             echo "SECRET_SUFFIX=-staging" >> "$GITHUB_ENV"
-            echo "ENV_VARS=R2_ACCOUNT_ID=39897974cb09c05474b5515d228f9bfd,R2_BUCKET=banquinha-images-staging,R2_PUBLIC_URL=${{ vars.R2_PUBLIC_URL_STAGING }}" >> "$GITHUB_ENV"
+            echo "ENV_VARS=APP_ENV=staging,R2_ACCOUNT_ID=39897974cb09c05474b5515d228f9bfd,R2_BUCKET=banquinha-images-staging,R2_PUBLIC_URL=${{ vars.R2_PUBLIC_URL_STAGING }}" >> "$GITHUB_ENV"
+          fi
+          # Platform admin: on once its three secrets exist for this environment (docs/deploy.md).
+          if [ "${{ vars.ADMIN_ENABLED }}" = true ]; then
+            echo "ADMIN_SECRETS=,ADMIN_USERNAME=admin-username$SECRET_SUFFIX:latest,ADMIN_PASSWORD_HASH=admin-password-hash$SECRET_SUFFIX:latest,ADMIN_TOTP_SECRET=admin-totp-secret$SECRET_SUFFIX:latest" >> "$GITHUB_ENV"
           fi
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -104,4 +108,4 @@ jobs:
             --max-instances 1 \
             --cpu-boost \
             --set-env-vars "$ENV_VARS" \
-            --set-secrets "DATABASE_URL=database-url$SECRET_SUFFIX:latest,INTERNAL_API_KEY=internal-api-key$SECRET_SUFFIX:latest,R2_ACCESS_KEY_ID=r2-access-key-id$SECRET_SUFFIX:latest,R2_SECRET_ACCESS_KEY=r2-secret-access-key$SECRET_SUFFIX:latest,RESEND_API_KEY=resend-api-key:latest"
+            --set-secrets "DATABASE_URL=database-url$SECRET_SUFFIX:latest,INTERNAL_API_KEY=internal-api-key$SECRET_SUFFIX:latest,R2_ACCESS_KEY_ID=r2-access-key-id$SECRET_SUFFIX:latest,R2_SECRET_ACCESS_KEY=r2-secret-access-key$SECRET_SUFFIX:latest,RESEND_API_KEY=resend-api-key:latest$ADMIN_SECRETS"

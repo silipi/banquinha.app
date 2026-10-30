@@ -296,3 +296,71 @@ access through its `r2.dev` URL is enough) with a token scoped to that bucket on
 go to the `-staging` secrets and its public URL to `R2_PUBLIC_URL_STAGING` (GitHub) and
 `R2_PUBLIC_URL` (Vercel, Preview).
 Function region: `gru1` (Settings → Functions).
+
+## Platform admin
+
+The owner's internal panel (`apps/api/src/admin`, `apps/web/src/app/admin`). Each environment
+has its own: production at `admin.banquinha.app`, staging at `/admin` on any preview (already
+behind Vercel Authentication), locally at `localhost:3000/admin`. Each one reads only its own
+database and has its own credentials, so a staging password never opens production. A badge
+shows which environment you are in (`APP_ENV`, set by `ci.yml`).
+
+There is a single admin, kept apart from merchant accounts: its own guard (`AdminGuard`),
+sessions table and cookie. Signing in takes a username, a password and a 6-digit code from an
+authenticator app (TOTP). Without the three variables below the whole `/admin` API answers 404.
+
+| Name                    | Where                                                                              |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| `ADMIN_USERNAME`        | API: secret `admin-username` (`admin-username-staging` for staging)                |
+| `ADMIN_PASSWORD_HASH`   | API: secret `admin-password-hash` (`-staging`): scrypt hash, never the password    |
+| `ADMIN_TOTP_SECRET`     | API: secret `admin-totp-secret` (`-staging`): base32, 160 bits                     |
+| `ADMIN_ENABLED`         | GitHub repository variable: `true` once the secrets of **both** environments exist |
+| `NEXT_PUBLIC_ADMIN_URL` | Vercel, Production only: `https://admin.banquinha.app`                             |
+
+### Setting it up
+
+1. Generate the values for one environment on your own machine (nothing is written to disk):
+   `pnpm --filter @banquinha/api admin:credentials`. It suggests a random username, asks for
+   a password of at least 16 characters (use a password manager) and prints the three values
+   plus an `otpauth://` URI. Add the URI (or the secret, as a time-based key) to your
+   authenticator app, and keep the password in the password manager. Run it again for the
+   other environment: different username, password and secret.
+2. In Cloud Shell, create the secrets and let the runtime read them:
+
+   ```bash
+   for SECRET in admin-username admin-password-hash admin-totp-secret \
+     admin-username-staging admin-password-hash-staging admin-totp-secret-staging; do
+     gcloud secrets create "$SECRET" --replication-policy=automatic
+     gcloud secrets add-iam-policy-binding "$SECRET" \
+       --member="serviceAccount:$RUNTIME_SA" --role=roles/secretmanager.secretAccessor
+   done
+   ```
+
+   Then add a version to each, one at a time, the same way as `database-url`: `read -rs VALUE`
+   alone, paste, then
+   `printf '%s' "$VALUE" | gcloud secrets versions add <secret> --data-file=- && unset VALUE`.
+   The hash contains `$` signs: paste it at the silent prompt, never inline in a command.
+
+3. GitHub repository variable `ADMIN_ENABLED=true`. From then on `ci.yml` passes the secrets
+   to both services. Deploying with the variable on and a secret missing fails the deploy.
+4. Production host: in Vercel add `admin.banquinha.app` to the project, create its CNAME in
+   Cloudflare (DNS only, like `minha`), set `NEXT_PUBLIC_ADMIN_URL=https://admin.banquinha.app`
+   (Production) and redeploy. `banquinha.app/admin` then redirects there, so the admin cookie
+   only ever exists on the admin host.
+
+To change the password or rotate the TOTP secret, run the generator again and add new versions
+of the secrets; the next deploy (or a new Cloud Run revision) picks them up.
+
+### Safeguards
+
+- 5 failed sign-ins within 15 minutes lock sign-in for 15 minutes (counted in the audit log,
+  shared by every instance). Each TOTP code works once.
+- Sessions last at most 12 hours and end after 1 hour idle. The cookie is httpOnly,
+  `SameSite=Strict`, host-only and limited to `/api/admin`.
+- Every sign-in attempt and every change goes to `admin_audit_log`, which has no foreign
+  keys: the record of a deleted store stays.
+- Deleting a store needs its handle typed again; in production also a fresh TOTP code.
+- Admin pages send `X-Robots-Tag: noindex` and `X-Frame-Options: DENY`, and PostHog never
+  loads on the admin host. Production's public `/docs` leaves the admin routes out.
+- There is no IP allowlist: browsers reach the API through Vercel's `/api` proxy, so the API
+  does not see the admin's IP. The TOTP code covers what an allowlist would.
