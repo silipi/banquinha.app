@@ -325,9 +325,12 @@ authenticator app (TOTP). Without the three variables below the whole `/admin` A
    plus an `otpauth://` URI. Add the URI (or the secret, as a time-based key) to your
    authenticator app, and keep the password in the password manager. Run it again for the
    other environment: different username, password and secret.
-2. In Cloud Shell, create the secrets and let the runtime read them:
+2. In Cloud Shell, create the secrets and let the runtime read them (a new Cloud Shell
+   session starts without the variables of the setup block, so they are set again here):
 
    ```bash
+   PROJECT_ID=banquinha-512513
+   RUNTIME_SA=banquinha-api@$PROJECT_ID.iam.gserviceaccount.com
    for SECRET in admin-username admin-password-hash admin-totp-secret \
      admin-username-staging admin-password-hash-staging admin-totp-secret-staging; do
      gcloud secrets create "$SECRET" --replication-policy=automatic
